@@ -59,7 +59,13 @@ async function searchJson({ system, prompt, city, countryCode, maxUses = 4, fetc
           }]
         : []),
     ],
-    system,
+    // web_fetch only accepts URLs already present in the conversation, so the
+    // model must be told to search first rather than construct a likely URL.
+    system: fetchUses > 0
+      ? `${system}
+
+Always run a web search before fetching. You may only fetch a URL that appeared in a search result — never type out a URL you expect to exist, as that fetch will fail.`
+      : system,
   };
 
   let response = await client.messages.create({
