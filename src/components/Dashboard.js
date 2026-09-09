@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ExpenseLogger from './ExpenseLogger';
 import PriceCheck from './PriceCheck';
 import '../styles/Dashboard.css';
 
-function Dashboard({ budget, onAskAdvisor, onStartOver, onGoToSmartSpending, onGoToBank }) {
+function Dashboard({ budget, onStartOver }) {
   const [currentBudget, setCurrentBudget] = useState(budget);
 
   const expensePieData = Object.entries(currentBudget.categories)
@@ -37,27 +38,27 @@ function Dashboard({ budget, onAskAdvisor, onStartOver, onGoToSmartSpending, onG
       </div>
 
       <div className="quick-actions">
-        <button className="quick-card food" onClick={onGoToSmartSpending}>
+        <Link className="quick-card food" to="/deals">
           <span className="quick-icon" aria-hidden="true">🥗</span>
           <span className="quick-title">Cheap food &amp; deals</span>
           <span className="quick-sub">
             Places near you that fit the {currentBudget.currency}{Math.max(currentBudget.surplus, 0).toFixed(0)} you have left, plus current offers
           </span>
-        </button>
-        <button className="quick-card bank" onClick={onGoToBank}>
+        </Link>
+        <Link className="quick-card bank" to="/bank">
           <span className="quick-icon" aria-hidden="true">🏦</span>
           <span className="quick-title">Connect your bank</span>
           <span className="quick-sub">
             Link Revolut or another bank to see what you really spent
           </span>
-        </button>
-        <button className="quick-card advisor" onClick={onAskAdvisor}>
+        </Link>
+        <Link className="quick-card advisor" to="/advisor">
           <span className="quick-icon" aria-hidden="true">💬</span>
           <span className="quick-title">Ask the advisor</span>
           <span className="quick-sub">
             Get specific answers about your own numbers
           </span>
-        </button>
+        </Link>
       </div>
 
       <ExpenseLogger budget={currentBudget} onExpenseAdd={handleExpenseAdd} />

@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { parseStatement, summarise } from '../lib/csvImport';
 import { importTransactions } from '../lib/budgetStore';
 import '../styles/BankConnect.css';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-function BankConnect({ onBack, budget }) {
+function BankConnect({ budget }) {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState('');
@@ -65,7 +67,7 @@ function BankConnect({ onBack, budget }) {
 
   return (
     <div className="bank-container">
-      <button className="btn-back" onClick={onBack}>← Back</button>
+      <button className="btn-back" onClick={() => navigate('/dashboard')}>← Back</button>
       <h2>🏦 Your real spending</h2>
 
       <p className="bank-intro">

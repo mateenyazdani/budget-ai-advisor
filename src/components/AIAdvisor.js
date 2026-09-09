@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/AIAdvisor.css';
 
-function AIAdvisor({ budget, onBack }) {
+function AIAdvisor({ budget }) {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       type: 'assistant',
@@ -68,7 +70,7 @@ function AIAdvisor({ budget, onBack }) {
       <div className="advisor-header">
         <h2>💬 AI Budget Advisor</h2>
         <p>Ask me anything about optimizing your {budget.country} budget</p>
-        <button className="back-btn" onClick={onBack}>← Back to Results</button>
+        <button className="back-btn" onClick={() => navigate('/dashboard')}>← Back to dashboard</button>
       </div>
 
       {/* Quick Questions */}

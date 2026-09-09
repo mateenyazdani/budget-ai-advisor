@@ -163,3 +163,70 @@
   padding: 80px 20px;
   font-size: 1rem;
 }
+
+.App-nav a {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: fit-content;
+  white-space: nowrap;
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.App-nav a:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+}
+
+.App-nav a.active {
+  background: var(--surface);
+  color: var(--brand-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.App-footer a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.App-footer a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.not-found {
+  text-align: center;
+  padding: 70px 24px;
+}
+
+.not-found h2 {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+.not-found p {
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .App-nav a {
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 4px;
+    font-size: 0.66rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    min-width: 0;
+  }
+}

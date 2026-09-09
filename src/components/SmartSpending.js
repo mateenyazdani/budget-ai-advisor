@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/SmartSpending.css';
 
 const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Gym', 'Shopping'];
@@ -21,7 +22,8 @@ function grouponUrl(city) {
   return `https://www.groupon.es/browse/${slug}`;
 }
 
-function SmartSpending({ budgetRemaining, onBack }) {
+function SmartSpending({ budgetRemaining }) {
+  const navigate = useNavigate();
   const [view, setView] = useState('places');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [savedPlaces, setSavedPlaces] = useState([]);
@@ -142,7 +144,7 @@ function SmartSpending({ budgetRemaining, onBack }) {
   return (
     <div className="smart-spending-container">
       <div className="spending-header">
-        <button className="btn-back" onClick={onBack}>← Back</button>
+        <button className="btn-back" onClick={() => navigate('/dashboard')}>← Back</button>
         <h2>Smart Spending</h2>
         <p className="spending-sub">Ways to spend less of the money you have left.</p>
         <div className="budget-info">
