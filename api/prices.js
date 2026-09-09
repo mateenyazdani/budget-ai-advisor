@@ -52,14 +52,14 @@ function cleanTransport(raw) {
     .filter((f) => f && typeof f.name === 'string' && money(f.price) !== null)
     .slice(0, 10)
     .map((f) => ({
-      name: String(f.name).slice(0, 70),
+      name: String(f.name).slice(0, 120),
       price: money(f.price),
       unit: f.unit === 'ride' ? 'ride' : 'month',
       appliesTo: f.appliesTo ? String(f.appliesTo).slice(0, 60) : null,
       sourceUrl: httpsUrlOrNull(f.sourceUrl),
     }));
   if (!cleaned.length) return null;
-  return { operator: raw.operator ? String(raw.operator).slice(0, 60) : null, fares: cleaned };
+  return { operator: raw.operator ? String(raw.operator).slice(0, 100) : null, fares: cleaned };
 }
 
 const SHARED_RULES = `Hard rules:
@@ -150,7 +150,7 @@ module.exports = async function handler(req, res) {
 
     const data =
       kind === 'subscriptions'
-        ? { subscriptions: cleanSubscriptions(parsed?.subscriptions) }
+        ? { subscriptions: cleanSubscriptions(parsed?.subscriptions ?? parsed) }
         : { transport: cleanTransport(parsed?.transport ?? parsed), ageBand };
 
     cacheSet(cacheKey, data);

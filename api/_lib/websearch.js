@@ -75,7 +75,12 @@ async function searchJson({ system, prompt, city, countryCode, maxUses = 4 }) {
     .map((block) => block.text)
     .join('\n');
 
-  return extractJson(text);
+  const parsed = extractJson(text);
+  if (parsed === null) {
+    // An empty result is otherwise indistinguishable from a parsing failure.
+    console.error('No JSON in model reply. stop_reason=%s, text starts: %s', response.stop_reason, text.slice(0, 400));
+  }
+  return parsed;
 }
 
 function httpsUrlOrNull(value) {
