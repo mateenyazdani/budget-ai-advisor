@@ -1,4 +1,4 @@
-const { searchJson, httpsUrlOrNull, Anthropic } = require('./_lib/websearch');
+const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_lib/websearch');
 
 // Each lookup costs a Claude call plus web searches, so results are reused for
 // an hour per city/category on a warm instance.
@@ -61,10 +61,10 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'A valid city is required.' });
   }
 
-  const country = String(req.query.country || 'Spain').trim().slice(0, 40);
+  const country = resolveCountry(req.query.country || 'ES');
   const category = CATEGORIES.includes(req.query.category) ? req.query.category : 'All';
 
-  const cacheKey = `${city.toLowerCase()}|${country.toLowerCase()}|${category}`;
+  const cacheKey = `${city.toLowerCase()}|${country.code}|${category}`;
   const cached = cacheGet(cacheKey);
   if (cached) {
     return res.status(200).json({ configured: true, deals: cached, cached: true });
@@ -75,11 +75,11 @@ module.exports = async function handler(req, res) {
   try {
     const parsed = await searchJson({
       city,
-      country,
-      prompt: `Find current money-saving offers in ${city}, ${country} for ${focus}.`,
+      countryCode: country.code,
+      prompt: `Find current money-saving offers in ${city}, ${country.name} for ${focus}.`,
       system: `You find real, currently-advertised money-saving offers for people in a specific city.
 
-Search the web for offers in ${city}, ${country}, focused on ${focus}.
+Search the web for offers in ${city}, ${country.name}, focused on ${focus}.
 Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.
 
 Hard rules:

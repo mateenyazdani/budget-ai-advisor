@@ -23,7 +23,7 @@ function extractJson(text) {
 // Runs one Claude turn with server-side web search and returns parsed JSON.
 // Returns null when the model answered but produced nothing parseable, which
 // callers should treat as "no results" rather than as a failure.
-async function searchJson({ system, prompt, city, country, maxUses = 4 }) {
+async function searchJson({ system, prompt, city, countryCode, maxUses = 4 }) {
   const client = new Anthropic();
 
   const params = {
@@ -35,7 +35,7 @@ async function searchJson({ system, prompt, city, country, maxUses = 4 }) {
         type: 'web_search_20260209',
         name: 'web_search',
         max_uses: maxUses,
-        ...(city ? { user_location: { type: 'approximate', city, country } } : {}),
+        ...(city ? { user_location: { type: 'approximate', city, country: countryCode } } : {}),
       },
     ],
     system,
@@ -72,4 +72,43 @@ function httpsUrlOrNull(value) {
   return typeof value === 'string' && /^https?:\/\//.test(value) ? value : null;
 }
 
-module.exports = { searchJson, extractJson, httpsUrlOrNull, Anthropic };
+const COUNTRY_NAMES = {
+  ES: 'Spain',
+  GB: 'the United Kingdom',
+  IE: 'Ireland',
+  DE: 'Germany',
+  FR: 'France',
+  IT: 'Italy',
+  PT: 'Portugal',
+  NL: 'the Netherlands',
+  US: 'the United States',
+  AU: 'Australia',
+};
+
+const NAME_TO_CODE = {
+  spain: 'ES',
+  'united kingdom': 'GB',
+  uk: 'GB',
+  england: 'GB',
+  ireland: 'IE',
+  germany: 'DE',
+  france: 'FR',
+  italy: 'IT',
+  portugal: 'PT',
+  netherlands: 'NL',
+  usa: 'US',
+  'united states': 'US',
+  australia: 'AU',
+};
+
+// user_location.country must be a 2-letter ISO code, but prompts read better
+// with the full name, so callers get both from whichever form they have.
+function resolveCountry(input) {
+  const raw = String(input || '').trim();
+  const code = /^[A-Za-z]{2}$/.test(raw)
+    ? raw.toUpperCase()
+    : NAME_TO_CODE[raw.toLowerCase()] || 'ES';
+  return { code, name: COUNTRY_NAMES[code] || code };
+}
+
+module.exports = { searchJson, extractJson, httpsUrlOrNull, resolveCountry, Anthropic };

@@ -1,4 +1,4 @@
-const { searchJson, httpsUrlOrNull, Anthropic } = require('./_lib/websearch');
+const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_lib/websearch');
 
 // Subscription and fare prices move slowly, so a day of caching is plenty and
 // keeps the cost of this endpoint near zero.
@@ -81,11 +81,11 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'A valid city is required.' });
   }
 
-  const country = String(req.query.country || 'Spain').trim().slice(0, 40);
+  const country = resolveCountry(req.query.country || 'ES');
   const age = Math.min(Math.max(parseInt(req.query.age, 10) || 30, 14), 100);
   const ageBand = age < 26 ? 'under 26' : age < 31 ? '26 to 30' : age < 65 ? '31 to 64' : '65 or over';
 
-  const cacheKey = `${city.toLowerCase()}|${country.toLowerCase()}|${ageBand}`;
+  const cacheKey = `${city.toLowerCase()}|${country.code}|${ageBand}`;
   const cached = cacheGet(cacheKey);
   if (cached) {
     return res.status(200).json({ configured: true, ...cached, cached: true });
@@ -94,12 +94,12 @@ module.exports = async function handler(req, res) {
   try {
     const parsed = await searchJson({
       city,
-      country,
+      countryCode: country.code,
       maxUses: 6,
-      prompt: `Find the current subscription prices and public transport fares for someone aged ${age} living in ${city}, ${country}.`,
+      prompt: `Find the current subscription prices and public transport fares for someone aged ${age} living in ${city}, ${country.name}.`,
       system: `You look up real, current consumer prices for a specific city and report them with sources.
 
-Find, for ${city}, ${country}:
+Find, for ${city}, ${country.name}:
 1. Current monthly prices for Netflix, Spotify, Apple iCloud+, Disney+, Amazon Prime and YouTube Premium in that country's local currency. Give the standard individual plan unless a cheaper one is the obvious default.
 2. Current public transport fares from the city's own transport operator: the single-ride fare, any multi-trip or travel-card fare, and the monthly pass. Include any age-based discount that applies to someone aged ${age} (${ageBand}), such as a youth or senior pass.
 
