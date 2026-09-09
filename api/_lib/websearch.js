@@ -33,7 +33,7 @@ function extractJson(text) {
 // Runs one Claude turn with server-side web search and returns parsed JSON.
 // Returns null when the model answered but produced nothing parseable, which
 // callers should treat as "no results" rather than as a failure.
-async function searchJson({ system, prompt, city, countryCode, maxUses = 4 }) {
+async function searchJson({ system, prompt, city, countryCode, maxUses = 4, fetchUses = 0 }) {
   const client = new Anthropic();
 
   const params = {
@@ -47,14 +47,17 @@ async function searchJson({ system, prompt, city, countryCode, maxUses = 4 }) {
         max_uses: maxUses,
         ...(city ? { user_location: { type: 'approximate', city, country: countryCode } } : {}),
       },
-      // Search snippets often omit the actual figure, so allow opening the
-      // pages the search turns up. It can only fetch URLs already found.
-      {
-        type: 'web_fetch_20260209',
-        name: 'web_fetch',
-        max_uses: maxUses,
-        max_content_tokens: 20000,
-      },
+      // Search snippets often omit the actual figure, so callers that need one
+      // can allow opening the pages search turns up. Fetching is slow, so it is
+      // off unless asked for. It can only fetch URLs already found.
+      ...(fetchUses > 0
+        ? [{
+            type: 'web_fetch_20260209',
+            name: 'web_fetch',
+            max_uses: fetchUses,
+            max_content_tokens: 8000,
+          }]
+        : []),
     ],
     system,
   };
