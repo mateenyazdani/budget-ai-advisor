@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './styles/App.css';
+import Landing from './components/Landing';
 import Auth from './components/Auth';
 import ComprehensiveQuestionnaire from './components/ComprehensiveQuestionnaire';
 import Dashboard from './components/Dashboard';
@@ -16,7 +17,7 @@ const NAV_ITEMS = [
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState('auth');
+  const [currentPage, setCurrentPage] = useState('landing');
   const [userBudget, setUserBudget] = useState(null);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ function App() {
     localStorage.removeItem('expenses');
     setCurrentUser(null);
     setUserBudget(null);
-    setCurrentPage('auth');
+    setCurrentPage('landing');
   };
 
   const handleGoToSmartSpending = () => {
@@ -68,9 +69,11 @@ function App() {
 
   return (
     <div className="App">
+      {currentPage === 'landing' && <Landing onGetStarted={() => setCurrentPage('auth')} />}
+
       {currentPage === 'auth' && <Auth onLogin={handleLogin} />}
 
-      {currentPage !== 'auth' && (
+      {currentPage !== 'auth' && currentPage !== 'landing' && (
         <>
           <header className="App-header">
             <h1>💰 Budget AI</h1>
