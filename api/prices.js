@@ -3,10 +3,11 @@ const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_li
 // Subscription and fare prices move slowly, so a day of caching is plenty and
 // keeps the cost of this endpoint near zero.
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const MAX_CACHE_ENTRIES = 30;
+const MAX_CACHE_ENTRIES = 60;
 const cache = new Map();
 
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
+const KINDS = ['transport', 'subscriptions'];
 
 function cacheGet(key) {
   const hit = cache.get(key);
@@ -61,6 +62,41 @@ function cleanTransport(raw) {
   return { operator: raw.operator ? String(raw.operator).slice(0, 60) : null, fares: cleaned };
 }
 
+const SHARED_RULES = `Hard rules:
+- Report only prices you actually found in search results. Never estimate, never convert from another country, and never carry over a price you remember.
+- Prefer the operator's or provider's own site.
+- Omit anything you could not verify. A short, accurate list beats a long, guessed one.`;
+
+function transportPrompt(city, country, age, ageBand) {
+  return {
+    prompt: `Find the current public transport fares in ${city}, ${country.name} for someone aged ${age}.`,
+    system: `You look up real, current public transport fares for a specific city and report them with sources.
+
+Find, from the transport operator for ${city}, ${country.name}: the single-ride fare, any multi-trip or travel-card fare, and the monthly pass. Include any age-based discount that applies to someone aged ${age} (${ageBand}), such as a youth or senior pass.
+
+${SHARED_RULES}
+
+Reply with only a JSON object, no prose:
+{"operator": string, "fares": [{"name": string, "price": number, "unit": "ride"|"month", "appliesTo": string|null, "sourceUrl": string}]}
+
+"appliesTo" names the eligibility, e.g. "under 26", or null if it applies to everyone.`,
+  };
+}
+
+function subscriptionsPrompt(city, country) {
+  return {
+    prompt: `Find the current monthly subscription prices in ${country.name}.`,
+    system: `You look up real, current consumer subscription prices for a country and report them with sources.
+
+Find the current monthly prices in ${country.name}, in local currency, for Netflix, Spotify, Apple iCloud+, Disney+, Amazon Prime and YouTube Premium. Give the standard individual plan unless a cheaper one is the obvious default.
+
+${SHARED_RULES}
+
+Reply with only a JSON object, no prose:
+{"subscriptions": [{"service": string, "plan": string, "monthlyPrice": number, "currency": string, "sourceUrl": string}]}`,
+  };
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -81,58 +117,49 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'A valid city is required.' });
   }
 
+  // Each topic is its own request: doing both in one call exceeded the
+  // platform's 60s function limit, so the client fetches them in parallel.
+  const kind = KINDS.includes(req.query.kind) ? req.query.kind : 'transport';
   const country = resolveCountry(req.query.country || 'ES');
   const age = Math.min(Math.max(parseInt(req.query.age, 10) || 30, 14), 100);
   const ageBand = age < 26 ? 'under 26' : age < 31 ? '26 to 30' : age < 65 ? '31 to 64' : '65 or over';
 
-  const cacheKey = `${city.toLowerCase()}|${country.code}|${ageBand}`;
+  const cacheKey =
+    kind === 'subscriptions'
+      ? `subs|${country.code}`
+      : `transport|${city.toLowerCase()}|${country.code}|${ageBand}`;
+
   const cached = cacheGet(cacheKey);
   if (cached) {
     return res.status(200).json({ configured: true, ...cached, cached: true });
   }
 
+  const { prompt, system } =
+    kind === 'subscriptions'
+      ? subscriptionsPrompt(city, country)
+      : transportPrompt(city, country, age, ageBand);
+
   try {
     const parsed = await searchJson({
       city,
       countryCode: country.code,
-      maxUses: 6,
-      prompt: `Find the current subscription prices and public transport fares for someone aged ${age} living in ${city}, ${country.name}.`,
-      system: `You look up real, current consumer prices for a specific city and report them with sources.
-
-Find, for ${city}, ${country.name}:
-1. Current monthly prices for Netflix, Spotify, Apple iCloud+, Disney+, Amazon Prime and YouTube Premium in that country's local currency. Give the standard individual plan unless a cheaper one is the obvious default.
-2. Current public transport fares from the city's own transport operator: the single-ride fare, any multi-trip or travel-card fare, and the monthly pass. Include any age-based discount that applies to someone aged ${age} (${ageBand}), such as a youth or senior pass.
-
-Hard rules:
-- Report only prices you actually found in search results. Never estimate, never convert from another country, and never carry over a price you remember.
-- Prefer the operator's or provider's own site.
-- Omit anything you could not verify. A short, accurate list beats a long, guessed one.
-
-Reply with only a JSON object, no prose:
-{
-  "subscriptions": [{"service": string, "plan": string, "monthlyPrice": number, "currency": string, "sourceUrl": string}],
-  "transport": {
-    "operator": string,
-    "fares": [{"name": string, "price": number, "unit": "ride"|"month", "appliesTo": string|null, "sourceUrl": string}]
-  }
-}
-
-"appliesTo" names the eligibility, e.g. "under 26", or null if it applies to everyone.`,
+      maxUses: 3,
+      prompt,
+      system,
     });
 
-    const data = {
-      subscriptions: cleanSubscriptions(parsed?.subscriptions),
-      transport: cleanTransport(parsed?.transport),
-      ageBand,
-    };
-    cacheSet(cacheKey, data);
+    const data =
+      kind === 'subscriptions'
+        ? { subscriptions: cleanSubscriptions(parsed?.subscriptions) }
+        : { transport: cleanTransport(parsed?.transport ?? parsed), ageBand };
 
+    cacheSet(cacheKey, data);
     return res.status(200).json({ configured: true, ...data, cached: false });
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {
       return res.status(429).json({ error: 'Too many requests. Try again shortly.' });
     }
-    console.error('Price lookup failed:', error);
+    console.error(`Price lookup (${kind}) failed:`, error);
     return res.status(502).json({ error: 'Could not look up prices right now.' });
   }
 };

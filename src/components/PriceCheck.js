@@ -14,29 +14,46 @@ function PriceCheck({ age }) {
     setState('loading');
     setMessage('');
 
-    try {
-      const params = new URLSearchParams({ city: city.trim(), age: String(age || 30) });
+    // Transport and subscriptions are separate requests so neither hits the
+    // serverless time limit; whichever succeeds gets shown.
+    const fetchKind = async (kind) => {
+      const params = new URLSearchParams({ city: city.trim(), age: String(age || 30), kind });
       const response = await fetch(`/api/prices?${params}`);
       const data = await response.json().catch(() => null);
-
-      if (!data) {
-        setState('error');
-        setMessage('Price lookup needs the API running — use `vercel dev` locally, or the deployed site.');
-        return;
-      }
+      if (!data) throw new Error('unavailable');
       if (!response.ok) throw new Error(data.error || 'Lookup failed.');
-      if (data.configured === false) {
-        setState('error');
-        setMessage(data.message || 'Live prices are not configured.');
-        return;
-      }
+      return data;
+    };
 
-      setResult(data);
-      setState('done');
-    } catch (error) {
+    const [transportResult, subsResult] = await Promise.allSettled([
+      fetchKind('transport'),
+      fetchKind('subscriptions'),
+    ]);
+
+    const ok = [transportResult, subsResult].filter((r) => r.status === 'fulfilled');
+
+    if (ok.length === 0) {
       setState('error');
-      setMessage(error.message);
+      setMessage(
+        transportResult.reason?.message === 'unavailable'
+          ? 'Price lookup needs the API running — use `vercel dev` locally, or the deployed site.'
+          : 'Could not look up prices right now. Try again in a moment.'
+      );
+      return;
     }
+
+    if (ok.some((r) => r.value.configured === false)) {
+      setState('error');
+      setMessage('Live prices are not configured.');
+      return;
+    }
+
+    setResult({
+      transport: transportResult.status === 'fulfilled' ? transportResult.value.transport : null,
+      subscriptions: subsResult.status === 'fulfilled' ? subsResult.value.subscriptions || [] : [],
+      partial: ok.length === 1,
+    });
+    setState('done');
   };
 
   const nothingFound =
@@ -119,6 +136,10 @@ function PriceCheck({ age }) {
             ))}
           </ul>
         </div>
+      )}
+
+      {state === 'done' && result?.partial && (
+        <p className="price-status">Part of the lookup timed out — showing what came back.</p>
       )}
 
       {state === 'done' && !nothingFound && (
