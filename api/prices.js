@@ -26,8 +26,19 @@ function cacheSet(key, data) {
   cache.set(key, { data, at: Date.now() });
 }
 
+// Prices come back in many shapes: 13.99, "13,99", "€13.99", "13.99 EUR".
 function money(value) {
-  const n = typeof value === 'number' ? value : parseFloat(String(value).replace(',', '.'));
+  let n;
+  if (typeof value === 'number') {
+    n = value;
+  } else {
+    let s = String(value).trim();
+    // "1,299.50" uses comma as a thousands separator; "13,99" as the decimal.
+    s = s.includes(',') && s.includes('.') ? s.replace(/,/g, '') : s.replace(',', '.');
+    const match = s.match(/\d+(\.\d+)?/);
+    if (!match) return null;
+    n = parseFloat(match[0]);
+  }
   return Number.isFinite(n) && n >= 0 && n < 10000 ? Number(n.toFixed(2)) : null;
 }
 
@@ -152,6 +163,11 @@ module.exports = async function handler(req, res) {
       kind === 'subscriptions'
         ? { subscriptions: cleanSubscriptions(parsed?.subscriptions ?? parsed) }
         : { transport: cleanTransport(parsed?.transport ?? parsed), ageBand };
+
+    const kept = kind === 'subscriptions' ? data.subscriptions.length : data.transport?.fares.length || 0;
+    if (parsed && kept === 0) {
+      console.error('Parsed a reply but kept nothing (%s): %s', kind, JSON.stringify(parsed).slice(0, 400));
+    }
 
     cacheSet(cacheKey, data);
     return res.status(200).json({ configured: true, ...data, cached: false });
