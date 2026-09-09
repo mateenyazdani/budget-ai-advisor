@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './styles/App.css';
 import Landing from './components/Landing';
-import Auth from './components/Auth';
+import SignIn from './components/SignIn';
 import ComprehensiveQuestionnaire from './components/ComprehensiveQuestionnaire';
 import Dashboard from './components/Dashboard';
 import SmartSpending from './components/SmartSpending';
 import BankConnect from './components/BankConnect';
 import AIAdvisor from './components/AIAdvisor';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 
 const NAV_ITEMS = [
   { page: 'dashboard', icon: '📊', label: 'My budget' },
@@ -16,34 +18,56 @@ const NAV_ITEMS = [
 ];
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [currentPage, setCurrentPage] = useState('landing');
   const [userBudget, setUserBudget] = useState(null);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
 
+  // Restore the session, then the saved budget, so returning lands you on your
+  // dashboard rather than back at the questionnaire.
   useEffect(() => {
-    const savedUser = localStorage.getItem('budgetUser');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-      setCurrentPage('questionnaire');
-    }
+    if (!isSupabaseConfigured) return;
+
+    let active = true;
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      if (data.session) {
+        const saved = await loadLatestBudget();
+        if (!active) return;
+        if (saved) {
+          setUserBudget(saved);
+          setCurrentPage('dashboard');
+        } else {
+          setCurrentPage('questionnaire');
+        }
+      }
+      setLoading(false);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession);
+      if (!newSession) {
+        setUserBudget(null);
+        setCurrentPage('landing');
+        return;
+      }
+      const saved = await loadLatestBudget();
+      setUserBudget(saved);
+      setCurrentPage(saved ? 'dashboard' : 'questionnaire');
+    });
+
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
-  const handleLogin = (user) => {
-    setCurrentUser(user);
-    setCurrentPage('questionnaire');
-  };
-
-  const handleQuestionnaireSubmit = (budget) => {
+  const handleQuestionnaireSubmit = async (budget, answers) => {
     setUserBudget(budget);
     setCurrentPage('dashboard');
-  };
-
-  const handleAskAdvisor = () => {
-    setCurrentPage('advisor');
-  };
-
-  const handleBackToResults = () => {
-    setCurrentPage('dashboard');
+    await saveBudget(budget, answers);
   };
 
   const handleStartOver = () => {
@@ -51,35 +75,40 @@ function App() {
     setCurrentPage('questionnaire');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('budgetUser');
-    localStorage.removeItem('expenses');
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setSession(null);
     setUserBudget(null);
     setCurrentPage('landing');
   };
 
-  const handleGoToSmartSpending = () => {
-    setCurrentPage('smartspending');
-  };
+  const username = session?.user?.email?.split('@')[0];
 
-  const handleGoToBank = () => {
-    setCurrentPage('bank');
-  };
+  if (loading) {
+    return (
+      <div className="App">
+        <div className="app-loading">Loading…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
-      {currentPage === 'landing' && <Landing onGetStarted={() => setCurrentPage('auth')} />}
+      {!session && currentPage === 'landing' && (
+        <Landing onGetStarted={() => setCurrentPage('signin')} />
+      )}
 
-      {currentPage === 'auth' && <Auth onLogin={handleLogin} />}
+      {!session && currentPage === 'signin' && (
+        <SignIn onBack={() => setCurrentPage('landing')} />
+      )}
 
-      {currentPage !== 'auth' && currentPage !== 'landing' && (
+      {session && (
         <>
           <header className="App-header">
             <h1>💰 Budget AI</h1>
             <div className="header-user">
-              <span>@{currentUser?.username}</span>
-              <button className="btn-logout" onClick={handleLogout}>Logout</button>
+              <span>@{username}</span>
+              <button className="btn-logout" onClick={handleLogout}>Sign out</button>
             </div>
           </header>
 
@@ -105,12 +134,12 @@ function App() {
             )}
 
             {currentPage === 'dashboard' && userBudget && (
-              <Dashboard 
-                budget={userBudget} 
-                onAskAdvisor={handleAskAdvisor}
+              <Dashboard
+                budget={userBudget}
+                onAskAdvisor={() => setCurrentPage('advisor')}
                 onStartOver={handleStartOver}
-                onGoToSmartSpending={handleGoToSmartSpending}
-                onGoToBank={handleGoToBank}
+                onGoToSmartSpending={() => setCurrentPage('smartspending')}
+                onGoToBank={() => setCurrentPage('bank')}
               />
             )}
 
@@ -126,9 +155,9 @@ function App() {
             )}
 
             {currentPage === 'advisor' && userBudget && (
-              <AIAdvisor 
+              <AIAdvisor
                 budget={userBudget}
-                onBack={handleBackToResults}
+                onBack={() => setCurrentPage('dashboard')}
               />
             )}
           </main>

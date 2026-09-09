@@ -132,3 +132,30 @@
   text-align: center;
   color: white;
 }
+
+.input-group.stacked {
+  display: block;
+}
+
+.input-group.stacked input {
+  width: 100%;
+}
+
+.notice-msg {
+  background: var(--accent-soft);
+  color: #0f5f57;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 14px;
+}

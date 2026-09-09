@@ -55,7 +55,7 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
         age: parseInt(formData.age),
         petCount: parseInt(formData.petCount) || 0,
       });
-      onSubmit(budget);
+      onSubmit(budget, formData);
     } catch (error) {
       console.error('Error:', error);
       alert('Error calculating budget');
