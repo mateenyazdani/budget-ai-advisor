@@ -167,6 +167,7 @@ export function calculateComprehensiveBudget(userProfile) {
     country: countryInfo.name,
     currency: countryInfo.currency,
     monthlyIncome,
+    age,
     categories: {
       'Housing': costs.rent[householdType],
       'Rent Insurance': costs.rentInsurance,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ExpenseLogger from './ExpenseLogger';
+import PriceCheck from './PriceCheck';
 import '../styles/Dashboard.css';
 
 function Dashboard({ budget, onAskAdvisor, onStartOver, onGoToSmartSpending, onGoToBank }) {
@@ -43,6 +44,8 @@ function Dashboard({ budget, onAskAdvisor, onStartOver, onGoToSmartSpending, onG
       </div>
 
       <div className="detailed-breakdown"><h3>📋 Complete Budget Breakdown</h3><div className="categories-list">{categories.filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount).map((c, i) => (<div key={i} className="category-item"><div className="category-info"><span className="category-name">{c.name}</span><div className="progress-bar"><div className="progress-fill" style={{ width: `${(c.amount / currentBudget.monthlyIncome) * 100}%` }}></div></div></div><div className="category-amount">{currentBudget.currency}{c.amount.toFixed(2)}<span className="percentage">({((c.amount / currentBudget.monthlyIncome) * 100).toFixed(1)}%)</span></div></div>))}</div></div>
+
+      <PriceCheck age={currentBudget.age} />
 
       <div className="recommendations-section"><h3>✨ Personalized Recommendations</h3><ul>{currentBudget.recommendations.map((rec, i) => (<li key={i}>{rec}</li>))}</ul></div>
 
