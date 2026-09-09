@@ -403,3 +403,14 @@
   padding: 8px 0 0;
   text-decoration: underline;
 }
+
+.budget-info.over {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.budget-toggle input:disabled + span,
+.budget-toggle:has(input:disabled) {
+  color: var(--ink-faint);
+  cursor: default;
+}

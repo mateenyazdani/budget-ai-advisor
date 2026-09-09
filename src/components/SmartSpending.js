@@ -27,7 +27,7 @@ function SmartSpending({ budgetRemaining }) {
   const [view, setView] = useState('places');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [savedPlaces, setSavedPlaces] = useState([]);
-  const [budgetOnly, setBudgetOnly] = useState(true);
+  const [budgetOnly, setBudgetOnly] = useState(budgetRemaining > 0);
 
   const [places, setPlaces] = useState([]);
   const [status, setStatus] = useState('locating');
@@ -151,8 +151,12 @@ function SmartSpending({ budgetRemaining }) {
         <button className="btn-back" onClick={() => navigate('/dashboard')}>← Back</button>
         <h2>Smart Spending</h2>
         <p className="spending-sub">Ways to spend less of the money you have left.</p>
-        <div className="budget-info">
-          You have <strong>€{budgetRemaining.toFixed(2)}</strong> left this month
+        <div className={`budget-info ${budgetRemaining < 0 ? 'over' : ''}`}>
+          {budgetRemaining < 0 ? (
+            <>Your plan is <strong>€{Math.abs(budgetRemaining).toFixed(2)}</strong> over your income this month</>
+          ) : (
+            <>You have <strong>€{budgetRemaining.toFixed(2)}</strong> left this month</>
+          )}
         </div>
       </div>
 
@@ -186,8 +190,15 @@ function SmartSpending({ budgetRemaining }) {
           )}
 
           <label className="budget-toggle">
-            <input type="checkbox" checked={budgetOnly} onChange={(e) => setBudgetOnly(e.target.checked)} />
-            Only show places that fit my remaining budget
+            <input
+              type="checkbox"
+              checked={budgetOnly}
+              onChange={(e) => setBudgetOnly(e.target.checked)}
+              disabled={budgetRemaining <= 0}
+            />
+            {budgetRemaining > 0
+              ? 'Only show places that fit my remaining budget'
+              : 'Budget filter is off — your plan has nothing spare to filter against'}
           </label>
 
           {status === 'locating' && <div className="places-status">Finding your location…</div>}
@@ -245,8 +256,8 @@ function SmartSpending({ budgetRemaining }) {
             ) : (
               status !== 'loading' && status !== 'locating' && (
                 <div className="no-deals">
-                  <p>Nothing here fits your remaining budget right now.</p>
-                  <p>Try another category, or untick the budget filter.</p>
+                  <p>No places to show in this category.</p>
+                  <p>Try another category{budgetOnly ? ', or untick the budget filter' : ''}.</p>
                 </div>
               )
             )}
