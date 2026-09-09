@@ -159,8 +159,8 @@ module.exports = async function handler(req, res) {
       // Subscription prices sit on JS-heavy pages that search snippets miss,
       // so that lookup fetches pages; both budgets are sized to fit the 60s
       // function limit.
-      maxUses: kind === 'subscriptions' ? 5 : 4,
-      fetchUses: kind === 'subscriptions' ? 5 : 0,
+      maxUses: kind === 'subscriptions' ? 4 : 4,
+      fetchUses: kind === 'subscriptions' ? 3 : 0,
       prompt,
       system,
     });
