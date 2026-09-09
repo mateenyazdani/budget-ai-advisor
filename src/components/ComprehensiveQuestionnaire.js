@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { calculateComprehensiveBudget } from '../utils/budgetCalculator';
+import { calculateComprehensiveBudget, ACTIVITY_OPTIONS } from '../utils/budgetCalculator';
 import '../styles/Questionnaire.css';
 
 function ComprehensiveQuestionnaire({ onSubmit }) {
@@ -9,15 +9,14 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
     country: 'spain',
     monthlyIncome: '',
     age: '',
-    hasKids: 'no',
+    childCount: 0,
     maritalStatus: 'single',
     usePublicTransport: 'yes',
     transportCard: 'yes',
     ridesPerMonth: 40,
     usesCar: 'no',
     gymOption: 'none',
-    padelOption: 'none',
-    otherSportsOption: 'none',
+    activities: [],
     subscriptions: [],
     hasPets: 'no',
     petCount: 0,
@@ -26,9 +25,10 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
+      const list = e.target.dataset.group === 'activities' ? 'activities' : 'subscriptions';
       setFormData(prev => ({
         ...prev,
-        subscriptions: checked ? [...prev.subscriptions, name] : prev.subscriptions.filter(s => s !== name)
+        [list]: checked ? [...prev[list], name] : prev[list].filter(v => v !== name)
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -54,6 +54,7 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
         monthlyIncome: parseFloat(formData.monthlyIncome),
         age: parseInt(formData.age),
         petCount: parseInt(formData.petCount) || 0,
+        childCount: parseInt(formData.childCount) || 0,
       });
       onSubmit(budget, formData);
     } catch (error) {
@@ -99,11 +100,11 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
                 </select>
               </div>
               <div className="form-group">
-                <label>Do you have children?</label>
-                <select name="hasKids" value={formData.hasKids} onChange={handleInputChange}>
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
+                <label>How many children do you support?</label>
+                <input type="number" name="childCount" value={formData.childCount} onChange={handleInputChange} min="0" max="8" />
+                <span className="field-hint">
+                  Each child adds childcare, food, clothing and health costs, so the number matters.
+                </span>
               </div>
             </div>
           </div>
@@ -176,21 +177,22 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
               </select>
             </div>
             <div className="form-group">
-              <label>🎾 Padel (Popular in Spain!)</label>
-              <select name="padelOption" value={formData.padelOption} onChange={handleInputChange}>
-                <option value="none">Don't play</option>
-                <option value="casual">Casual (1-2x/month, ~€40)</option>
-                <option value="regular">Regular (1-2x/week, ~€80)</option>
-                <option value="serious">Serious (3x+/week, ~€120)</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Other Sports/Activities</label>
-              <select name="otherSportsOption" value={formData.otherSportsOption} onChange={handleInputChange}>
-                <option value="none">None</option>
-                <option value="casual">Casual (running, yoga, etc.)</option>
-                <option value="active">Active (classes, coaching)</option>
-              </select>
+              <label>Sports and activities you pay for</label>
+              <div className="checkbox-group">
+                {ACTIVITY_OPTIONS.map((a) => (
+                  <label key={a.id}>
+                    <input
+                      type="checkbox"
+                      name={a.id}
+                      data-group="activities"
+                      checked={formData.activities.includes(a.id)}
+                      onChange={handleInputChange}
+                    />
+                    {a.label}
+                  </label>
+                ))}
+              </div>
+              <span className="field-hint">Pick any you pay for. Leave blank if none.</span>
             </div>
             <div className="form-group">
               <label>Subscriptions</label>
@@ -211,9 +213,9 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
               <p><strong>Country:</strong> {formData.country.toUpperCase()}</p>
               <p><strong>Monthly Income:</strong> {formData.monthlyIncome}</p>
               <p><strong>Age:</strong> {formData.age}</p>
-              <p><strong>Status:</strong> {formData.maritalStatus} {formData.hasKids === 'yes' ? '+ Kids' : ''}</p>
+              <p><strong>Status:</strong> {formData.maritalStatus}{Number(formData.childCount) > 0 ? ` · ${formData.childCount} child${Number(formData.childCount) > 1 ? 'ren' : ''}` : ''}</p>
               <p><strong>Transport:</strong> Public: {formData.usePublicTransport === 'yes' ? '✓' : '✗'}, Car: {formData.usesCar === 'yes' ? '✓' : '✗'}</p>
-              <p><strong>Fitness:</strong> {formData.gymOption} {formData.padelOption !== 'none' && `+ Padel: ${formData.padelOption}`}</p>
+              <p><strong>Fitness:</strong> {formData.gymOption === 'none' ? 'No gym' : formData.gymOption}{formData.activities.length > 0 ? ` · ${formData.activities.length} activity${formData.activities.length > 1 ? 'ies' : ''}` : ''}</p>
             </div>
           </div>
         )}

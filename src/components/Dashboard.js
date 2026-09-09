@@ -1,81 +1,180 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ExpenseLogger from './ExpenseLogger';
 import PriceCheck from './PriceCheck';
+import { groupBudget } from '../utils/budgetGroups';
+import { BasketIcon, BankIcon, ChatIcon } from './Icons';
 import '../styles/Dashboard.css';
+
+function money(currency, amount) {
+  return `${currency}${Math.round(amount).toLocaleString()}`;
+}
 
 function Dashboard({ budget, onStartOver }) {
   const [currentBudget, setCurrentBudget] = useState(budget);
+  const [openGroup, setOpenGroup] = useState(null);
 
-  const expensePieData = Object.entries(currentBudget.categories)
-    .filter(([key, value]) => value > 0 && !key.includes('Savings'))
-    .map(([name, value]) => ({ name: name.length > 15 ? name.substring(0, 15) + '...' : name, value: parseFloat(value.toFixed(2)) }))
-    .sort((a, b) => b.value - a.value);
+  const { currency, monthlyIncome, totalExpenses, surplus } = currentBudget;
+  const groups = groupBudget(currentBudget.categories);
+  const inTheGreen = surplus >= 0;
 
-  const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#fee140'];
-  const top5 = expensePieData.slice(0, 5);
-  const categories = Object.entries(currentBudget.categories).map(([name, value]) => ({ name, amount: parseFloat(value.toFixed(2)) }));
+  // Segments are sized against income when there is money left, so the bar
+  // reads as "your month" rather than just "your spending".
+  const scale = Math.max(monthlyIncome, totalExpenses);
+  const leftoverShare = Math.max(surplus, 0) / scale;
 
   const handleExpenseAdd = (data) => {
-    const totalSpent = data.expenses.reduce((sum, e) => sum + e.amount, 0);
-    setCurrentBudget(prev => ({
+    const spent = data.expenses.reduce((sum, e) => sum + e.amount, 0);
+    setCurrentBudget((prev) => ({
       ...prev,
-      surplus: prev.monthlyIncome - (prev.totalExpenses + totalSpent)
+      surplus: prev.monthlyIncome - (prev.totalExpenses + spent),
     }));
   };
 
   return (
-    <div className="dashboard-container">
-      <h2>Your Personalized Budget Dashboard</h2>
-      <p className="location">{currentBudget.country}</p>
+    <div className="dashboard">
+      <section className="hero-panel">
+        <div className="hero-figure">
+          <span className="hero-label">
+            {inTheGreen ? 'Left over each month' : 'Short each month'}
+          </span>
+          <span className={`hero-amount ${inTheGreen ? 'positive' : 'negative'}`}>
+            {inTheGreen ? '' : '−'}{money(currency, Math.abs(surplus))}
+          </span>
+          <span className="hero-sub">
+            {money(currency, monthlyIncome)} coming in · {money(currency, totalExpenses)} going out
+            {currentBudget.childCount > 0 && ` · ${currentBudget.childCount} child${currentBudget.childCount > 1 ? 'ren' : ''}`}
+          </span>
+        </div>
 
-      <div className="summary-cards">
-        <div className="card income"><label>Monthly Income</label><p className="amount">{currentBudget.currency}{currentBudget.monthlyIncome.toFixed(2)}</p></div>
-        <div className="card expenses"><label>Total Expenses</label><p className="amount">{currentBudget.currency}{currentBudget.totalExpenses.toFixed(2)}</p></div>
-        <div className={`card surplus ${currentBudget.surplus > 0 ? 'positive' : 'negative'}`}><label>Surplus/Deficit</label><p className="amount">{currentBudget.currency}{currentBudget.surplus.toFixed(2)}</p></div>
-        <div className="card savings-rate"><label>Savings Rate</label><p className="amount">{currentBudget.savingsRate}%</p></div>
-      </div>
+        <div className="allocation">
+          <div className="allocation-bar" role="img" aria-label="How your income is allocated">
+            {groups.map((g) => (
+              <div
+                key={g.id}
+                className="allocation-segment"
+                style={{ width: `${(g.total / scale) * 100}%`, background: g.color }}
+                title={`${g.label}: ${money(currency, g.total)}`}
+              />
+            ))}
+            {leftoverShare > 0 && (
+              <div
+                className="allocation-segment leftover"
+                style={{ width: `${leftoverShare * 100}%` }}
+                title={`Left over: ${money(currency, surplus)}`}
+              />
+            )}
+          </div>
+
+          <ul className="allocation-legend">
+            {groups.map((g) => (
+              <li key={g.id}>
+                <span className="swatch" style={{ background: g.color }} aria-hidden="true" />
+                <span className="legend-label">{g.label}</span>
+                <span className="legend-value">{money(currency, g.total)}</span>
+                <span className="legend-share">{Math.round((g.total / monthlyIncome) * 100)}%</span>
+              </li>
+            ))}
+            {leftoverShare > 0 && (
+              <li>
+                <span className="swatch leftover-swatch" aria-hidden="true" />
+                <span className="legend-label">Left over</span>
+                <span className="legend-value">{money(currency, surplus)}</span>
+                <span className="legend-share">{Math.round((surplus / monthlyIncome) * 100)}%</span>
+              </li>
+            )}
+          </ul>
+        </div>
+      </section>
 
       <div className="quick-actions">
-        <Link className="quick-card food" to="/deals">
-          <span className="quick-icon" aria-hidden="true">🥗</span>
+        <Link className="quick-card" to="/deals">
+          <span className="quick-icon"><BasketIcon /></span>
           <span className="quick-title">Cheap food &amp; deals</span>
           <span className="quick-sub">
-            Places near you that fit the {currentBudget.currency}{Math.max(currentBudget.surplus, 0).toFixed(0)} you have left, plus current offers
+            Places near you under {money(currency, Math.max(surplus, 0))}
           </span>
         </Link>
-        <Link className="quick-card bank" to="/bank">
-          <span className="quick-icon" aria-hidden="true">🏦</span>
-          <span className="quick-title">Connect your bank</span>
-          <span className="quick-sub">
-            Link Revolut or another bank to see what you really spent
-          </span>
+        <Link className="quick-card" to="/bank">
+          <span className="quick-icon"><BankIcon /></span>
+          <span className="quick-title">Check against reality</span>
+          <span className="quick-sub">Drop in a statement and compare</span>
         </Link>
-        <Link className="quick-card advisor" to="/advisor">
-          <span className="quick-icon" aria-hidden="true">💬</span>
+        <Link className="quick-card" to="/advisor">
+          <span className="quick-icon"><ChatIcon /></span>
           <span className="quick-title">Ask the advisor</span>
-          <span className="quick-sub">
-            Get specific answers about your own numbers
-          </span>
+          <span className="quick-sub">Answers about your own numbers</span>
         </Link>
       </div>
+
+      <section className="breakdown">
+        <div className="section-head">
+          <h2>Where it goes</h2>
+          <p>Tap any row to see what is inside it.</p>
+        </div>
+
+        {groups.map((g) => {
+          const share = (g.total / totalExpenses) * 100;
+          const open = openGroup === g.id;
+          return (
+            <div key={g.id} className={`group-row ${open ? 'open' : ''}`}>
+              <button
+                className="group-head"
+                onClick={() => setOpenGroup(open ? null : g.id)}
+                aria-expanded={open}
+              >
+                <span className="swatch" style={{ background: g.color }} aria-hidden="true" />
+                <span className="group-label">{g.label}</span>
+                <span className="group-count">{g.items.length}</span>
+                <span className="group-total">{money(currency, g.total)}</span>
+                <span className="group-share">{share.toFixed(0)}%</span>
+                <span className="group-chevron" aria-hidden="true">{open ? '−' : '+'}</span>
+              </button>
+
+              <div className="group-track" aria-hidden="true">
+                <div className="group-fill" style={{ width: `${share}%`, background: g.color }} />
+              </div>
+
+              {open && (
+                <ul className="group-items">
+                  {g.items.map((item) => (
+                    <li key={item.name}>
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-track" aria-hidden="true">
+                        <span
+                          className="item-fill"
+                          style={{ width: `${(item.amount / g.items[0].amount) * 100}%`, background: g.color }}
+                        />
+                      </span>
+                      <span className="item-amount">{money(currency, item.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {currentBudget.recommendations?.length > 0 && (
+        <section className="advice">
+          <div className="section-head">
+            <h2>Worth knowing</h2>
+          </div>
+          <ul>
+            {currentBudget.recommendations.map((rec, i) => (
+              <li key={i}>{rec}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <ExpenseLogger budget={currentBudget} onExpenseAdd={handleExpenseAdd} />
 
-      <div className="charts-grid">
-        <div className="chart-box"><h3>💰 Where Your Money Goes</h3><ResponsiveContainer width="100%" height={300}><PieChart><Pie data={expensePieData} cx="50%" cy="50%" labelLine={false} outerRadius={80} dataKey="value">{expensePieData.map((e, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}</Pie><Tooltip /></PieChart></ResponsiveContainer></div>
-        <div className="chart-box"><h3>📊 Top 5 Expenses</h3><ResponsiveContainer width="100%" height={300}><BarChart data={top5}><CartesianGrid /><XAxis dataKey="name" angle={-45} textAnchor="end" height={80} /><YAxis /><Tooltip /><Bar dataKey="value" fill="#667eea" /></BarChart></ResponsiveContainer></div>
-      </div>
-
-      <div className="detailed-breakdown"><h3>📋 Complete Budget Breakdown</h3><div className="categories-list">{categories.filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount).map((c, i) => (<div key={i} className="category-item"><div className="category-info"><span className="category-name">{c.name}</span><div className="progress-bar"><div className="progress-fill" style={{ width: `${(c.amount / currentBudget.monthlyIncome) * 100}%` }}></div></div></div><div className="category-amount">{currentBudget.currency}{c.amount.toFixed(2)}<span className="percentage">({((c.amount / currentBudget.monthlyIncome) * 100).toFixed(1)}%)</span></div></div>))}</div></div>
-
       <PriceCheck age={currentBudget.age} />
 
-      <div className="recommendations-section"><h3>✨ Personalized Recommendations</h3><ul>{currentBudget.recommendations.map((rec, i) => (<li key={i}>{rec}</li>))}</ul></div>
-
       <div className="actions">
-        <button className="btn-restart" onClick={onStartOver}>🔄 Start over with new answers</button>
+        <button className="btn-restart" onClick={onStartOver}>Start over with new answers</button>
       </div>
     </div>
   );

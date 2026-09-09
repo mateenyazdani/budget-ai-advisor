@@ -9,8 +9,7 @@
     "axios": "^1.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^7.18.3",
-    "recharts": "^2.10.0"
+    "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
     "@testing-library/react": "^13.4.0",
