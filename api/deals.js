@@ -85,6 +85,10 @@ module.exports = async function handler(req, res) {
     const parsed = await searchJson({
       city,
       countryCode: country.code,
+      // Search snippets carry a headline like "up to 70% off" but rarely the
+      // actual offer, so a typed search opens the pages it finds.
+      maxUses: query ? 4 : 4,
+      fetchUses: query ? 3 : 0,
       prompt: query
         ? `Find current deals, discounts and cheap options for "${query}" available to someone in ${city}, ${country.name}.`
         : `Find current money-saving offers in ${city}, ${country.name} for ${focus}.`,
@@ -113,6 +117,9 @@ Reply with only a JSON array, no prose around it. Each element:
     });
 
     const deals = cleanDeals(parsed);
+    if (parsed && deals.length === 0) {
+      console.error('Parsed a reply but kept no deals (%s): %s', focus, JSON.stringify(parsed).slice(0, 300));
+    }
     cacheSet(cacheKey, deals);
 
     return res.status(200).json({ configured: true, deals, cached: false });
