@@ -85,10 +85,18 @@ module.exports = async function handler(req, res) {
     const parsed = await searchJson({
       city,
       countryCode: country.code,
-      prompt: `Find current money-saving offers in ${city}, ${country.name} for ${focus}.`,
-      system: `You find real, currently-advertised money-saving offers for people in a specific city.
+      prompt: query
+        ? `Find current deals, discounts and cheap options for "${query}" available to someone in ${city}, ${country.name}.`
+        : `Find current money-saving offers in ${city}, ${country.name} for ${focus}.`,
+      system: `You find real, currently-advertised money-saving offers people can actually use.
 
-Search the web for offers in ${city}, ${country.name}, focused on ${focus}.
+${query
+  ? `The user is looking for: "${query}". They live in ${city}, ${country.name}.
+
+Include nationwide and online offers as well as local ones — for SIM cards, broadband, insurance, subscriptions and most products, the best deal is usually a national or online one, and a country-wide offer is a correct answer. Only restrict to ${city} for things that are inherently local, such as a restaurant, gym or court booking.
+
+Cheap standing prices count, not just limited-time discounts: if a provider simply offers the best rate, report it as the offer.`
+  : `Search the web for offers in ${city}, ${country.name}, focused on ${focus}.`}
 Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.
 Offers may be online-only rather than tied to a shop — for things like SIM cards, broadband or insurance, a nationwide deal is a good answer.
 
