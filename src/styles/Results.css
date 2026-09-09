@@ -4,12 +4,12 @@
 
 .results-container h2 {
   font-size: 1.8rem;
-  color: #667eea;
+  color: var(--brand);
   margin-bottom: 5px;
 }
 
 .location {
-  color: #999;
+  color: var(--ink-faint);
   margin-bottom: 30px;
   font-size: 0.95rem;
 }
@@ -25,14 +25,14 @@
 .income-box {
   background: #f5f5f5;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   text-align: center;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--brand);
 }
 
 .income-box label {
   display: block;
-  color: #666;
+  color: var(--ink-soft);
   font-size: 0.85rem;
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -42,11 +42,11 @@
 .income-box .amount {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #333;
+  color: var(--ink);
 }
 
 .income-box.green .amount {
-  color: #27ae60;
+  color: var(--positive);
 }
 
 .income-box.yellow .amount {
@@ -54,7 +54,7 @@
 }
 
 .income-box.red .amount {
-  color: #e74c3c;
+  color: var(--negative);
 }
 
 /* Budget Breakdown */
@@ -64,7 +64,7 @@
 
 .budget-breakdown h3 {
   font-size: 1.3rem;
-  color: #333;
+  color: var(--ink);
   margin-bottom: 20px;
 }
 
@@ -88,28 +88,28 @@
 .category-name {
   display: block;
   font-weight: 600;
-  color: #333;
+  color: var(--ink);
   margin-bottom: 8px;
   font-size: 0.95rem;
 }
 
 .progress-bar {
   height: 8px;
-  background: #e0e0e0;
+  background: var(--line);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: var(--brand);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
 .category-amount {
   font-weight: 700;
-  color: #667eea;
+  color: var(--brand);
   min-width: 80px;
   text-align: right;
   font-size: 0.95rem;
@@ -117,16 +117,16 @@
 
 /* Recommendations */
 .recommendations {
-  background: #f0f4ff;
+  background: var(--surface-sunken);
   padding: 20px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   margin-bottom: 30px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--brand);
 }
 
 .recommendations h3 {
   font-size: 1.1rem;
-  color: #333;
+  color: var(--ink);
   margin-bottom: 15px;
 }
 
@@ -142,7 +142,7 @@
 
 .recommendations li:before {
   content: "✓ ";
-  color: #667eea;
+  color: var(--brand);
   font-weight: bold;
   margin-right: 8px;
 }
@@ -167,7 +167,7 @@
 }
 
 .btn-advisor {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--surface);
   color: white;
 }
 
@@ -178,12 +178,12 @@
 
 .btn-restart {
   background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: var(--brand);
+  border: 2px solid var(--brand);
 }
 
 .btn-restart:hover {
-  background: #f0f4ff;
+  background: var(--surface-sunken);
 }
 
 /* Savings Info */
@@ -192,11 +192,11 @@
   padding: 15px;
   background: #f5f5f5;
   border-radius: 8px;
-  color: #666;
+  color: var(--ink-soft);
 }
 
 .savings-info p strong {
-  color: #667eea;
+  color: var(--brand);
   font-size: 1.1rem;
 }
 

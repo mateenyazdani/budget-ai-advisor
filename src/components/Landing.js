@@ -1,4 +1,5 @@
 import React from 'react';
+import { Wordmark, ChartIcon, ChatIcon, BasketIcon, TagIcon, TrainIcon, BankIcon } from './Icons';
 import '../styles/Landing.css';
 
 const STATS = [
@@ -10,34 +11,34 @@ const STATS = [
 
 const FEATURES = [
   {
-    icon: '📊',
+    Icon: ChartIcon,
     title: 'A budget built from your life',
     body: 'Answer four short steps and get a full monthly breakdown — rent, transport, food, gym, padel, subscriptions — modelled on real costs for your country and age.',
   },
   {
-    icon: '💬',
+    Icon: ChatIcon,
     title: 'An advisor that reads your numbers',
     body: 'Ask what to cut and get an answer about your actual budget, not generic advice. It will tell you when your figures do not add up.',
   },
   {
-    icon: '🥗',
+    Icon: BasketIcon,
     title: 'Cheap food and real offers',
     body: 'Places near you that fit what you have left this month, plus current deals found across Groupon, TheFork and local sites.',
   },
   {
-    icon: '🏷️',
+    Icon: TagIcon,
     title: 'No invented discounts',
     body: 'Every offer carries the link it came from, so you can check it before you go. If nothing real is found, you get nothing — never a made-up bargain.',
   },
   {
-    icon: '🚇',
+    Icon: TrainIcon,
     title: 'Prices that are actually current',
     body: 'Looks up today’s transport fares and subscription prices for your city and age, so you can see whether a travel card beats paying per ride.',
   },
   {
-    icon: '🏦',
-    title: 'Connect your bank',
-    body: 'Link Revolut or another bank through a regulated provider to see what you really spent. You log in on your bank’s own page, never here.',
+    Icon: BankIcon,
+    title: 'Check it against reality',
+    body: 'Drop in a statement export from Revolut or any bank and see what you actually spent against what you planned. The file is read in your browser and never uploaded.',
   },
 ];
 
@@ -53,8 +54,8 @@ const FAQS = [
     a: 'Yes. There is no payment, no subscription and no card required.',
   },
   {
-    q: 'Can it really connect to Revolut?',
-    a: 'Yes, through GoCardless, which is a regulated account information provider. Revolut does not give apps direct access to personal accounts — that is regulated under PSD2 — so every budgeting app uses a provider like this. You authorise it on your bank’s own page and your bank login never touches this app.',
+    q: 'Does it connect to my bank?',
+    a: 'Not automatically. Reading bank accounts directly is regulated under PSD2 and the providers that hold that licence now start at a few hundred a month. Instead you export a statement from your bank — four taps in Revolut — and drop the file in. It is read in your browser, so the file never leaves your device.',
   },
   {
     q: 'Where do the deals come from?',
@@ -66,7 +67,7 @@ const FAQS = [
   },
   {
     q: 'What happens to my data?',
-    a: 'Your answers stay in your own browser. Bank access goes through GoCardless and can be disconnected at any time from the bank screen.',
+    a: 'Your budget and expenses are saved to your account in a database in Ireland, so they are there when you come back. The database refuses to hand your rows to anyone else. Ask for your account to be deleted and it all goes with it.',
   },
 ];
 
@@ -74,7 +75,7 @@ function Landing({ onGetStarted }) {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <span className="landing-logo">💰 Budget AI</span>
+        <Wordmark className="landing-logo" />
         <div className="landing-nav-links">
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
@@ -118,7 +119,7 @@ function Landing({ onGetStarted }) {
         <div className="feature-grid">
           {FEATURES.map((f) => (
             <div key={f.title} className="feature-card">
-              <span className="feature-icon" aria-hidden="true">{f.icon}</span>
+              <span className="feature-icon"><f.Icon /></span>
               <h3>{f.title}</h3>
               <p>{f.body}</p>
             </div>
@@ -162,7 +163,7 @@ function Landing({ onGetStarted }) {
       </section>
 
       <footer className="landing-footer">
-        <span>💰 Budget AI</span>
+        <Wordmark />
         <span className="footer-note">
           Budget figures are estimates, not financial advice. Offers and prices are found on the web —
           always check the source link.

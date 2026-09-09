@@ -9,6 +9,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import './styles/App.css';
+import { Wordmark, ChartIcon, BasketIcon, BankIcon, ChatIcon } from './components/Icons';
 import Landing from './components/Landing';
 import SignIn from './components/SignIn';
 import Privacy from './components/Privacy';
@@ -22,10 +23,10 @@ import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: '📊', label: 'My budget' },
-  { to: '/deals', icon: '🥗', label: 'Cheap food & deals' },
-  { to: '/bank', icon: '🏦', label: 'Connect bank' },
-  { to: '/advisor', icon: '💬', label: 'Ask advisor' },
+  { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
+  { to: '/deals', Icon: BasketIcon, label: 'Cheap food & deals' },
+  { to: '/bank', Icon: BankIcon, label: 'Statements' },
+  { to: '/advisor', Icon: ChatIcon, label: 'Ask advisor' },
 ];
 
 function Shell({ session, budget, children, showNav }) {
@@ -40,7 +41,7 @@ function Shell({ session, budget, children, showNav }) {
   return (
     <>
       <header className="App-header">
-        <h1>💰 Budget AI</h1>
+        <h1><Wordmark /></h1>
         <div className="header-user">
           <span>@{username}</span>
           <button className="btn-logout" onClick={signOut}>Sign out</button>
@@ -55,7 +56,7 @@ function Shell({ session, budget, children, showNav }) {
               to={item.to}
               className={({ isActive }) => (isActive ? 'active' : '')}
             >
-              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+              <span className="nav-icon"><item.Icon /></span>
               <span className="nav-label">{item.label}</span>
             </NavLink>
           ))}

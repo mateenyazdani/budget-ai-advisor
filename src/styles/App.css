@@ -2,214 +2,157 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 24px 20px 40px;
+  background: var(--page-bg);
 }
 
+/* Header spans the full width like site chrome, rather than floating over a
+   coloured page. */
 .App-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  max-width: 1000px;
-  width: 100%;
-  margin: 0 auto 24px;
-  color: white;
+  padding: 0 28px;
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
-.App-header h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin: 0;
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 650;
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark-glyph {
+  width: 22px;
+  height: 22px;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.wordmark-accent {
+  color: var(--brand);
 }
 
 .header-user {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  gap: 14px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: 500;
 }
 
 .btn-logout {
-  background: rgba(255, 255, 255, 0.18);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 7px 14px;
-  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  padding: 6px 13px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 0.2s;
+  font-size: 0.82rem;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.3);
+  border-color: var(--ink-soft);
+  color: var(--ink);
 }
 
+/* Nav reads as a tab strip under the header, not a pill floating on colour. */
 .App-nav {
   display: flex;
-  gap: 8px;
-  max-width: 1000px;
-  width: 100%;
-  margin: 0 auto 16px;
-  padding: 6px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius);
-  overflow-x: auto;
-}
-
-.App-nav button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: fit-content;
-  white-space: nowrap;
-  padding: 11px 16px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.92rem;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.App-nav button:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: white;
-}
-
-.App-nav button.active {
+  gap: 2px;
+  padding: 0 28px;
   background: var(--surface);
-  color: var(--brand-dark);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  position: sticky;
+  top: 60px;
+  z-index: 19;
+}
+
+.App-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 13px 14px;
+  color: var(--ink-soft);
+  font-size: 0.87rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.App-nav a:hover {
+  color: var(--ink);
+}
+
+.App-nav a.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+  font-weight: 550;
 }
 
 .nav-icon {
   font-size: 1.05rem;
+  display: inline-flex;
 }
 
 .App-main {
   flex: 1;
-  max-width: 1000px;
+  max-width: 1060px;
   margin: 0 auto;
   width: 100%;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 36px;
-  animation: slideUp 0.45s ease-out;
+  padding: 32px 28px 56px;
 }
 
 .App-footer {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.85);
-  margin-top: 28px;
-  font-size: 0.85rem;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .App {
-    padding: 16px 12px 28px;
-  }
-
-  .App-header h1 {
-    font-size: 1.2rem;
-  }
-
-  .App-main {
-    padding: 20px;
-    border-radius: var(--radius);
-  }
-
-  /* Stack icon over a wrapped label so all four fit a phone without scrolling. */
-  .App-nav {
-    gap: 4px;
-    padding: 4px;
-  }
-
-  .App-nav button {
-    flex-direction: column;
-    gap: 3px;
-    padding: 8px 4px;
-    font-size: 0.66rem;
-    line-height: 1.2;
-    text-align: center;
-    white-space: normal;
-    min-width: 0;
-  }
-
-  .nav-icon {
-    font-size: 1.2rem;
-  }
-}
-
-.app-loading {
-  color: white;
-  text-align: center;
-  padding: 80px 20px;
-  font-size: 1rem;
-}
-
-.App-nav a {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: fit-content;
-  white-space: nowrap;
-  padding: 11px 16px;
-  border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.92rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-}
-
-.App-nav a:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: white;
-}
-
-.App-nav a.active {
+  border-top: 1px solid var(--line);
   background: var(--surface);
-  color: var(--brand-dark);
-  box-shadow: var(--shadow-sm);
+  padding: 20px 28px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 0.82rem;
 }
 
 .App-footer a {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--ink-soft);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .App-footer a:hover {
-  color: white;
+  color: var(--brand);
   text-decoration: underline;
+}
+
+.app-loading {
+  color: var(--ink-faint);
+  text-align: center;
+  padding: 90px 20px;
+  font-size: 0.95rem;
 }
 
 .not-found {
   text-align: center;
-  padding: 70px 24px;
+  padding: 80px 24px;
 }
 
 .not-found h2 {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   margin-bottom: 8px;
 }
 
@@ -219,14 +162,32 @@
 }
 
 @media (max-width: 768px) {
+  .App-header,
+  .App-nav,
+  .App-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .App-main {
+    padding: 22px 16px 40px;
+  }
+
+  .App-nav {
+    gap: 8px;
+    justify-content: space-around;
+  }
+
   .App-nav a {
-    flex-direction: column;
-    gap: 3px;
-    padding: 8px 4px;
-    font-size: 0.66rem;
-    line-height: 1.2;
-    text-align: center;
-    white-space: normal;
-    min-width: 0;
+    padding: 12px 10px;
+    font-size: 0.8rem;
+  }
+
+  .nav-label {
+    display: none;
+  }
+
+  .App-nav a .nav-icon {
+    font-size: 1.25rem;
   }
 }

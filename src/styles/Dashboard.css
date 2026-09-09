@@ -4,12 +4,12 @@
 
 .dashboard-container h2 {
   font-size: 1.8rem;
-  color: #667eea;
+  color: var(--brand);
   margin-bottom: 5px;
 }
 
 .location {
-  color: #999;
+  color: var(--ink-faint);
   margin-bottom: 30px;
   font-size: 0.95rem;
 }
@@ -24,15 +24,15 @@
 .card {
   background: white;
   padding: 20px;
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--brand);
+  box-shadow: var(--shadow-sm);
   text-align: center;
 }
 
 .card label {
   display: block;
-  color: #999;
+  color: var(--ink-faint);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -43,15 +43,15 @@
 .card .amount {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #333;
+  color: var(--ink);
   margin: 0;
 }
 
-.card.income .amount { color: #667eea; }
-.card.expenses .amount { color: #e74c3c; }
-.card.surplus.positive .amount { color: #27ae60; }
-.card.surplus.negative .amount { color: #e74c3c; }
-.card.savings-rate .amount { color: #3498db; }
+.card.income .amount { color: var(--brand); }
+.card.expenses .amount { color: var(--negative); }
+.card.surplus.positive .amount { color: var(--positive); }
+.card.surplus.negative .amount { color: var(--negative); }
+.card.savings-rate .amount { color: var(--brand); }
 
 .charts-grid {
   display: grid;
@@ -63,13 +63,13 @@
 .chart-box {
   background: white;
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .chart-box h3 {
   font-size: 1.1rem;
-  color: #333;
+  color: var(--ink);
   margin-bottom: 20px;
   font-weight: 600;
 }
@@ -77,14 +77,14 @@
 .detailed-breakdown {
   background: white;
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 30px;
 }
 
 .detailed-breakdown h3 {
   font-size: 1.1rem;
-  color: #333;
+  color: var(--ink);
   margin-bottom: 20px;
   font-weight: 600;
 }
@@ -101,9 +101,9 @@
   align-items: center;
   gap: 20px;
   padding: 12px;
-  background: #f9f9f9;
+  background: var(--surface-sunken);
   border-radius: 8px;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid var(--brand);
 }
 
 .category-info { flex: 1; }
@@ -111,44 +111,44 @@
 .category-name {
   display: block;
   font-weight: 600;
-  color: #333;
+  color: var(--ink);
   margin-bottom: 8px;
   font-size: 0.95rem;
 }
 
 .progress-bar {
   height: 6px;
-  background: #e0e0e0;
+  background: var(--line);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: var(--brand);
   transition: width 0.3s ease;
 }
 
 .category-amount {
   text-align: right;
   font-weight: 700;
-  color: #667eea;
+  color: var(--brand);
   font-size: 0.95rem;
 }
 
 .percentage {
   display: block;
   font-size: 0.75rem;
-  color: #999;
+  color: var(--ink-faint);
   font-weight: normal;
   margin-top: 2px;
 }
 
 .savings-section {
-  background: #f0f4ff;
+  background: var(--surface-sunken);
   padding: 25px;
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--brand);
   margin-bottom: 30px;
 }
 
@@ -170,16 +170,16 @@
 .recommendations-section {
   background: white;
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 30px;
 }
 
 .recommendations-section li {
   padding: 12px;
   margin-bottom: 10px;
-  background: #f9f9f9;
-  border-left: 3px solid #667eea;
+  background: var(--surface-sunken);
+  border-left: 3px solid var(--brand);
   border-radius: 4px;
 }
 
