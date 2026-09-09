@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Wordmark } from './Icons';
 import '../styles/Auth.css';
 
+const RETURNING_KEY = 'hasAccount';
+
 function SignIn({ onBack }) {
-  const [mode, setMode] = useState('signup');
+  // Someone who has signed up on this device before is almost certainly here to
+  // sign in, and defaulting them to sign-up made them re-register by accident.
+  const [mode, setMode] = useState(() =>
+    localStorage.getItem(RETURNING_KEY) ? 'signin' : 'signup'
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -33,9 +40,15 @@ function SignIn({ onBack }) {
 
       if (authError) throw authError;
 
+      localStorage.setItem(RETURNING_KEY, '1');
+
       // With email confirmation on, sign-up returns a user but no session.
+      // Supabase returns the same shape for an address that already exists, so
+      // the message has to cover both without confirming the account exists.
       if (mode === 'signup' && !data.session) {
-        setNotice('Check your email to confirm your address, then sign in.');
+        setNotice(
+          'Check your email for a confirmation link. If you already have an account, switch to sign in below.'
+        );
         setMode('signin');
       }
       // A successful sign-in is picked up by the auth listener in App.
@@ -51,7 +64,7 @@ function SignIn({ onBack }) {
       <div className="auth-container">
         <div className="auth-box">
           <div className="auth-header">
-            <h1>💰 Budget AI</h1>
+            <h1><Wordmark /></h1>
           </div>
           <p className="auth-subtitle">
             Accounts are not configured yet. Set REACT_APP_SUPABASE_URL and
@@ -67,8 +80,29 @@ function SignIn({ onBack }) {
     <div className="auth-container">
       <div className="auth-box">
         <div className="auth-header">
-          <h1>💰 Budget AI</h1>
+          <h1><Wordmark /></h1>
           <p>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</p>
+        </div>
+
+        <div className="mode-switch" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'signin'}
+            className={mode === 'signin' ? 'active' : ''}
+            onClick={() => { setMode('signin'); setError(''); setNotice(''); }}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'signup'}
+            className={mode === 'signup' ? 'active' : ''}
+            onClick={() => { setMode('signup'); setError(''); setNotice(''); }}
+          >
+            Create account
+          </button>
         </div>
 
         <form onSubmit={submit} className="auth-form">
@@ -98,14 +132,6 @@ function SignIn({ onBack }) {
             {busy ? 'Working…' : mode === 'signup' ? 'Create account' : 'Sign in'}
           </button>
         </form>
-
-        <button
-          type="button"
-          className="btn-link"
-          onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); setNotice(''); }}
-        >
-          {mode === 'signup' ? 'I already have an account' : 'Create an account instead'}
-        </button>
 
         <button type="button" className="btn-back" onClick={onBack}>← Back</button>
       </div>
