@@ -89,6 +89,40 @@ export async function addExpense({ amount, category, note, spentAt }) {
   return !error;
 }
 
+// Statements overlap when you export month to month, so rows carry a stable
+// external_id and duplicates are ignored rather than piling up.
+export async function importTransactions(transactions) {
+  if (!supabase) return { saved: 0, skipped: 0 };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { saved: 0, skipped: 0, error: 'Not signed in.' };
+
+  const rows = transactions
+    .filter((t) => t.amount < 0)
+    .map((t) => ({
+      user_id: user.id,
+      amount: Math.abs(t.amount),
+      category: t.category,
+      note: t.description,
+      spent_at: t.date,
+      external_id: t.externalId,
+    }));
+
+  if (!rows.length) return { saved: 0, skipped: 0 };
+
+  const { data, error } = await supabase
+    .from('expenses')
+    .upsert(rows, { onConflict: 'user_id,external_id', ignoreDuplicates: true })
+    .select();
+
+  if (error) {
+    console.error('Could not import transactions:', error.message);
+    return { saved: 0, skipped: 0, error: error.message };
+  }
+
+  const saved = data?.length || 0;
+  return { saved, skipped: rows.length - saved };
+}
+
 export async function loadExpenses(sinceDate) {
   if (!supabase) return [];
   const { data, error } = await supabase

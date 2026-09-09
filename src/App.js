@@ -151,7 +151,7 @@ function App() {
             )}
 
             {currentPage === 'bank' && (
-              <BankConnect onBack={() => setCurrentPage('dashboard')} />
+              <BankConnect budget={userBudget} onBack={() => setCurrentPage('dashboard')} />
             )}
 
             {currentPage === 'advisor' && userBudget && (
