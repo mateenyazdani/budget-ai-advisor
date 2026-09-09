@@ -7,6 +7,13 @@ import SmartSpending from './components/SmartSpending';
 import BankConnect from './components/BankConnect';
 import AIAdvisor from './components/AIAdvisor';
 
+const NAV_ITEMS = [
+  { page: 'dashboard', icon: '📊', label: 'My budget' },
+  { page: 'smartspending', icon: '🥗', label: 'Cheap food & deals' },
+  { page: 'bank', icon: '🏦', label: 'Connect bank' },
+  { page: 'advisor', icon: '💬', label: 'Ask advisor' },
+];
+
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentPage, setCurrentPage] = useState('auth');
@@ -66,12 +73,28 @@ function App() {
       {currentPage !== 'auth' && (
         <>
           <header className="App-header">
-            <h1>💰 Budget AI Advisor</h1>
+            <h1>💰 Budget AI</h1>
             <div className="header-user">
               <span>@{currentUser?.username}</span>
               <button className="btn-logout" onClick={handleLogout}>Logout</button>
             </div>
           </header>
+
+          {userBudget && currentPage !== 'questionnaire' && (
+            <nav className="App-nav" aria-label="Main">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.page}
+                  className={currentPage === item.page ? 'active' : ''}
+                  aria-current={currentPage === item.page ? 'page' : undefined}
+                  onClick={() => setCurrentPage(item.page)}
+                >
+                  <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+                  <span className="nav-label">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          )}
 
           <main className="App-main">
             {currentPage === 'questionnaire' && (

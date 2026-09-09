@@ -36,6 +36,30 @@ function Dashboard({ budget, onAskAdvisor, onStartOver, onGoToSmartSpending, onG
         <div className="card savings-rate"><label>Savings Rate</label><p className="amount">{currentBudget.savingsRate}%</p></div>
       </div>
 
+      <div className="quick-actions">
+        <button className="quick-card food" onClick={onGoToSmartSpending}>
+          <span className="quick-icon" aria-hidden="true">🥗</span>
+          <span className="quick-title">Cheap food &amp; deals</span>
+          <span className="quick-sub">
+            Places near you that fit the {currentBudget.currency}{Math.max(currentBudget.surplus, 0).toFixed(0)} you have left, plus current offers
+          </span>
+        </button>
+        <button className="quick-card bank" onClick={onGoToBank}>
+          <span className="quick-icon" aria-hidden="true">🏦</span>
+          <span className="quick-title">Connect your bank</span>
+          <span className="quick-sub">
+            Link Revolut or another bank to see what you really spent
+          </span>
+        </button>
+        <button className="quick-card advisor" onClick={onAskAdvisor}>
+          <span className="quick-icon" aria-hidden="true">💬</span>
+          <span className="quick-title">Ask the advisor</span>
+          <span className="quick-sub">
+            Get specific answers about your own numbers
+          </span>
+        </button>
+      </div>
+
       <ExpenseLogger budget={currentBudget} onExpenseAdd={handleExpenseAdd} />
 
       <div className="charts-grid">
@@ -50,10 +74,7 @@ function Dashboard({ budget, onAskAdvisor, onStartOver, onGoToSmartSpending, onG
       <div className="recommendations-section"><h3>✨ Personalized Recommendations</h3><ul>{currentBudget.recommendations.map((rec, i) => (<li key={i}>{rec}</li>))}</ul></div>
 
       <div className="actions">
-        <button className="btn-advisor" onClick={onAskAdvisor}>💬 Ask AI Advisor</button>
-        <button className="btn-smart-spending" onClick={onGoToSmartSpending}>🎁 Smart Spending</button>
-        <button className="btn-bank" onClick={onGoToBank}>🏦 Connect Bank</button>
-        <button className="btn-restart" onClick={onStartOver}>🔄 Start Over</button>
+        <button className="btn-restart" onClick={onStartOver}>🔄 Start over with new answers</button>
       </div>
     </div>
   );

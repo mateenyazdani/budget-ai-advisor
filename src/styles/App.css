@@ -45,6 +45,52 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.App-nav {
+  display: flex;
+  gap: 8px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto 16px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.App-nav button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: fit-content;
+  white-space: nowrap;
+  padding: 11px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.App-nav button:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+}
+
+.App-nav button.active {
+  background: var(--surface);
+  color: var(--brand-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-icon {
+  font-size: 1.05rem;
+}
+
 .App-main {
   flex: 1;
   max-width: 1000px;
@@ -87,5 +133,26 @@
   .App-main {
     padding: 20px;
     border-radius: var(--radius);
+  }
+
+  /* Stack icon over a wrapped label so all four fit a phone without scrolling. */
+  .App-nav {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .App-nav button {
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 4px;
+    font-size: 0.66rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    min-width: 0;
+  }
+
+  .nav-icon {
+    font-size: 1.2rem;
   }
 }

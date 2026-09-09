@@ -183,41 +183,83 @@
   border-radius: 4px;
 }
 
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 26px 0;
+}
+
+.quick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 20px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.quick-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.quick-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.quick-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.quick-sub {
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+.quick-card.food {
+  background: #e3f8ef;
+  color: #10633f;
+}
+
+.quick-card.bank {
+  background: #e5f1fd;
+  color: #14507f;
+}
+
+.quick-card.advisor {
+  background: var(--brand-soft);
+  color: #3a3a8c;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
 }
 
-.btn-advisor, .btn-restart, .btn-smart-spending, .btn-bank {
+.btn-restart {
   flex: 1;
   min-width: 160px;
   padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
 }
 
-.btn-advisor {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-smart-spending {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: #14532d;
-}
-
-.btn-bank {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #0b3a5c;
-}
-
-.btn-restart {
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+.btn-restart:hover {
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 @keyframes slideIn {
