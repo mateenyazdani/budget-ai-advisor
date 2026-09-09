@@ -6,7 +6,17 @@ function extractJson(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidate = (fenced ? fenced[1] : text).trim();
 
-  for (const [open, close] of [['[', ']'], ['{', '}']]) {
+  // Try whichever bracket opens first. Array-first would slice
+  // {"subscriptions":[...]} down to its inner array and lose the key.
+  const objectAt = candidate.indexOf('{');
+  const arrayAt = candidate.indexOf('[');
+  const order =
+    objectAt === -1 ? [['[', ']']]
+    : arrayAt === -1 ? [['{', '}']]
+    : objectAt < arrayAt ? [['{', '}'], ['[', ']']]
+    : [['[', ']'], ['{', '}']];
+
+  for (const [open, close] of order) {
     const start = candidate.indexOf(open);
     const end = candidate.lastIndexOf(close);
     if (start !== -1 && end > start) {
