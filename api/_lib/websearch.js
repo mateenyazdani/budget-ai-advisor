@@ -47,6 +47,14 @@ async function searchJson({ system, prompt, city, countryCode, maxUses = 4 }) {
         max_uses: maxUses,
         ...(city ? { user_location: { type: 'approximate', city, country: countryCode } } : {}),
       },
+      // Search snippets often omit the actual figure, so allow opening the
+      // pages the search turns up. It can only fetch URLs already found.
+      {
+        type: 'web_fetch_20260209',
+        name: 'web_fetch',
+        max_uses: maxUses,
+        max_content_tokens: 20000,
+      },
     ],
     system,
   };
@@ -74,6 +82,17 @@ async function searchJson({ system, prompt, city, countryCode, maxUses = 4 }) {
     .filter((block) => block.type === 'text')
     .map((block) => block.text)
     .join('\n');
+
+  // Server tools fail with a 200 and an error object in the result block, so
+  // a broken search looks exactly like a search that found nothing.
+  for (const block of response.content) {
+    if (block.type === 'web_search_tool_result' || block.type === 'web_fetch_tool_result') {
+      const content = block.content;
+      if (content && !Array.isArray(content) && content.error_code) {
+        console.error('%s error: %s', block.type, content.error_code);
+      }
+    }
+  }
 
   const parsed = extractJson(text);
   if (parsed === null) {
