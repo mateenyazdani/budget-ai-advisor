@@ -3,6 +3,7 @@ const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_li
 // Each lookup costs a Claude call plus web searches, so results are reused for
 // an hour per city/category on a warm instance.
 const CACHE_TTL_MS = 60 * 60 * 1000;
+const EMPTY_CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
 
@@ -14,7 +15,8 @@ const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
 function cacheGet(key) {
   const hit = cache.get(key);
   if (!hit) return null;
-  if (Date.now() - hit.at > CACHE_TTL_MS) {
+  const ttl = hit.deals.length ? CACHE_TTL_MS : EMPTY_CACHE_TTL_MS;
+  if (Date.now() - hit.at > ttl) {
     cache.delete(key);
     return null;
   }

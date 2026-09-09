@@ -321,8 +321,23 @@ function SmartSpending({ budgetRemaining }) {
 
           {dealsState === 'done' && deals.length === 0 && (
             <div className="places-notice">
-              Nothing current found for {activeQuery ? `“${activeQuery}”` : 'this category'} in {city}.
-              Rather than show you invented discounts, it shows nothing.
+              <strong>Nothing verifiable found for {activeQuery ? `“${activeQuery}”` : 'this category'} in {city}.</strong>
+              <br />
+              It only reports offers it can open and read, so it shows nothing rather than inventing a
+              discount. It does best on local, bookable things — padel courts, restaurants, gyms,
+              classes. Phone plans and insurance often hide prices behind scripts it cannot read.
+              {activeQuery && (
+                <>
+                  {' '}
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(`${activeQuery} oferta ${city}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Search the web yourself
+                  </a>.
+                </>
+              )}
             </div>
           )}
 
