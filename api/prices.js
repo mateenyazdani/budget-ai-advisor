@@ -99,7 +99,9 @@ function subscriptionsPrompt(city, country) {
     prompt: `Find the current monthly subscription prices in ${country.name}.`,
     system: `You look up real, current consumer subscription prices for a country and report them with sources.
 
-Find the current monthly prices in ${country.name}, in local currency, for Netflix, Spotify, Apple iCloud+, Disney+, Amazon Prime and YouTube Premium. Give the standard individual plan unless a cheaper one is the obvious default.
+Find the current monthly prices in ${country.name}, in local currency, for Netflix, Spotify, Apple iCloud+ and Disney+. Give the standard individual plan unless a cheaper one is the obvious default.
+
+Report each service as soon as you have found its price. Do not hold back a price you did have to verify the others.
 
 ${SHARED_RULES}
 
@@ -154,7 +156,9 @@ module.exports = async function handler(req, res) {
     const parsed = await searchJson({
       city,
       countryCode: country.code,
-      maxUses: 3,
+      // Each service needs its own lookup; too small a budget makes the model
+      // return nothing rather than guess, which is correct but unhelpful.
+      maxUses: kind === 'subscriptions' ? 6 : 4,
       prompt,
       system,
     });
