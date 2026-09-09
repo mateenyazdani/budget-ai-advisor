@@ -65,7 +65,7 @@ function cleanTransport(raw) {
     .map((f) => ({
       name: String(f.name).slice(0, 120),
       price: money(f.price),
-      unit: f.unit === 'ride' ? 'ride' : 'month',
+      unit: ['ride', 'ticket', 'month'].includes(f.unit) ? f.unit : 'month',
       appliesTo: f.appliesTo ? String(f.appliesTo).slice(0, 60) : null,
       sourceUrl: httpsUrlOrNull(f.sourceUrl),
     }));
@@ -88,8 +88,9 @@ Find, from the transport operator for ${city}, ${country.name}: the single-ride 
 ${SHARED_RULES}
 
 Reply with only a JSON object, no prose:
-{"operator": string, "fares": [{"name": string, "price": number, "unit": "ride"|"month", "appliesTo": string|null, "sourceUrl": string}]}
+{"operator": string, "fares": [{"name": string, "price": number, "unit": "ride"|"ticket"|"month", "appliesTo": string|null, "sourceUrl": string}]}
 
+"unit" is what the price buys: "ride" for one journey, "ticket" for a multi-trip ticket priced as a whole, "month" for a pass. A 10-trip ticket costing 7.30 in total is {"price": 7.30, "unit": "ticket"}, never a per-ride price.
 "appliesTo" names the eligibility, e.g. "under 26", or null if it applies to everyone.`,
   };
 }

@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import '../styles/PriceCheck.css';
 
+const CURRENCY_SYMBOLS = { EUR: '€', USD: '$', GBP: '£', AUD: '$' };
+
+// The lookup returns either a symbol or an ISO code; a bare code jammed against
+// the number reads as "EUR14.99".
+function currencyPrefix(currency) {
+  if (!currency) return '€';
+  return CURRENCY_SYMBOLS[currency.toUpperCase()] || `${currency} `;
+}
+
 function PriceCheck({ age }) {
   const [city, setCity] = useState(() => localStorage.getItem('userCity') || 'Madrid');
   const [state, setState] = useState('idle');
@@ -104,7 +113,7 @@ function PriceCheck({ age }) {
                 </span>
                 <span className="price-value">
                   €{fare.price.toFixed(2)}
-                  <small>/{fare.unit}</small>
+                  <small>{fare.unit === 'ticket' ? ' per ticket' : `/${fare.unit}`}</small>
                 </span>
                 {fare.sourceUrl && (
                   <a href={fare.sourceUrl} target="_blank" rel="noopener noreferrer">source</a>
@@ -126,7 +135,7 @@ function PriceCheck({ age }) {
                   {sub.plan && <em> · {sub.plan}</em>}
                 </span>
                 <span className="price-value">
-                  {sub.currency}{sub.monthlyPrice.toFixed(2)}
+                  {currencyPrefix(sub.currency)}{sub.monthlyPrice.toFixed(2)}
                   <small>/month</small>
                 </span>
                 {sub.sourceUrl && (
