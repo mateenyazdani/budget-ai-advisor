@@ -381,3 +381,25 @@
     flex: 1;
   }
 }
+
+.deal-search {
+  margin-bottom: 16px;
+}
+
+.deal-search label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.clear-query {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 8px 0 0;
+  text-decoration: underline;
+}

@@ -36,6 +36,8 @@ function SmartSpending({ budgetRemaining }) {
 
   const [city, setCity] = useState(() => localStorage.getItem('userCity') || 'Madrid');
   const [cityInput, setCityInput] = useState(() => localStorage.getItem('userCity') || 'Madrid');
+  const [dealQuery, setDealQuery] = useState('');
+  const [activeQuery, setActiveQuery] = useState('');
   const [deals, setDeals] = useState([]);
   const [dealsState, setDealsState] = useState('idle');
   const [dealsMessage, setDealsMessage] = useState('');
@@ -92,7 +94,9 @@ function SmartSpending({ budgetRemaining }) {
     setDealsState('loading');
     setDealsMessage('');
     try {
-      const params = new URLSearchParams({ city, category: selectedCategory });
+      const params = new URLSearchParams({ city });
+      if (activeQuery) params.set('query', activeQuery);
+      else params.set('category', selectedCategory);
       const response = await fetch(`/api/deals?${params}`);
 
       // Running under `npm start` there is no API server, so the dev server
@@ -116,7 +120,7 @@ function SmartSpending({ budgetRemaining }) {
       setDealsState('error');
       setDealsMessage(error.message);
     }
-  }, [city, selectedCategory]);
+  }, [city, selectedCategory, activeQuery]);
 
   useEffect(() => {
     if (view === 'deals') loadDeals();
@@ -161,7 +165,7 @@ function SmartSpending({ budgetRemaining }) {
         </button>
       </div>
 
-      <div className="category-filter">
+      <div className="category-filter" hidden={view === 'deals' && Boolean(activeQuery)}>
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
@@ -256,6 +260,32 @@ function SmartSpending({ budgetRemaining }) {
         </>
       ) : (
         <>
+          <form
+            className="deal-search"
+            onSubmit={(e) => { e.preventDefault(); setActiveQuery(dealQuery.trim()); }}
+          >
+            <label htmlFor="dealq">What are you looking for?</label>
+            <div className="city-row">
+              <input
+                id="dealq"
+                value={dealQuery}
+                onChange={(e) => setDealQuery(e.target.value)}
+                placeholder="sim card, padel court, haircut, gym…"
+                maxLength={60}
+              />
+              <button type="submit">Search</button>
+            </div>
+            {activeQuery && (
+              <button
+                type="button"
+                className="clear-query"
+                onClick={() => { setDealQuery(''); setActiveQuery(''); }}
+              >
+                Clear “{activeQuery}” and use the categories instead
+              </button>
+            )}
+          </form>
+
           <form className="city-form" onSubmit={applyCity}>
             <label htmlFor="city">Your city</label>
             <div className="city-row">
@@ -280,8 +310,8 @@ function SmartSpending({ budgetRemaining }) {
 
           {dealsState === 'done' && deals.length === 0 && (
             <div className="places-notice">
-              No current offers were found for {city} in this category. Rather than show you invented
-              discounts, it shows nothing.
+              Nothing current found for {activeQuery ? `“${activeQuery}”` : 'this category'} in {city}.
+              Rather than show you invented discounts, it shows nothing.
             </div>
           )}
 

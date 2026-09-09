@@ -8,6 +8,8 @@ const cache = new Map();
 
 const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Gym', 'Shopping'];
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
+// Free text goes into a prompt, so keep it to plain words and digits.
+const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
 
 function cacheGet(key) {
   const hit = cache.get(key);
@@ -64,13 +66,20 @@ module.exports = async function handler(req, res) {
   const country = resolveCountry(req.query.country || 'ES');
   const category = CATEGORIES.includes(req.query.category) ? req.query.category : 'All';
 
-  const cacheKey = `${city.toLowerCase()}|${country.code}|${category}`;
+  // A typed search wins over the category buttons when present.
+  const rawQuery = String(req.query.query || '').trim().slice(0, 60);
+  const query = rawQuery && QUERY_PATTERN.test(rawQuery) ? rawQuery : null;
+  if (rawQuery && !query) {
+    return res.status(400).json({ error: 'Search for a product or service in plain words.' });
+  }
+
+  const cacheKey = `${city.toLowerCase()}|${country.code}|${query ? `q:${query.toLowerCase()}` : category}`;
   const cached = cacheGet(cacheKey);
   if (cached) {
     return res.status(200).json({ configured: true, deals: cached, cached: true });
   }
 
-  const focus = category === 'All' ? 'any everyday spending category' : category.toLowerCase();
+  const focus = query || (category === 'All' ? 'any everyday spending category' : category.toLowerCase());
 
   try {
     const parsed = await searchJson({
@@ -81,6 +90,7 @@ module.exports = async function handler(req, res) {
 
 Search the web for offers in ${city}, ${country.name}, focused on ${focus}.
 Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.
+Offers may be online-only rather than tied to a shop — for things like SIM cards, broadband or insurance, a nationwide deal is a good answer.
 
 Hard rules:
 - Only report an offer you actually found in a search result. Never invent one, never guess at a discount percentage, and never pad the list to look fuller.
