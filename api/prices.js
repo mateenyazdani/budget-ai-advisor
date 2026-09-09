@@ -1,0 +1,138 @@
+const { searchJson, httpsUrlOrNull, Anthropic } = require('./_lib/websearch');
+
+// Subscription and fare prices move slowly, so a day of caching is plenty and
+// keeps the cost of this endpoint near zero.
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 30;
+const cache = new Map();
+
+const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
+
+function cacheGet(key) {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > CACHE_TTL_MS) {
+    cache.delete(key);
+    return null;
+  }
+  return hit.data;
+}
+
+function cacheSet(key, data) {
+  if (cache.size >= MAX_CACHE_ENTRIES) {
+    cache.delete(cache.keys().next().value);
+  }
+  cache.set(key, { data, at: Date.now() });
+}
+
+function money(value) {
+  const n = typeof value === 'number' ? value : parseFloat(String(value).replace(',', '.'));
+  return Number.isFinite(n) && n >= 0 && n < 10000 ? Number(n.toFixed(2)) : null;
+}
+
+function cleanSubscriptions(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s) => s && typeof s.service === 'string' && money(s.monthlyPrice) !== null)
+    .slice(0, 12)
+    .map((s) => ({
+      service: String(s.service).slice(0, 40),
+      plan: s.plan ? String(s.plan).slice(0, 60) : null,
+      monthlyPrice: money(s.monthlyPrice),
+      currency: s.currency ? String(s.currency).slice(0, 4) : '€',
+      sourceUrl: httpsUrlOrNull(s.sourceUrl),
+    }));
+}
+
+function cleanTransport(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const fares = Array.isArray(raw.fares) ? raw.fares : [];
+  const cleaned = fares
+    .filter((f) => f && typeof f.name === 'string' && money(f.price) !== null)
+    .slice(0, 10)
+    .map((f) => ({
+      name: String(f.name).slice(0, 70),
+      price: money(f.price),
+      unit: f.unit === 'ride' ? 'ride' : 'month',
+      appliesTo: f.appliesTo ? String(f.appliesTo).slice(0, 60) : null,
+      sourceUrl: httpsUrlOrNull(f.sourceUrl),
+    }));
+  if (!cleaned.length) return null;
+  return { operator: raw.operator ? String(raw.operator).slice(0, 60) : null, fares: cleaned };
+}
+
+module.exports = async function handler(req, res) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(200).json({
+      configured: false,
+      subscriptions: [],
+      transport: null,
+      message: 'Live prices need ANTHROPIC_API_KEY to be set.',
+    });
+  }
+
+  const city = String(req.query.city || '').trim().slice(0, 60);
+  if (!city || !CITY_PATTERN.test(city)) {
+    return res.status(400).json({ error: 'A valid city is required.' });
+  }
+
+  const country = String(req.query.country || 'Spain').trim().slice(0, 40);
+  const age = Math.min(Math.max(parseInt(req.query.age, 10) || 30, 14), 100);
+  const ageBand = age < 26 ? 'under 26' : age < 31 ? '26 to 30' : age < 65 ? '31 to 64' : '65 or over';
+
+  const cacheKey = `${city.toLowerCase()}|${country.toLowerCase()}|${ageBand}`;
+  const cached = cacheGet(cacheKey);
+  if (cached) {
+    return res.status(200).json({ configured: true, ...cached, cached: true });
+  }
+
+  try {
+    const parsed = await searchJson({
+      city,
+      country,
+      maxUses: 6,
+      prompt: `Find the current subscription prices and public transport fares for someone aged ${age} living in ${city}, ${country}.`,
+      system: `You look up real, current consumer prices for a specific city and report them with sources.
+
+Find, for ${city}, ${country}:
+1. Current monthly prices for Netflix, Spotify, Apple iCloud+, Disney+, Amazon Prime and YouTube Premium in that country's local currency. Give the standard individual plan unless a cheaper one is the obvious default.
+2. Current public transport fares from the city's own transport operator: the single-ride fare, any multi-trip or travel-card fare, and the monthly pass. Include any age-based discount that applies to someone aged ${age} (${ageBand}), such as a youth or senior pass.
+
+Hard rules:
+- Report only prices you actually found in search results. Never estimate, never convert from another country, and never carry over a price you remember.
+- Prefer the operator's or provider's own site.
+- Omit anything you could not verify. A short, accurate list beats a long, guessed one.
+
+Reply with only a JSON object, no prose:
+{
+  "subscriptions": [{"service": string, "plan": string, "monthlyPrice": number, "currency": string, "sourceUrl": string}],
+  "transport": {
+    "operator": string,
+    "fares": [{"name": string, "price": number, "unit": "ride"|"month", "appliesTo": string|null, "sourceUrl": string}]
+  }
+}
+
+"appliesTo" names the eligibility, e.g. "under 26", or null if it applies to everyone.`,
+    });
+
+    const data = {
+      subscriptions: cleanSubscriptions(parsed?.subscriptions),
+      transport: cleanTransport(parsed?.transport),
+      ageBand,
+    };
+    cacheSet(cacheKey, data);
+
+    return res.status(200).json({ configured: true, ...data, cached: false });
+  } catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+      return res.status(429).json({ error: 'Too many requests. Try again shortly.' });
+    }
+    console.error('Price lookup failed:', error);
+    return res.status(502).json({ error: 'Could not look up prices right now.' });
+  }
+};

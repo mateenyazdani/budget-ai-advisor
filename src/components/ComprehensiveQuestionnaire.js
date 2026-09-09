@@ -12,6 +12,8 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
     hasKids: 'no',
     maritalStatus: 'single',
     usePublicTransport: 'yes',
+    transportCard: 'yes',
+    ridesPerMonth: 40,
     usesCar: 'no',
     gymOption: 'none',
     padelOption: 'none',
@@ -125,6 +127,27 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
                 </select>
               </div>
             </div>
+
+            {formData.usePublicTransport === 'yes' && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Do you have a travel card / monthly pass?</label>
+                  <select name="transportCard" value={formData.transportCard} onChange={handleInputChange}>
+                    <option value="yes">Yes — monthly pass</option>
+                    <option value="no">No — I pay per ride</option>
+                  </select>
+                  <span className="field-hint">
+                    Passes are usually cheaper from about 30 rides a month, and under-26s often pay much less.
+                  </span>
+                </div>
+                {formData.transportCard === 'no' && (
+                  <div className="form-group">
+                    <label>Roughly how many rides a month?</label>
+                    <input type="number" name="ridesPerMonth" value={formData.ridesPerMonth} onChange={handleInputChange} min="0" max="300" />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="form-group">
               <label>Do you have pets?</label>
               <select name="hasPets" value={formData.hasPets} onChange={handleInputChange}>
@@ -174,6 +197,7 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
               <div className="checkbox-group">
                 <label><input type="checkbox" name="netflix" checked={formData.subscriptions.includes('netflix')} onChange={handleInputChange} /> Netflix</label>
                 <label><input type="checkbox" name="spotify" checked={formData.subscriptions.includes('spotify')} onChange={handleInputChange} /> Spotify</label>
+                <label><input type="checkbox" name="icloud" checked={formData.subscriptions.includes('icloud')} onChange={handleInputChange} /> iCloud+</label>
                 <label><input type="checkbox" name="other" checked={formData.subscriptions.includes('other')} onChange={handleInputChange} /> Other Apps</label>
               </div>
             </div>

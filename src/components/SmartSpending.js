@@ -11,14 +11,32 @@ const SAMPLE_PLACES = [
   { id: 's4', name: 'Padel Indoor Madrid', emoji: '🎾', rating: 4.4, ratingCount: 310, priceLabel: '€€', estimatedSpend: 28, distanceKm: 3.1, openNow: null, address: 'Retiro, Madrid' },
 ];
 
+function grouponUrl(city) {
+  const slug = city
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `https://www.groupon.es/browse/${slug}`;
+}
+
 function SmartSpending({ budgetRemaining, onBack }) {
+  const [view, setView] = useState('places');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [savedPlaces, setSavedPlaces] = useState([]);
+  const [budgetOnly, setBudgetOnly] = useState(true);
+
   const [places, setPlaces] = useState([]);
   const [status, setStatus] = useState('locating');
   const [notice, setNotice] = useState('');
   const [coords, setCoords] = useState(null);
-  const [budgetOnly, setBudgetOnly] = useState(true);
+
+  const [city, setCity] = useState(() => localStorage.getItem('userCity') || 'Madrid');
+  const [cityInput, setCityInput] = useState(() => localStorage.getItem('userCity') || 'Madrid');
+  const [deals, setDeals] = useState([]);
+  const [dealsState, setDealsState] = useState('idle');
+  const [dealsMessage, setDealsMessage] = useState('');
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -57,7 +75,7 @@ function SmartSpending({ budgetRemaining, onBack }) {
       }
       setPlaces(data.places || []);
       setStatus('live');
-    } catch (error) {
+    } catch {
       setStatus('sample');
       setNotice('Could not load nearby venues, so these are samples.');
     }
@@ -66,6 +84,49 @@ function SmartSpending({ budgetRemaining, onBack }) {
   useEffect(() => {
     loadPlaces();
   }, [loadPlaces]);
+
+  const loadDeals = useCallback(async () => {
+    if (!city) return;
+    setDealsState('loading');
+    setDealsMessage('');
+    try {
+      const params = new URLSearchParams({ city, category: selectedCategory });
+      const response = await fetch(`/api/deals?${params}`);
+
+      // Running under `npm start` there is no API server, so the dev server
+      // answers with index.html rather than JSON.
+      const data = await response.json().catch(() => null);
+      if (!data) {
+        setDealsState('error');
+        setDealsMessage('Deal search is not available here. It needs the API running — use `vercel dev` locally, or the deployed site.');
+        return;
+      }
+
+      if (!response.ok) throw new Error(data.error || 'Could not search for deals.');
+      if (data.configured === false) {
+        setDealsState('unconfigured');
+        setDealsMessage(data.message || 'Live deals are not configured.');
+        return;
+      }
+      setDeals(data.deals || []);
+      setDealsState('done');
+    } catch (error) {
+      setDealsState('error');
+      setDealsMessage(error.message);
+    }
+  }, [city, selectedCategory]);
+
+  useEffect(() => {
+    if (view === 'deals') loadDeals();
+  }, [view, loadDeals]);
+
+  const applyCity = (e) => {
+    e.preventDefault();
+    const next = cityInput.trim();
+    if (!next) return;
+    setCity(next);
+    localStorage.setItem('userCity', next);
+  };
 
   const toggleSave = (id) => {
     setSavedPlaces((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
@@ -82,17 +143,21 @@ function SmartSpending({ budgetRemaining, onBack }) {
     <div className="smart-spending-container">
       <div className="spending-header">
         <button className="btn-back" onClick={onBack}>← Back</button>
-        <h2>🎁 Smart Spending</h2>
+        <h2>Smart Spending</h2>
+        <p className="spending-sub">Ways to spend less of the money you have left.</p>
         <div className="budget-info">
-          <span>You have <strong>€{budgetRemaining.toFixed(2)}</strong> left this month</span>
+          You have <strong>€{budgetRemaining.toFixed(2)}</strong> left this month
         </div>
       </div>
 
-      {status !== 'live' && notice && (
-        <div className="places-notice">
-          <strong>Sample data.</strong> {notice}
-        </div>
-      )}
+      <div className="view-tabs">
+        <button className={view === 'places' ? 'active' : ''} onClick={() => setView('places')}>
+          Places near me
+        </button>
+        <button className={view === 'deals' ? 'active' : ''} onClick={() => setView('deals')}>
+          Live deals
+        </button>
+      </div>
 
       <div className="category-filter">
         {CATEGORIES.map((cat) => (
@@ -106,77 +171,149 @@ function SmartSpending({ budgetRemaining, onBack }) {
         ))}
       </div>
 
-      <label className="budget-toggle">
-        <input type="checkbox" checked={budgetOnly} onChange={(e) => setBudgetOnly(e.target.checked)} />
-        Only show places that fit my remaining budget
-      </label>
-
-      {status === 'locating' && <div className="places-status">Finding your location…</div>}
-      {status === 'loading' && <div className="places-status">Loading nearby places…</div>}
-
-      <div className="deals-grid">
-        {visible.length > 0 ? (
-          visible.map((place) => (
-            <div key={place.id} className="deal-card">
-              <div className="deal-header">
-                <span className="deal-emoji">{place.emoji || '📍'}</span>
-                {place.priceLabel && <span className="price-band">{place.priceLabel}</span>}
-              </div>
-
-              <h4>{place.name}</h4>
-              {place.address && <p className="deal-description">{place.address}</p>}
-
-              <div className="place-facts">
-                {place.rating !== null && place.rating !== undefined && (
-                  <span>⭐ {place.rating}{place.ratingCount ? ` (${place.ratingCount})` : ''}</span>
-                )}
-                {place.distanceKm !== null && place.distanceKm !== undefined && (
-                  <span>📍 {place.distanceKm} km</span>
-                )}
-                {place.openNow === true && <span className="open-now">Open now</span>}
-                {place.openNow === false && <span className="closed-now">Closed</span>}
-              </div>
-
-              <div className="spend-estimate">
-                {place.estimatedSpend === null || place.estimatedSpend === undefined ? (
-                  <span className="no-estimate">No price information</span>
-                ) : (
-                  <>
-                    <span className="label">Typical spend (estimated)</span>
-                    <span className="amount">≈ €{place.estimatedSpend}</span>
-                  </>
-                )}
-              </div>
-
-              <div className="card-actions">
-                {place.mapsUri && (
-                  <a className="btn-map" href={place.mapsUri} target="_blank" rel="noopener noreferrer">
-                    Open in Maps
-                  </a>
-                )}
-                <button
-                  className={`btn-save ${savedPlaces.includes(place.id) ? 'saved' : ''}`}
-                  onClick={() => toggleSave(place.id)}
-                >
-                  {savedPlaces.includes(place.id) ? '✓ Saved' : '❤️ Save'}
-                </button>
-              </div>
+      {view === 'places' ? (
+        <>
+          {status !== 'live' && notice && (
+            <div className="places-notice">
+              <strong>Sample data.</strong> {notice}
             </div>
-          ))
-        ) : (
-          status !== 'loading' && status !== 'locating' && (
-            <div className="no-deals">
-              <p>Nothing here fits your remaining budget right now.</p>
-              <p>Try another category, or untick the budget filter.</p>
-            </div>
-          )
-        )}
-      </div>
+          )}
 
-      {status === 'live' && (
-        <p className="places-footnote">
-          Venue data from Google Places. Spend figures are estimates based on Google's price band, not real prices or offers.
-        </p>
+          <label className="budget-toggle">
+            <input type="checkbox" checked={budgetOnly} onChange={(e) => setBudgetOnly(e.target.checked)} />
+            Only show places that fit my remaining budget
+          </label>
+
+          {status === 'locating' && <div className="places-status">Finding your location…</div>}
+          {status === 'loading' && <div className="places-status">Loading nearby places…</div>}
+
+          <div className="deals-grid">
+            {visible.length > 0 ? (
+              visible.map((place) => (
+                <div key={place.id} className="deal-card">
+                  <div className="deal-header">
+                    <span className="deal-emoji">{place.emoji || '📍'}</span>
+                    {place.priceLabel && <span className="price-band">{place.priceLabel}</span>}
+                  </div>
+
+                  <h4>{place.name}</h4>
+                  {place.address && <p className="deal-description">{place.address}</p>}
+
+                  <div className="place-facts">
+                    {place.rating !== null && place.rating !== undefined && (
+                      <span>⭐ {place.rating}{place.ratingCount ? ` (${place.ratingCount})` : ''}</span>
+                    )}
+                    {place.distanceKm !== null && place.distanceKm !== undefined && (
+                      <span>📍 {place.distanceKm} km</span>
+                    )}
+                    {place.openNow === true && <span className="open-now">Open now</span>}
+                    {place.openNow === false && <span className="closed-now">Closed</span>}
+                  </div>
+
+                  <div className="spend-estimate">
+                    {place.estimatedSpend === null || place.estimatedSpend === undefined ? (
+                      <span className="no-estimate">No price information</span>
+                    ) : (
+                      <>
+                        <span className="label">Typical spend (estimated)</span>
+                        <span className="amount">≈ €{place.estimatedSpend}</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="card-actions">
+                    {place.mapsUri && (
+                      <a className="btn-map" href={place.mapsUri} target="_blank" rel="noopener noreferrer">
+                        Open in Maps
+                      </a>
+                    )}
+                    <button
+                      className={`btn-save ${savedPlaces.includes(place.id) ? 'saved' : ''}`}
+                      onClick={() => toggleSave(place.id)}
+                    >
+                      {savedPlaces.includes(place.id) ? '✓ Saved' : '♥ Save'}
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              status !== 'loading' && status !== 'locating' && (
+                <div className="no-deals">
+                  <p>Nothing here fits your remaining budget right now.</p>
+                  <p>Try another category, or untick the budget filter.</p>
+                </div>
+              )
+            )}
+          </div>
+
+          {status === 'live' && (
+            <p className="places-footnote">
+              Venue data from Google Places. Spend figures are estimates based on Google's price band, not real prices or offers.
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <form className="city-form" onSubmit={applyCity}>
+            <label htmlFor="city">Your city</label>
+            <div className="city-row">
+              <input
+                id="city"
+                value={cityInput}
+                onChange={(e) => setCityInput(e.target.value)}
+                placeholder="Madrid"
+                maxLength={60}
+              />
+              <button type="submit">Search</button>
+            </div>
+          </form>
+
+          {dealsState === 'loading' && (
+            <div className="places-status">Searching the web for current offers in {city}… this takes a few seconds.</div>
+          )}
+
+          {(dealsState === 'unconfigured' || dealsState === 'error') && (
+            <div className="places-notice">{dealsMessage}</div>
+          )}
+
+          {dealsState === 'done' && deals.length === 0 && (
+            <div className="places-notice">
+              No current offers were found for {city} in this category. Rather than show you invented
+              discounts, it shows nothing.
+            </div>
+          )}
+
+          <div className="deals-grid">
+            {deals.map((deal, i) => (
+              <div key={`${deal.merchant}-${i}`} className="deal-card">
+                <h4>{deal.merchant}</h4>
+                <p className="deal-offer">{deal.offer}</p>
+                {deal.detail && <p className="deal-description">{deal.detail}</p>}
+                {deal.validity && <p className="deal-validity">⏰ {deal.validity}</p>}
+
+                <div className="card-actions">
+                  {deal.sourceUrl ? (
+                    <a className="btn-map" href={deal.sourceUrl} target="_blank" rel="noopener noreferrer">
+                      Check on {deal.sourceName || 'source'}
+                    </a>
+                  ) : (
+                    <span className="unverified">No source link — treat with caution</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="deals-footer">
+            <a className="btn-groupon" href={grouponUrl(city)} target="_blank" rel="noopener noreferrer">
+              Browse Groupon {city}
+            </a>
+            <p className="places-footnote">
+              These are found by searching the web, so always check the source link before relying on an
+              offer — it may have changed or expired.
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

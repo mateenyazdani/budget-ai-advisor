@@ -31,6 +31,24 @@ To run the API routes locally, use the Vercel CLI:
 npx vercel dev
 ```
 
+## Live deals and prices
+
+Google Places returns venues but no offers, and Groupon retired its public API,
+so there is no feed to plug in. Instead `api/deals.js` and `api/prices.js` use
+Claude with server-side web search to find real, currently-advertised offers and
+current local prices, and every result carries the source URL it came from.
+
+Both endpoints are told explicitly never to invent an offer or estimate a price,
+and to return an empty result instead — so an empty list is a correct answer,
+not a failure. The UI shows the source link on every card and asks the user to
+check it, because a web result can be stale.
+
+They need only `ANTHROPIC_API_KEY`. Results are cached in memory per warm
+instance: one hour for deals, a day for prices.
+
+`api/prices.js` also takes an `age`, so it can look up the youth or senior fare
+that actually applies rather than a single average.
+
 ## Smart Spending data
 
 Google Places returns venues, ratings, price bands and opening hours. It does

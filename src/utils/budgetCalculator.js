@@ -13,7 +13,10 @@ const countryData = {
       groceries: { single: 250, married: 400, withKids: 600 },
       dining: { single: 120, married: 200, withKids: 250 },
       coffee: { single: 30, married: 50, withKids: 60 },
-      publicTransport: { under26: 10, age26to30: 20, age30plus: 60 },
+      publicTransport: {
+        monthlyPass: { under26: 20, age26to30: 55, age30plus: 55, senior: 12 },
+        singleRide: 1.5,
+      },
       carPayment: 200,
       carInsurance: 100,
       fuel: 100,
@@ -29,6 +32,7 @@ const countryData = {
       personalCare: 30,
       netflix: 9,
       spotify: 11,
+      icloud: 3,
       otherSubscriptions: 10,
       cinema: 20,
       entertainment: 40,
@@ -56,7 +60,10 @@ const countryData = {
       groceries: { single: 350, married: 600, withKids: 900 },
       dining: { single: 200, married: 350, withKids: 500 },
       coffee: { single: 50, married: 80, withKids: 100 },
-      publicTransport: { under26: 30, age26to30: 50, age30plus: 100 },
+      publicTransport: {
+        monthlyPass: { under26: 60, age26to30: 100, age30plus: 100, senior: 45 },
+        singleRide: 2.9,
+      },
       carPayment: 400,
       carInsurance: 150,
       fuel: 200,
@@ -72,6 +79,7 @@ const countryData = {
       personalCare: 50,
       netflix: 15,
       spotify: 11,
+      icloud: 3,
       otherSubscriptions: 20,
       cinema: 30,
       entertainment: 80,
@@ -99,7 +107,10 @@ const countryData = {
       groceries: { single: 400, married: 700, withKids: 1000 },
       dining: { single: 250, married: 400, withKids: 600 },
       coffee: { single: 60, married: 100, withKids: 120 },
-      publicTransport: { under26: 50, age26to30: 80, age30plus: 120 },
+      publicTransport: {
+        monthlyPass: { under26: 90, age26to30: 130, age30plus: 130, senior: 50 },
+        singleRide: 3.2,
+      },
       carPayment: 450,
       carInsurance: 180,
       fuel: 220,
@@ -115,6 +126,7 @@ const countryData = {
       personalCare: 60,
       netflix: 15,
       spotify: 12,
+      icloud: 4,
       otherSubscriptions: 25,
       cinema: 35,
       entertainment: 100,
@@ -131,18 +143,24 @@ const countryData = {
 };
 
 export function calculateComprehensiveBudget(userProfile) {
-  const { country, monthlyIncome, age, hasKids, maritalStatus, usePublicTransport, usesCar, gymOption, padelOption, otherSportsOption, subscriptions, hasPets, petCount } = userProfile;
+  const { country, monthlyIncome, age, hasKids, maritalStatus, usePublicTransport, usesCar, gymOption, padelOption, otherSportsOption, subscriptions, hasPets, petCount, transportCard, ridesPerMonth } = userProfile;
   const countryInfo = countryData[country];
   if (!countryInfo) throw new Error('Country not supported');
 
   const costs = countryInfo.costs;
   const householdType = hasKids === 'yes' ? 'withKids' : maritalStatus === 'single' ? 'single' : 'married';
-  
+
+  const ageBand = age < 26 ? 'under26' : age < 31 ? 'age26to30' : age >= 65 ? 'senior' : 'age30plus';
+
+  // A travel card is a flat monthly pass; without one you pay per ride, which
+  // is cheaper only for light users. The questionnaire lets you compare both.
   const getTransportCost = () => {
     if (usePublicTransport === 'no') return 0;
-    if (age < 26) return costs.publicTransport.under26;
-    if (age < 31) return costs.publicTransport.age26to30;
-    return costs.publicTransport.age30plus;
+    const rides = Math.min(Math.max(parseInt(ridesPerMonth, 10) || 40, 0), 300);
+    if (transportCard === 'no') {
+      return Math.round(costs.publicTransport.singleRide * rides);
+    }
+    return costs.publicTransport.monthlyPass[ageBand];
   };
 
   let budget = {
@@ -176,6 +194,7 @@ export function calculateComprehensiveBudget(userProfile) {
       'Personal Care': costs.personalCare,
       'Netflix': subscriptions && subscriptions.includes('netflix') ? costs.netflix : 0,
       'Spotify': subscriptions && subscriptions.includes('spotify') ? costs.spotify : 0,
+      'iCloud+': subscriptions && subscriptions.includes('icloud') ? costs.icloud : 0,
       'Other Subscriptions': subscriptions && subscriptions.includes('other') ? costs.otherSubscriptions : 0,
       'Cinema & Entertainment': costs.cinema + costs.entertainment,
       'Clothing': costs.clothing,

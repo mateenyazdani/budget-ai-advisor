@@ -1,0 +1,75 @@
+const Anthropic = require('@anthropic-ai/sdk');
+
+const MAX_RESUMES = 3;
+
+function extractJson(text) {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const candidate = (fenced ? fenced[1] : text).trim();
+
+  for (const [open, close] of [['[', ']'], ['{', '}']]) {
+    const start = candidate.indexOf(open);
+    const end = candidate.lastIndexOf(close);
+    if (start !== -1 && end > start) {
+      try {
+        return JSON.parse(candidate.slice(start, end + 1));
+      } catch {
+        // fall through to the next shape
+      }
+    }
+  }
+  return null;
+}
+
+// Runs one Claude turn with server-side web search and returns parsed JSON.
+// Returns null when the model answered but produced nothing parseable, which
+// callers should treat as "no results" rather than as a failure.
+async function searchJson({ system, prompt, city, country, maxUses = 4 }) {
+  const client = new Anthropic();
+
+  const params = {
+    model: 'claude-opus-5',
+    max_tokens: 8000,
+    output_config: { effort: 'low' },
+    tools: [
+      {
+        type: 'web_search_20260209',
+        name: 'web_search',
+        max_uses: maxUses,
+        ...(city ? { user_location: { type: 'approximate', city, country } } : {}),
+      },
+    ],
+    system,
+  };
+
+  let response = await client.messages.create({
+    ...params,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  let resumes = 0;
+  while (response.stop_reason === 'pause_turn' && resumes < MAX_RESUMES) {
+    resumes += 1;
+    response = await client.messages.create({
+      ...params,
+      messages: [
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: response.content },
+      ],
+    });
+  }
+
+  if (response.stop_reason === 'refusal') return null;
+
+  const text = response.content
+    .filter((block) => block.type === 'text')
+    .map((block) => block.text)
+    .join('\n');
+
+  return extractJson(text);
+}
+
+function httpsUrlOrNull(value) {
+  return typeof value === 'string' && /^https?:\/\//.test(value) ? value : null;
+}
+
+module.exports = { searchJson, extractJson, httpsUrlOrNull, Anthropic };

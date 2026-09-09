@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/deals.js": { "maxDuration": 60 },
+    "api/prices.js": { "maxDuration": 60 },
+    "api/claude-advisor.js": { "maxDuration": 30 }
+  }
+}
