@@ -1,0 +1,134 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.auth-box {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.auth-header h1 {
+  font-size: 2rem;
+  color: #667eea;
+  margin: 0;
+  font-weight: 700;
+}
+
+.auth-header p {
+  color: #999;
+  margin: 8px 0 0 0;
+}
+
+.auth-form h2 {
+  font-size: 1.3rem;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.auth-subtitle {
+  color: #999;
+  font-size: 0.9rem;
+  margin: 0 0 24px 0;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.country-code, .username-icon {
+  font-weight: 600;
+  color: #667eea;
+  margin-right: 8px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.error-msg {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  padding: 10px;
+  background: rgba(231, 76, 60, 0.1);
+  border-left: 3px solid #e74c3c;
+}
+
+.btn-next, .btn-confirm {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.btn-back {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.confirm-card {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.confirm-row .label {
+  font-weight: 600;
+  color: #999;
+}
+
+.confirm-row .value {
+  font-weight: 600;
+  color: #333;
+}
+
+.auth-footer {
+  margin-top: 40px;
+  text-align: center;
+  color: white;
+}

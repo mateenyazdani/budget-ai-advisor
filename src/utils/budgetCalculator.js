@@ -1,128 +1,229 @@
-// Budget data for different countries
 const countryData = {
   spain: {
     name: 'Spain',
     currency: '€',
     costs: {
-      rent: { single: 600, married: 800, withKids: 1000 },
-      utilities: { single: 120, married: 150, withKids: 180 },
+      rent: { single: 700, married: 900, withKids: 1200 },
+      rentInsurance: 15,
+      electricity: { single: 80, married: 120, withKids: 150 },
+      water: 25,
+      gas: { single: 30, married: 40, withKids: 50 },
       internet: 40,
       phone: 25,
       groceries: { single: 250, married: 400, withKids: 600 },
-      transport: {
-        single: 50,
-        married: 80,
-        youngPerson: 20, // under 25 in Madrid gets discount
-      },
-      dining: { single: 150, married: 250, withKids: 300 },
-      entertainment: 100,
-      insurance: 80,
-      gym: 50,
-      savings: 300,
+      dining: { single: 120, married: 200, withKids: 250 },
+      coffee: { single: 30, married: 50, withKids: 60 },
+      publicTransport: { under26: 10, age26to30: 20, age30plus: 60 },
+      carPayment: 200,
+      carInsurance: 100,
+      fuel: 100,
+      parking: 30,
+      maintenance: 50,
+      gym: { none: 0, budget: 30, midrange: 45, premium: 65 },
+      padel: { none: 0, casual: 40, regular: 80, serious: 120 },
+      otherSports: { none: 0, casual: 20, active: 50 },
+      sportEquipment: 20,
+      healthInsurance: { single: 60, married: 100, withKids: 150 },
+      medications: 20,
+      haircuts: 25,
+      personalCare: 30,
+      netflix: 9,
+      spotify: 11,
+      otherSubscriptions: 10,
+      cinema: 20,
+      entertainment: 40,
+      clothing: 40,
+      petFood: 0,
+      petVet: 0,
+      childcare: 0,
+      gifts: 30,
+      miscellaneous: 50,
+      emergencyFund: 200,
+      retirementSavings: 100,
     },
   },
   usa: {
     name: 'USA',
     currency: '$',
     costs: {
-      rent: { single: 1200, married: 1600, withKids: 2000 },
-      utilities: { single: 150, married: 200, withKids: 250 },
-      internet: 60,
+      rent: { single: 1300, married: 1700, withKids: 2200 },
+      rentInsurance: 20,
+      electricity: { single: 120, married: 170, withKids: 220 },
+      water: 50,
+      gas: { single: 60, married: 80, withKids: 100 },
+      internet: 70,
       phone: 80,
       groceries: { single: 350, married: 600, withKids: 900 },
-      transport: { single: 300, married: 400, withKids: 500 },
-      dining: { single: 250, married: 400, withKids: 500 },
-      entertainment: 150,
-      insurance: 200,
-      gym: 60,
-      savings: 400,
+      dining: { single: 200, married: 350, withKids: 500 },
+      coffee: { single: 50, married: 80, withKids: 100 },
+      publicTransport: { under26: 30, age26to30: 50, age30plus: 100 },
+      carPayment: 400,
+      carInsurance: 150,
+      fuel: 200,
+      parking: 60,
+      maintenance: 100,
+      gym: { none: 0, budget: 30, midrange: 60, premium: 100 },
+      padel: { none: 0, casual: 60, regular: 120, serious: 200 },
+      otherSports: { none: 0, casual: 40, active: 100 },
+      sportEquipment: 40,
+      healthInsurance: { single: 200, married: 400, withKids: 600 },
+      medications: 50,
+      haircuts: 40,
+      personalCare: 50,
+      netflix: 15,
+      spotify: 11,
+      otherSubscriptions: 20,
+      cinema: 30,
+      entertainment: 80,
+      clothing: 80,
+      petFood: 50,
+      petVet: 80,
+      childcare: 1200,
+      gifts: 50,
+      miscellaneous: 100,
+      emergencyFund: 400,
+      retirementSavings: 300,
     },
   },
   australia: {
     name: 'Australia',
     currency: '$',
     costs: {
-      rent: { single: 1400, married: 1800, withKids: 2200 },
-      utilities: { single: 180, married: 250, withKids: 300 },
-      internet: 70,
+      rent: { single: 1500, married: 1900, withKids: 2400 },
+      rentInsurance: 25,
+      electricity: { single: 150, married: 220, withKids: 280 },
+      water: 70,
+      gas: { single: 50, married: 70, withKids: 90 },
+      internet: 80,
       phone: 50,
       groceries: { single: 400, married: 700, withKids: 1000 },
-      transport: { single: 180, married: 250, withKids: 350 },
-      dining: { single: 300, married: 450, withKids: 600 },
-      entertainment: 150,
-      insurance: 150,
-      gym: 80,
-      savings: 500,
+      dining: { single: 250, married: 400, withKids: 600 },
+      coffee: { single: 60, married: 100, withKids: 120 },
+      publicTransport: { under26: 50, age26to30: 80, age30plus: 120 },
+      carPayment: 450,
+      carInsurance: 180,
+      fuel: 220,
+      parking: 80,
+      maintenance: 120,
+      gym: { none: 0, budget: 40, midrange: 70, premium: 100 },
+      padel: { none: 0, casual: 60, regular: 120, serious: 180 },
+      otherSports: { none: 0, casual: 50, active: 120 },
+      sportEquipment: 50,
+      healthInsurance: { single: 150, married: 280, withKids: 400 },
+      medications: 40,
+      haircuts: 50,
+      personalCare: 60,
+      netflix: 15,
+      spotify: 12,
+      otherSubscriptions: 25,
+      cinema: 35,
+      entertainment: 100,
+      clothing: 100,
+      petFood: 60,
+      petVet: 100,
+      childcare: 1500,
+      gifts: 60,
+      miscellaneous: 120,
+      emergencyFund: 500,
+      retirementSavings: 400,
     },
   },
 };
 
-export function calculateBudget(userProfile) {
-  const { country, jobStatus, monthlyIncome, age, hasKids, maritalStatus } = userProfile;
-  
+export function calculateComprehensiveBudget(userProfile) {
+  const { country, monthlyIncome, age, hasKids, maritalStatus, usePublicTransport, usesCar, gymOption, padelOption, otherSportsOption, subscriptions, hasPets, petCount } = userProfile;
   const countryInfo = countryData[country];
   if (!countryInfo) throw new Error('Country not supported');
 
   const costs = countryInfo.costs;
-  const householdType = hasKids ? 'withKids' : maritalStatus === 'single' ? 'single' : 'married';
+  const householdType = hasKids === 'yes' ? 'withKids' : maritalStatus === 'single' ? 'single' : 'married';
+  
+  const getTransportCost = () => {
+    if (usePublicTransport === 'no') return 0;
+    if (age < 26) return costs.publicTransport.under26;
+    if (age < 31) return costs.publicTransport.age26to30;
+    return costs.publicTransport.age30plus;
+  };
 
-  // Calculate main expenses
   let budget = {
     country: countryInfo.name,
     currency: countryInfo.currency,
     monthlyIncome,
     categories: {
-      housing: costs.rent[householdType] || costs.rent.single,
-      utilities: costs.utilities[householdType] || costs.utilities.single,
-      internet: costs.internet,
-      phone: costs.phone,
-      groceries: costs.groceries[householdType] || costs.groceries.single,
-      transport: getTransportCost(country, age, costs, householdType),
-      dining: costs.dining[householdType] || costs.dining.single,
-      entertainment: costs.entertainment,
-      insurance: costs.insurance,
-      gym: costs.gym,
-      savings: costs.savings,
+      'Housing': costs.rent[householdType],
+      'Rent Insurance': costs.rentInsurance,
+      'Electricity': costs.electricity[householdType],
+      'Water': costs.water,
+      'Gas': costs.gas[householdType],
+      'Internet': costs.internet,
+      'Phone': costs.phone,
+      'Groceries': costs.groceries[householdType],
+      'Dining Out': costs.dining[householdType],
+      'Coffee & Snacks': costs.coffee[householdType],
+      'Public Transport': getTransportCost(),
+      'Car Payment': usesCar === 'yes' ? costs.carPayment : 0,
+      'Car Insurance': usesCar === 'yes' ? costs.carInsurance : 0,
+      'Fuel': usesCar === 'yes' ? costs.fuel : 0,
+      'Parking': usesCar === 'yes' ? costs.parking : 0,
+      'Car Maintenance': usesCar === 'yes' ? costs.maintenance : 0,
+      'Gym': gymOption && gymOption !== 'none' ? costs.gym[gymOption] : 0,
+      'Padel': padelOption && padelOption !== 'none' ? costs.padel[padelOption] : 0,
+      'Other Sports': otherSportsOption && otherSportsOption !== 'none' ? costs.otherSports[otherSportsOption] : 0,
+      'Sports Equipment': (gymOption !== 'none' || padelOption !== 'none' || otherSportsOption !== 'none') ? costs.sportEquipment : 0,
+      'Health Insurance': costs.healthInsurance[householdType],
+      'Medications': costs.medications,
+      'Haircuts': costs.haircuts,
+      'Personal Care': costs.personalCare,
+      'Netflix': subscriptions && subscriptions.includes('netflix') ? costs.netflix : 0,
+      'Spotify': subscriptions && subscriptions.includes('spotify') ? costs.spotify : 0,
+      'Other Subscriptions': subscriptions && subscriptions.includes('other') ? costs.otherSubscriptions : 0,
+      'Cinema & Entertainment': costs.cinema + costs.entertainment,
+      'Clothing': costs.clothing,
+      'Pet Food': hasPets === 'yes' ? costs.petFood * petCount : 0,
+      'Pet Vet': hasPets === 'yes' ? costs.petVet : 0,
+      'Childcare': hasKids === 'yes' ? costs.childcare : 0,
+      'Gifts': costs.gifts,
+      'Miscellaneous': costs.miscellaneous,
+      'Emergency Fund': costs.emergencyFund,
+      'Retirement Savings': costs.retirementSavings,
     },
   };
 
-  // Calculate totals
   budget.totalExpenses = Object.values(budget.categories).reduce((a, b) => a + b, 0);
   budget.surplus = monthlyIncome - budget.totalExpenses;
-  budget.savingsPercentage = ((budget.categories.savings / monthlyIncome) * 100).toFixed(1);
-
-  // Add recommendations
+  budget.savingsRate = (((budget.categories['Emergency Fund'] + budget.categories['Retirement Savings']) / monthlyIncome) * 100).toFixed(1);
   budget.recommendations = generateRecommendations(budget, userProfile);
 
   return budget;
 }
 
-function getTransportCost(country, age, costs, householdType) {
-  if (country === 'spain' && age < 25) {
-    return costs.transport.youngPerson || 20;
-  }
-  return costs.transport[householdType] || costs.transport.single;
-}
-
 function generateRecommendations(budget, userProfile) {
   const recommendations = [];
+  const housingPercent = (budget.categories['Housing'] / budget.monthlyIncome) * 100;
+  const foodPercent = ((budget.categories['Groceries'] + budget.categories['Dining Out']) / budget.monthlyIncome) * 100;
 
   if (budget.surplus > 500) {
-    recommendations.push('💡 You have good surplus! Consider investing or building an emergency fund.');
+    recommendations.push('💡 Excellent surplus! Consider increasing retirement savings or building investment portfolio.');
+  } else if (budget.surplus < -200) {
+    recommendations.push('⚠️ Budget is tight. Consider reducing dining out or entertainment spending.');
   } else if (budget.surplus < 0) {
-    recommendations.push('⚠️ Your expenses exceed income. Consider reviewing dining or entertainment budget.');
+    recommendations.push('⚠️ Monthly deficit. Review discretionary spending categories.');
   }
 
-  if (budget.categories.housing > budget.monthlyIncome * 0.35) {
-    recommendations.push('🏠 Your housing cost is >35% of income. Consider looking for cheaper accommodation.');
+  if (housingPercent > 40) {
+    recommendations.push('🏠 Housing is >40% of income. Consider finding cheaper accommodation or getting a roommate.');
   }
 
-  if (userProfile.hasKids && budget.categories.groceries < 500) {
-    recommendations.push('👨‍👩‍👧‍👦 With kids, you might want to increase grocery budget for better nutrition.');
+  if (foodPercent > 20) {
+    recommendations.push('🍔 Food spending is >20% of income. Try meal planning or reducing dining out.');
   }
 
-  if (userProfile.jobStatus === 'freelance' && budget.categories.savings < 400) {
-    recommendations.push('💼 As freelancer, save more for irregular income months (suggest 15-20% of income).');
+  if (userProfile.usePublicTransport === 'no' && userProfile.usesCar === 'yes') {
+    recommendations.push('🚗 Car costs are high. Consider using public transport part-time.');
+  }
+
+  if (budget.categories['Miscellaneous'] > 100) {
+    recommendations.push('💸 Miscellaneous expenses are high. Track where this money goes to find savings.');
   }
 
   return recommendations;

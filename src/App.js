@@ -1,16 +1,33 @@
-import React, { useState } from 'react';
-import './App.css';
-import Questionnaire from './components/Questionnaire';
-import Results from './components/Results';
+import React, { useState, useEffect } from 'react';
+import './styles/App.css';
+import Auth from './components/Auth';
+import ComprehensiveQuestionnaire from './components/ComprehensiveQuestionnaire';
+import Dashboard from './components/Dashboard';
+import SmartSpending from './components/SmartSpending';
+import BankConnect from './components/BankConnect';
 import AIAdvisor from './components/AIAdvisor';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('questionnaire');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState('auth');
   const [userBudget, setUserBudget] = useState(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('budgetUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+      setCurrentPage('questionnaire');
+    }
+  }, []);
+
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    setCurrentPage('questionnaire');
+  };
 
   const handleQuestionnaireSubmit = (budget) => {
     setUserBudget(budget);
-    setCurrentPage('results');
+    setCurrentPage('dashboard');
   };
 
   const handleAskAdvisor = () => {
@@ -18,7 +35,7 @@ function App() {
   };
 
   const handleBackToResults = () => {
-    setCurrentPage('results');
+    setCurrentPage('dashboard');
   };
 
   const handleStartOver = () => {
@@ -26,37 +43,75 @@ function App() {
     setCurrentPage('questionnaire');
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('budgetUser');
+    localStorage.removeItem('expenses');
+    setCurrentUser(null);
+    setUserBudget(null);
+    setCurrentPage('auth');
+  };
+
+  const handleGoToSmartSpending = () => {
+    setCurrentPage('smartspending');
+  };
+
+  const handleGoToBank = () => {
+    setCurrentPage('bank');
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>💰 Budget AI Advisor</h1>
-        <p>Personalized budgeting powered by AI</p>
-      </header>
+      {currentPage === 'auth' && <Auth onLogin={handleLogin} />}
 
-      <main className="App-main">
-        {currentPage === 'questionnaire' && (
-          <Questionnaire onSubmit={handleQuestionnaireSubmit} />
-        )}
+      {currentPage !== 'auth' && (
+        <>
+          <header className="App-header">
+            <h1>💰 Budget AI Advisor</h1>
+            <div className="header-user">
+              <span>@{currentUser?.username}</span>
+              <button className="btn-logout" onClick={handleLogout}>Logout</button>
+            </div>
+          </header>
 
-        {currentPage === 'results' && userBudget && (
-          <Results 
-            budget={userBudget} 
-            onAskAdvisor={handleAskAdvisor}
-            onStartOver={handleStartOver}
-          />
-        )}
+          <main className="App-main">
+            {currentPage === 'questionnaire' && (
+              <ComprehensiveQuestionnaire onSubmit={handleQuestionnaireSubmit} />
+            )}
 
-        {currentPage === 'advisor' && userBudget && (
-          <AIAdvisor 
-            budget={userBudget}
-            onBack={handleBackToResults}
-          />
-        )}
-      </main>
+            {currentPage === 'dashboard' && userBudget && (
+              <Dashboard 
+                budget={userBudget} 
+                onAskAdvisor={handleAskAdvisor}
+                onStartOver={handleStartOver}
+                onGoToSmartSpending={handleGoToSmartSpending}
+                onGoToBank={handleGoToBank}
+              />
+            )}
 
-      <footer className="App-footer">
-        <p>Your budget, intelligently personalized</p>
-      </footer>
+            {currentPage === 'smartspending' && userBudget && (
+              <SmartSpending
+                budgetRemaining={userBudget.surplus}
+                onBack={() => setCurrentPage('dashboard')}
+              />
+            )}
+
+            {currentPage === 'bank' && (
+              <BankConnect onBack={() => setCurrentPage('dashboard')} />
+            )}
+
+            {currentPage === 'advisor' && userBudget && (
+              <AIAdvisor 
+                budget={userBudget}
+                onBack={handleBackToResults}
+              />
+            )}
+          </main>
+
+          <footer className="App-footer">
+            <p>Smart spending starts here 💪</p>
+          </footer>
+        </>
+      )}
     </div>
   );
 }
