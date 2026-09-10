@@ -1,5 +1,6 @@
 import React from 'react';
 import { Wordmark, ChartIcon, ChatIcon, BasketIcon, TagIcon, TrainIcon, BankIcon } from './Icons';
+import ProductShot from './ProductShot';
 import '../styles/Landing.css';
 
 const STATS = [
@@ -86,19 +87,22 @@ function Landing({ onGetStarted }) {
 
       <header className="landing-hero">
         <span className="hero-eyebrow">Built for Spain · Works in the USA and Australia</span>
-        <h1>
-          See where your money goes.
-          <span className="hero-accent">Then spend less of it.</span>
-        </h1>
+        <h1>Know exactly<br />where it goes.</h1>
         <p className="hero-body">
-          Build a full monthly budget in about a minute, then find cheaper places near you, check
-          what things actually cost today, and ask an AI advisor what to change.
+          A full monthly budget in about a minute. Then the cheaper option nearby, what things
+          really cost today, and an advisor that reads your own numbers.
         </p>
         <div className="hero-actions">
-          <button className="btn-cta" onClick={onGetStarted}>Get started — it&rsquo;s free →</button>
-          <a className="btn-ghost" href="#features">See what it does</a>
+          <button className="btn-cta" onClick={onGetStarted}>Get started</button>
+          <a className="btn-text" href="#features">See what it does &rsaquo;</a>
         </div>
 
+        <div className="hero-shot">
+          <ProductShot />
+        </div>
+      </header>
+
+      <section className="stat-band">
         <div className="stat-row">
           {STATS.map((s) => (
             <div key={s.label} className="stat">
@@ -107,7 +111,7 @@ function Landing({ onGetStarted }) {
             </div>
           ))}
         </div>
-      </header>
+      </section>
 
       <section className="landing-section" id="features">
         <span className="section-eyebrow">What it does</span>

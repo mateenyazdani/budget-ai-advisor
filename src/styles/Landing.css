@@ -80,8 +80,8 @@
 
 .landing-hero {
   text-align: center;
-  padding: 88px 32px 72px;
-  max-width: 860px;
+  padding: 100px 32px 0;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -97,11 +97,11 @@
 }
 
 .landing-hero h1 {
-  font-size: 3.4rem;
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
   font-weight: 680;
-  letter-spacing: -0.035em;
-  margin: 0 auto 22px;
-  max-width: 15ch;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  margin: 0 auto 26px;
 }
 
 .hero-accent {
@@ -111,18 +111,58 @@
 
 .hero-body {
   color: var(--ink-soft);
-  font-size: 1.05rem;
-  max-width: 560px;
-  margin: 0 auto 34px;
-  line-height: 1.65;
+  font-size: clamp(1.02rem, 1.6vw, 1.28rem);
+  max-width: 600px;
+  margin: 0 auto 36px;
+  line-height: 1.55;
 }
 
 .hero-actions {
   display: flex;
-  gap: 10px;
+  gap: 22px;
+  align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 64px;
+  margin-bottom: 72px;
+}
+
+.btn-text {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.btn-text:hover {
+  text-decoration: underline;
+}
+
+/* The product sits below the fold line and is cropped by it, which is what
+   makes an Apple-style hero feel deep rather than flat. */
+.hero-shot {
+  max-width: 840px;
+  margin: 0 auto;
+  transform: translateY(1px);
+}
+
+.stat-band {
+  border-top: 1px solid var(--line);
+  background: var(--surface-sunken);
+  padding: 0;
+}
+
+.stat-band .stat-row {
+  max-width: 1000px;
+  margin: 0 auto;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.stat-band .stat {
+  background: transparent;
+  text-align: center;
+  padding: 34px 16px;
 }
 
 .stat-row {
@@ -395,12 +435,7 @@
   }
 
   .landing-hero {
-    padding: 52px 20px 44px;
-  }
-
-  .landing-hero h1 {
-    font-size: 2.1rem;
-    max-width: none;
+    padding: 56px 20px 0;
   }
 
   .landing-section,
@@ -416,4 +451,131 @@
   .footer-note {
     margin-left: 0;
   }
+}
+
+/* Product shot — a CSS miniature of the dashboard */
+
+.product-shot {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -1px 0 var(--line), 0 30px 70px rgba(22, 22, 29, 0.13);
+  overflow: hidden;
+  text-align: left;
+}
+
+.shot-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 14px;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--line);
+}
+
+.shot-chrome .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.shot-url {
+  margin-left: 12px;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.shot-body {
+  padding: 30px 32px 36px;
+}
+
+.shot-eyebrow {
+  display: block;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-faint);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.shot-amount {
+  display: block;
+  font-size: 2.6rem;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.shot-sub {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  margin-top: 4px;
+}
+
+.shot-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  margin: 24px 0 20px;
+}
+
+.shot-bar > span {
+  border-radius: 3px;
+}
+
+.shot-left {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--surface-sunken),
+    var(--surface-sunken) 5px,
+    #fff 5px,
+    #fff 10px
+  );
+  border: 1px solid var(--line-strong);
+}
+
+.shot-rows {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.shot-rows li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.shot-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.shot-label {
+  flex: 1;
+  color: var(--ink-soft);
+}
+
+.shot-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.shot-share {
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+  min-width: 28px;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .shot-body { padding: 22px 20px 26px; }
+  .shot-amount { font-size: 2rem; }
+  .shot-rows li:nth-child(n + 4) { display: none; }
 }
