@@ -57,6 +57,12 @@ function requireUser({ endpoint, limit, window: windowInterval }, handler) {
 
     const auth = await getUser(req);
     if (!auth) {
+      const header = req.headers?.authorization || '';
+      console.error(
+        'Rejected %s: authorization header %s',
+        endpoint,
+        header ? `present (${header.slice(0, 12)}…, ${header.length} chars) but not accepted` : 'missing'
+      );
       return res.status(401).json({ error: 'Sign in to use this.' });
     }
 
