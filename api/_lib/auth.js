@@ -38,9 +38,12 @@ async function withinRateLimit(client, userId, endpoint, limit, windowInterval) 
   });
 
   if (error) {
-    // Failing open would defeat the point of having a limit at all.
-    console.error('Rate limit check failed:', error.message);
-    return false;
+    // A missing or misconfigured function is a deployment fault, not a user
+    // hitting their limit. Failing closed there would take every feature down
+    // and look identical to abuse, so it is logged loudly and allowed — the
+    // sign-in requirement above is still doing the real work.
+    console.error('Rate limit check unavailable, allowing request:', error.message);
+    return true;
   }
   return data === true;
 }
