@@ -4,6 +4,7 @@ import ExpenseLogger from './ExpenseLogger';
 import PriceCheck from './PriceCheck';
 import { groupBudget } from '../utils/budgetGroups';
 import { calculateComprehensiveBudget } from '../utils/budgetCalculator';
+import { getInsights } from '../utils/insights';
 import { BasketIcon, BankIcon, ChatIcon } from './Icons';
 import '../styles/Dashboard.css';
 
@@ -49,6 +50,7 @@ function Dashboard({ budget, onStartOver, onBudgetChange }) {
 
   const { currency, monthlyIncome, totalExpenses, surplus } = currentBudget;
   const groups = groupBudget(currentBudget.categories);
+  const insight = getInsights(currentBudget);
   const inTheGreen = surplus >= 0;
 
   // Segments are sized against income when there is money left, so the bar
@@ -66,6 +68,49 @@ function Dashboard({ budget, onStartOver, onBudgetChange }) {
 
   return (
     <div className="dashboard">
+      {insight && (
+        <section className={`decide decide-${insight.status}`}>
+          <div className="decide-main">
+            <span className="decide-label">Safe to spend this week</span>
+            <span className="decide-amount">{money(currency, insight.safeThisWeek)}</span>
+            <span className="decide-note">
+              Day-to-day spending only, across the {insight.daysLeft} days left this month.
+            </span>
+          </div>
+
+          <div className="decide-side">
+            <div className="decide-stat">
+              <span className="decide-label">On track to save</span>
+              <span className="decide-stat-value">{money(currency, insight.projectedSaving)}</span>
+              <span className="decide-note">{insight.savingRate}% of your income</span>
+            </div>
+
+            {insight.action ? (
+              <div className="decide-action">
+                <span className="decide-badge">Do this</span>
+                <p>
+                  Cut <strong>{insight.action.category}</strong> by{' '}
+                  <strong>{money(currency, insight.action.reduceBy)}</strong> a month — you are at{' '}
+                  {money(currency, insight.action.amount)} against a typical{' '}
+                  {money(currency, insight.action.target)} on your income.
+                </p>
+              </div>
+            ) : (
+              <div className="decide-action">
+                <span className="decide-badge">
+                  {insight.status === 'risk' ? 'Watch out' : 'Looking good'}
+                </span>
+                <p>
+                  {insight.status === 'risk'
+                    ? 'Your plan spends more than you earn. Open a group below and correct any figure that is wrong before cutting anything.'
+                    : 'Nothing is unusually high for your income. Check the figures below against a statement to be sure.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       <section className="hero-panel">
         <div className="hero-figure">
           <span className="hero-label">

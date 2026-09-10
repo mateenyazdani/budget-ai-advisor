@@ -1,13 +1,14 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Wordmark, ChartIcon, ChatIcon, BasketIcon, TagIcon, TrainIcon, BankIcon } from './Icons';
 import ProductShot from './ProductShot';
 import '../styles/Landing.css';
 
 const STATS = [
-  { figure: '37', label: 'Expense categories' },
-  { figure: '3', label: 'Countries' },
-  { figure: '4', label: 'Questions to set up' },
-  { figure: 'Free', label: 'To use' },
+  { figure: 'Today', label: 'Know what you can safely spend' },
+  { figure: 'Before month-end', label: 'Spot overspending in time to fix it' },
+  { figure: '1 minute', label: 'From nothing to a full budget' },
+  { figure: 'Free', label: 'No card, no subscription' },
 ];
 
 const FEATURES = [
@@ -87,14 +88,14 @@ function Landing({ onGetStarted }) {
 
       <header className="landing-hero">
         <span className="hero-eyebrow">Built for Spain · Works in the USA and Australia</span>
-        <h1>Know exactly<br />where it goes.</h1>
+        <h1>Know what you<br />can spend today.</h1>
         <p className="hero-body">
-          A full monthly budget in about a minute. Then the cheaper option nearby, what things
-          really cost today, and an advisor that reads your own numbers.
+          A full monthly budget in about a minute — then a straight answer on what is safe to spend
+          this week, what you are on track to save, and the one change worth making.
         </p>
         <div className="hero-actions">
           <button className="btn-cta" onClick={onGetStarted}>Get started</button>
-          <a className="btn-text" href="#features">See what it does &rsaquo;</a>
+          <Link className="btn-text" to="/sample">Try a sample Madrid budget &rsaquo;</Link>
         </div>
 
         <div className="hero-shot">

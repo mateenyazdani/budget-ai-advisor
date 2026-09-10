@@ -13,6 +13,7 @@ import { Wordmark, ChartIcon, BasketIcon, BankIcon, ChatIcon } from './component
 import Landing from './components/Landing';
 import SignIn from './components/SignIn';
 import Privacy from './components/Privacy';
+import SampleBudget from './components/SampleBudget';
 import Terms from './components/Terms';
 import ComprehensiveQuestionnaire from './components/ComprehensiveQuestionnaire';
 import Dashboard from './components/Dashboard';
@@ -111,6 +112,7 @@ function App() {
         <Routes>
           <Route path="/" element={<PublicHome session={session} budget={userBudget} />} />
           <Route path="/signin" element={<AuthRoute session={session} />} />
+          <Route path="/sample" element={<SampleBudget />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
 
