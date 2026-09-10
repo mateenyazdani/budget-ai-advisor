@@ -12,6 +12,7 @@ const ACTIVITY_LABELS = {
   cycling: 'Cycling',
   martialArts: 'Martial arts',
   dance: 'Dance',
+  other: 'Something else',
 };
 
 const countryData = {
@@ -41,7 +42,7 @@ const countryData = {
       gym: { none: 0, budget: 30, midrange: 45, premium: 65 },
       activities: {
         padel: 60, football: 40, tennis: 55, swimming: 35, running: 10,
-        climbing: 50, yoga: 55, cycling: 20, martialArts: 50, dance: 45,
+        climbing: 50, yoga: 55, cycling: 20, martialArts: 50, dance: 45, other: 40,
       },
       sportEquipment: 20,
       healthInsurance: { single: 60, married: 100, withKids: 150 },
@@ -92,7 +93,7 @@ const countryData = {
       gym: { none: 0, budget: 30, midrange: 60, premium: 100 },
       activities: {
         padel: 90, football: 60, tennis: 90, swimming: 55, running: 15,
-        climbing: 75, yoga: 90, cycling: 30, martialArts: 110, dance: 80,
+        climbing: 75, yoga: 90, cycling: 30, martialArts: 110, dance: 80, other: 70,
       },
       sportEquipment: 40,
       healthInsurance: { single: 200, married: 400, withKids: 600 },
@@ -141,7 +142,7 @@ const countryData = {
       gym: { none: 0, budget: 40, midrange: 70, premium: 100 },
       activities: {
         padel: 80, football: 55, tennis: 75, swimming: 50, running: 15,
-        climbing: 70, yoga: 85, cycling: 30, martialArts: 95, dance: 75,
+        climbing: 70, yoga: 85, cycling: 30, martialArts: 95, dance: 75, other: 65,
       },
       sportEquipment: 50,
       healthInsurance: { single: 150, married: 280, withKids: 400 },
@@ -173,6 +174,7 @@ export function calculateComprehensiveBudget(userProfile) {
     country, monthlyIncome, age, maritalStatus, usePublicTransport, usesCar,
     gymOption, activities, subscriptions, hasPets, petCount,
     transportCard, ridesPerMonth, childCount,
+    rentOverride, billsOverride, currentSavings,
   } = userProfile;
 
   const countryInfo = countryData[country];
@@ -199,14 +201,37 @@ export function calculateComprehensiveBudget(userProfile) {
 
   const perChild = costs.perChild;
 
-  const categories = {
-    'Housing': costs.rent[householdType],
-    'Rent Insurance': costs.rentInsurance,
+  // What someone actually pays beats a modelled estimate, so an entered figure
+  // replaces it outright.
+  const money = (value) => {
+    const n = parseFloat(value);
+    return Number.isFinite(n) && n >= 0 && n < 100000 ? n : null;
+  };
+  const rent = money(rentOverride);
+  const bills = money(billsOverride);
+
+  const BILL_KEYS = ['Electricity', 'Water', 'Gas', 'Internet', 'Phone'];
+  const modelledBills = {
     'Electricity': costs.electricity[householdType],
     'Water': costs.water,
     'Gas': costs.gas[householdType],
     'Internet': costs.internet,
     'Phone': costs.phone,
+  };
+  const modelledBillTotal = BILL_KEYS.reduce((sum, k) => sum + modelledBills[k], 0);
+  // An entered bills total keeps the individual lines, scaled to match it, so
+  // the breakdown still shows where it goes.
+  const billScale = bills !== null && modelledBillTotal > 0 ? bills / modelledBillTotal : 1;
+  const billFor = (key) => Math.round(modelledBills[key] * billScale);
+
+  const categories = {
+    'Housing': rent !== null ? rent : costs.rent[householdType],
+    'Rent Insurance': costs.rentInsurance,
+    'Electricity': billFor('Electricity'),
+    'Water': billFor('Water'),
+    'Gas': billFor('Gas'),
+    'Internet': billFor('Internet'),
+    'Phone': billFor('Phone'),
     'Groceries': costs.groceries[householdType] + kids * perChild.food,
     'Dining Out': costs.dining[householdType],
     'Coffee & Snacks': costs.coffee[householdType],
@@ -246,6 +271,9 @@ export function calculateComprehensiveBudget(userProfile) {
     age,
     childCount: kids,
     activities: chosenActivities.map((id) => ACTIVITY_LABELS[id]).filter(Boolean),
+    currentSavings: money(currentSavings),
+    usesRealRent: rent !== null,
+    usesRealBills: bills !== null,
     categories,
   };
 
@@ -254,6 +282,13 @@ export function calculateComprehensiveBudget(userProfile) {
   budget.savingsRate = (
     ((categories['Emergency Fund'] + categories['Retirement Savings']) / monthlyIncome) * 100
   ).toFixed(1);
+  // How long the savings would last if the income stopped — the number that
+  // makes a savings balance mean something.
+  budget.monthsOfRunway =
+    budget.currentSavings !== null && budget.totalExpenses > 0
+      ? Number((budget.currentSavings / budget.totalExpenses).toFixed(1))
+      : null;
+
   budget.recommendations = generateRecommendations(budget, userProfile, kids);
 
   return budget;
@@ -290,6 +325,18 @@ function generateRecommendations(budget, userProfile, kids) {
 
   if (kids > 0 && c['Childcare'] > 0 && pct(c['Childcare']) > 20) {
     out.push('Childcare is over a fifth of your income. Check what subsidies or tax deductions you qualify for.');
+  }
+
+  if (budget.monthsOfRunway !== null) {
+    if (budget.monthsOfRunway < 3) {
+      out.push(`Your savings would cover about ${budget.monthsOfRunway} months of outgoings. Three to six months is the usual target for an emergency fund.`);
+    } else if (budget.monthsOfRunway > 12) {
+      out.push(`You have over a year of outgoings saved. Beyond about six months, money sitting in cash is losing value to inflation.`);
+    }
+  }
+
+  if (!budget.usesRealRent && pct(c['Housing']) > 25) {
+    out.push('Housing is the biggest estimate here. Enter what you actually pay to make the rest of the budget meaningful.');
   }
 
   if (c['Miscellaneous'] > 100) {

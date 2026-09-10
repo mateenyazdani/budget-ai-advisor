@@ -11,6 +11,9 @@ const DEFAULTS = {
   age: '',
   maritalStatus: 'single',
   childCount: 0,
+  rentOverride: '',
+  billsOverride: '',
+  currentSavings: '',
   usePublicTransport: 'yes',
   transportCard: 'yes',
   ridesPerMonth: 40,
@@ -65,6 +68,9 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
         age,
         childCount: parseInt(form.childCount, 10) || 0,
         petCount: parseInt(form.petCount, 10) || 0,
+        rentOverride: form.rentOverride,
+        billsOverride: form.billsOverride,
+        currentSavings: form.currentSavings,
       });
       onSubmit(budget, form);
     } catch (err) {
@@ -78,7 +84,7 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
     <div className="setup">
       <div className="setup-head">
         <h1>Let&rsquo;s build your budget</h1>
-        <p>Four answers is enough. You can add detail afterwards.</p>
+        <p>A few answers is enough. You can add detail afterwards.</p>
       </div>
 
       <form onSubmit={submit} className="setup-form">
@@ -123,6 +129,31 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
               value={form.childCount} onChange={update} min="0" max="8"
             />
           </div>
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="rent">Rent or mortgage a month</label>
+            <input
+              id="rent" name="rentOverride" type="number" inputMode="decimal"
+              value={form.rentOverride} onChange={update} placeholder="Leave blank to estimate" min="0"
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="bills">Utilities a month</label>
+            <input
+              id="bills" name="billsOverride" type="number" inputMode="decimal"
+              value={form.billsOverride} onChange={update} placeholder="Power, water, internet, phone" min="0"
+            />
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="savings">Savings you already have</label>
+          <input
+            id="savings" name="currentSavings" type="number" inputMode="decimal"
+            value={form.currentSavings} onChange={update} placeholder="Optional — shows how long it would last" min="0"
+          />
         </div>
 
         <button

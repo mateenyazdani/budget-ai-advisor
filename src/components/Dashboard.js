@@ -47,6 +47,24 @@ function Dashboard({ budget, onStartOver }) {
           </span>
         </div>
 
+        {currentBudget.currentSavings !== null && currentBudget.currentSavings !== undefined && (
+          <div className="runway">
+            <div>
+              <span className="runway-label">Saved</span>
+              <span className="runway-value">{money(currency, currentBudget.currentSavings)}</span>
+            </div>
+            <div>
+              <span className="runway-label">That covers</span>
+              <span className="runway-value">
+                {currentBudget.monthsOfRunway} month{currentBudget.monthsOfRunway === 1 ? '' : 's'}
+              </span>
+            </div>
+            <p className="runway-note">
+              How long your savings would last at this rate if the income stopped.
+            </p>
+          </div>
+        )}
+
         <div className="allocation">
           <div className="allocation-bar" role="img" aria-label="How your income is allocated">
             {groups.map((g) => (

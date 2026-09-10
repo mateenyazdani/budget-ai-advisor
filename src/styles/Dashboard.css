@@ -374,3 +374,42 @@
     display: none;
   }
 }
+
+.runway {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 40px;
+  padding: 18px 20px;
+  margin-bottom: 26px;
+  background: var(--brand-soft);
+  border-radius: var(--radius);
+}
+
+.runway > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.runway-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-dark);
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.runway-value {
+  font-size: 1.4rem;
+  font-weight: 650;
+  color: var(--brand-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.runway-note {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  color: var(--brand-dark);
+  opacity: 0.72;
+}
