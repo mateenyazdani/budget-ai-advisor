@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authedFetch } from '../lib/authedFetch';
 import '../styles/SmartSpending.css';
 
 const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Gym', 'Shopping'];
@@ -97,7 +98,7 @@ function SmartSpending({ budgetRemaining }) {
       const params = new URLSearchParams({ city });
       if (activeQuery) params.set('query', activeQuery);
       else params.set('category', selectedCategory);
-      const response = await fetch(`/api/deals?${params}`);
+      const response = await authedFetch(`/api/deals?${params}`);
 
       // Running under `npm start` there is no API server, so the dev server
       // answers with index.html rather than JSON.

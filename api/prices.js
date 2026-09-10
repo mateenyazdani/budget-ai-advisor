@@ -1,4 +1,5 @@
 const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_lib/websearch');
+const { requireUser } = require('./_lib/auth');
 
 // Subscription and fare prices move slowly, so a day of caching is plenty and
 // keeps the cost of this endpoint near zero.
@@ -111,7 +112,7 @@ Reply with only a JSON object, no prose:
   };
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -185,4 +186,9 @@ module.exports = async function handler(req, res) {
     console.error(`Price lookup (${kind}) failed:`, error);
     return res.status(502).json({ error: 'Could not look up prices right now.' });
   }
-};
+}
+
+module.exports = requireUser(
+  { endpoint: 'prices', limit: 8, window: '1 hour' },
+  handler,
+);

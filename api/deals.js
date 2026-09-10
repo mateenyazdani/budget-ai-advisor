@@ -1,4 +1,5 @@
 const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_lib/websearch');
+const { requireUser } = require('./_lib/auth');
 
 // Each lookup costs a Claude call plus web searches, so results are reused for
 // an hour per city/category on a warm instance.
@@ -46,7 +47,7 @@ function cleanDeals(raw) {
     }));
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -132,4 +133,9 @@ Reply with only a JSON array, no prose around it. Each element:
     console.error('Deal search failed:', error);
     return res.status(502).json({ error: 'Could not search for deals right now.' });
   }
-};
+}
+
+module.exports = requireUser(
+  { endpoint: 'deals', limit: 6, window: '1 hour' },
+  handler,
+);

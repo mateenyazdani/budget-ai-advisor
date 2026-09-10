@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const { requireUser } = require('./_lib/auth');
 
 const MAX_MESSAGE_CHARS = 2000;
 const MAX_HISTORY_TURNS = 20;
@@ -48,7 +49,7 @@ function toApiMessages(history) {
   return firstUser === -1 ? [] : mapped.slice(firstUser).slice(-MAX_HISTORY_TURNS);
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -116,4 +117,9 @@ Guidelines:
     console.error('Advisor request failed:', error);
     return res.status(502).json({ error: 'The advisor is unavailable right now.' });
   }
-};
+}
+
+module.exports = requireUser(
+  { endpoint: 'advisor', limit: 30, window: '1 hour' },
+  handler,
+);
