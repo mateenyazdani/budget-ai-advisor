@@ -1,11 +1,11 @@
 :root {
   /* A near-black ink with one restrained accent, rather than a saturated
      gradient. Finance products read as trustworthy when they are quiet. */
-  --brand: #2f2f7a;
-  --brand-dark: #1f1f5c;
-  --brand-soft: #eeeef7;
-  --accent: #0f7a63;
-  --accent-soft: #e7f4f1;
+  --brand: #007a5e;
+  --brand-dark: #00543f;
+  --brand-soft: #e6f4ef;
+  --accent: #1f6feb;
+  --accent-soft: #e8f0fe;
 
   --ink: #16161d;
   --ink-soft: #55555f;
@@ -13,7 +13,7 @@
 
   --surface: #ffffff;
   --surface-sunken: #f7f7f9;
-  --page-bg: #fbfbfd;
+  --page-bg: #fafbfa;
   --line: #e6e6ec;
   --line-strong: #d5d5de;
 
