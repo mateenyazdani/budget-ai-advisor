@@ -28,6 +28,8 @@ function fromRow(row) {
     totalExpenses: Number(row.total_expenses),
     surplus: Number(row.surplus),
     savingsRate: row.savings_rate != null ? String(row.savings_rate) : null,
+    currentSavings: row.answers?.currentSavings ? parseFloat(row.answers.currentSavings) : null,
+    // Kept so the setup form can be reopened with what was entered last time.
     answers: row.answers || {},
     // Recommendations are derived, not stored, so they stay in step with the
     // rules rather than being frozen at whatever they were when saved.

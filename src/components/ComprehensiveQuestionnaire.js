@@ -25,9 +25,11 @@ const DEFAULTS = {
   petCount: 0,
 };
 
-function ComprehensiveQuestionnaire({ onSubmit }) {
-  const [form, setForm] = useState(DEFAULTS);
-  const [showMore, setShowMore] = useState(false);
+function ComprehensiveQuestionnaire({ onSubmit, initial, onCancel }) {
+  const editing = Boolean(initial);
+  const [form, setForm] = useState(() => ({ ...DEFAULTS, ...(initial || {}) }));
+  // Someone reopening their answers usually wants a detail they set before.
+  const [showMore, setShowMore] = useState(editing);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -83,8 +85,12 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
   return (
     <div className="setup">
       <div className="setup-head">
-        <h1>Let&rsquo;s build your budget</h1>
-        <p>A few answers is enough. You can add detail afterwards.</p>
+        <h1>{editing ? 'Adjust your answers' : 'Let\u2019s build your budget'}</h1>
+        <p>
+          {editing
+            ? 'Change anything and rebuild. Your previous answers are filled in.'
+            : 'A few answers is enough. You can add detail afterwards.'}
+        </p>
       </div>
 
       <form onSubmit={submit} className="setup-form">
@@ -251,9 +257,16 @@ function ComprehensiveQuestionnaire({ onSubmit }) {
 
         {error && <div className="setup-error">{error}</div>}
 
-        <button type="submit" className="btn-build" disabled={busy}>
-          {busy ? 'Working it out…' : 'Build my budget'}
-        </button>
+        <div className="setup-actions">
+          {editing && (
+            <button type="button" className="btn-cancel" onClick={onCancel}>
+              Cancel
+            </button>
+          )}
+          <button type="submit" className="btn-build" disabled={busy}>
+            {busy ? 'Working it out…' : editing ? 'Update my budget' : 'Build my budget'}
+          </button>
+        </div>
 
         <p className="setup-note">
           Figures are modelled estimates for your country and household, not your real spending.

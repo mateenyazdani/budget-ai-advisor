@@ -126,12 +126,32 @@ function App() {
           />
 
           <Route
+            path="/edit"
+            element={
+              <Protected session={session}>
+                <NeedsBudget budget={userBudget}>
+                  <Shell session={session} budget={userBudget} showNav={false}>
+                    <SetupRoute onSaved={setUserBudget} initial={userBudget?.answers} />
+                  </Shell>
+                </NeedsBudget>
+              </Protected>
+            }
+          />
+
+          <Route
             path="/dashboard"
             element={
               <Protected session={session}>
                 <NeedsBudget budget={userBudget}>
                   <Shell session={session} budget={userBudget} showNav>
-                    <Dashboard budget={userBudget} onStartOver={() => setUserBudget(null)} />
+                    <Dashboard
+                      budget={userBudget}
+                      onStartOver={() => setUserBudget(null)}
+                      onBudgetChange={(next, answers) => {
+                        setUserBudget(next);
+                        saveBudget(next, answers);
+                      }}
+                    />
                   </Shell>
                 </NeedsBudget>
               </Protected>
@@ -209,12 +229,14 @@ function NeedsBudget({ budget, children }) {
   return children;
 }
 
-function SetupRoute({ onSaved }) {
+function SetupRoute({ onSaved, initial }) {
   const navigate = useNavigate();
   return (
     <ComprehensiveQuestionnaire
+      initial={initial}
+      onCancel={() => navigate('/dashboard')}
       onSubmit={async (budget, answers) => {
-        onSaved(budget);
+        onSaved({ ...budget, answers });
         navigate('/dashboard');
         await saveBudget(budget, answers);
       }}

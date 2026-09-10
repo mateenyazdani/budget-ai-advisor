@@ -174,7 +174,7 @@ export function calculateComprehensiveBudget(userProfile) {
     country, monthlyIncome, age, maritalStatus, usePublicTransport, usesCar,
     gymOption, activities, subscriptions, hasPets, petCount,
     transportCard, ridesPerMonth, childCount,
-    rentOverride, billsOverride, currentSavings,
+    rentOverride, billsOverride, currentSavings, categoryOverrides,
   } = userProfile;
 
   const countryInfo = countryData[country];
@@ -264,6 +264,15 @@ export function calculateComprehensiveBudget(userProfile) {
     'Retirement Savings': costs.retirementSavings,
   };
 
+  // Every figure here is a modelled average until someone tells us otherwise,
+  // so an entered amount for any category replaces it outright.
+  if (categoryOverrides && typeof categoryOverrides === 'object') {
+    for (const [name, value] of Object.entries(categoryOverrides)) {
+      const amount = money(value);
+      if (amount !== null && name in categories) categories[name] = amount;
+    }
+  }
+
   const budget = {
     country: countryInfo.name,
     currency: countryInfo.currency,
@@ -274,6 +283,7 @@ export function calculateComprehensiveBudget(userProfile) {
     currentSavings: money(currentSavings),
     usesRealRent: rent !== null,
     usesRealBills: bills !== null,
+    categoryOverrides: categoryOverrides || {},
     categories,
   };
 

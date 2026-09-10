@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ExpenseLogger from './ExpenseLogger';
 import PriceCheck from './PriceCheck';
 import { groupBudget } from '../utils/budgetGroups';
+import { calculateComprehensiveBudget } from '../utils/budgetCalculator';
 import { BasketIcon, BankIcon, ChatIcon } from './Icons';
 import '../styles/Dashboard.css';
 
@@ -10,9 +11,41 @@ function money(currency, amount) {
   return `${currency}${Math.round(amount).toLocaleString()}`;
 }
 
-function Dashboard({ budget, onStartOver }) {
+function Dashboard({ budget, onStartOver, onBudgetChange }) {
   const [currentBudget, setCurrentBudget] = useState(budget);
   const [openGroup, setOpenGroup] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [draft, setDraft] = useState('');
+
+  // Every figure starts as a modelled average, so any of them can be replaced
+  // with what the person actually pays.
+  const saveOverride = (name) => {
+    const value = draft.trim();
+    setEditing(null);
+    if (value === '') return;
+
+    const amount = parseFloat(value);
+    if (!Number.isFinite(amount) || amount < 0) return;
+
+    const answers = {
+      ...(currentBudget.answers || {}),
+      categoryOverrides: { ...(currentBudget.answers?.categoryOverrides || {}), [name]: amount },
+    };
+
+    try {
+      const next = calculateComprehensiveBudget({
+        ...answers,
+        monthlyIncome: currentBudget.monthlyIncome,
+        age: currentBudget.age,
+        country: (currentBudget.answers?.country) || 'spain',
+      });
+      const merged = { ...next, answers };
+      setCurrentBudget(merged);
+      onBudgetChange?.(merged, answers);
+    } catch {
+      // Leave the figure as it was if the recalculation cannot be done.
+    }
+  };
 
   const { currency, monthlyIncome, totalExpenses, surplus } = currentBudget;
   const groups = groupBudget(currentBudget.categories);
@@ -128,7 +161,7 @@ function Dashboard({ budget, onStartOver }) {
       <section className="breakdown">
         <div className="section-head">
           <h2>Where it goes</h2>
-          <p>Tap any row to see what is inside it.</p>
+          <p>Open a row, then click any amount to replace the estimate with what you actually pay.</p>
         </div>
 
         {groups.map((g) => {
@@ -164,7 +197,29 @@ function Dashboard({ budget, onStartOver }) {
                           style={{ width: `${(item.amount / g.items[0].amount) * 100}%`, background: g.color }}
                         />
                       </span>
-                      <span className="item-amount">{money(currency, item.amount)}</span>
+                      {editing === item.name ? (
+                        <input
+                          className="item-input"
+                          type="number"
+                          autoFocus
+                          value={draft}
+                          onChange={(e) => setDraft(e.target.value)}
+                          onBlur={() => saveOverride(item.name)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveOverride(item.name);
+                            if (e.key === 'Escape') setEditing(null);
+                          }}
+                          aria-label={`What you actually pay for ${item.name}`}
+                        />
+                      ) : (
+                        <button
+                          className={`item-amount ${currentBudget.answers?.categoryOverrides?.[item.name] !== undefined ? 'edited' : ''}`}
+                          onClick={() => { setEditing(item.name); setDraft(String(item.amount)); }}
+                          title="Click to enter what you actually pay"
+                        >
+                          {money(currency, item.amount)}
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -192,7 +247,8 @@ function Dashboard({ budget, onStartOver }) {
       <PriceCheck age={currentBudget.age} />
 
       <div className="actions">
-        <button className="btn-restart" onClick={onStartOver}>Start over with new answers</button>
+        <Link className="btn-restart" to="/edit">Adjust my answers</Link>
+        <button className="btn-restart subtle" onClick={onStartOver}>Start fresh</button>
       </div>
     </div>
   );
