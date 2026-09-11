@@ -1,5 +1,5 @@
 const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_lib/websearch');
-const { requireUser } = require('./_lib/auth');
+const { rateLimited } = require('./_lib/ratelimit');
 
 // Subscription and fare prices move slowly, so a day of caching is plenty and
 // keeps the cost of this endpoint near zero.
@@ -188,7 +188,4 @@ async function handler(req, res) {
   }
 }
 
-module.exports = requireUser(
-  { endpoint: 'prices', limit: 8, window: '1 hour' },
-  handler,
-);
+module.exports = rateLimited({ endpoint: 'prices', limit: 16 }, handler);

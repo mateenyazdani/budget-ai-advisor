@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { authedFetch } from '../lib/authedFetch';
 import '../styles/PriceCheck.css';
 
 const CURRENCY_SYMBOLS = { EUR: '€', USD: '$', GBP: '£', AUD: '$' };
@@ -28,7 +27,7 @@ function PriceCheck({ age }) {
     // serverless time limit; whichever succeeds gets shown.
     const fetchKind = async (kind) => {
       const params = new URLSearchParams({ city: city.trim(), age: String(age || 30), kind });
-      const response = await authedFetch(`/api/prices?${params}`);
+      const response = await fetch(`/api/prices?${params}`);
       const data = await response.json().catch(() => null);
       if (!data) throw new Error('unavailable');
       if (!response.ok) throw new Error(data.error || 'Lookup failed.');

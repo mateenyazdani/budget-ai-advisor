@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { requireUser } = require('./_lib/auth');
+const { rateLimited } = require('./_lib/ratelimit');
 
 const MAX_MESSAGE_CHARS = 2000;
 const MAX_HISTORY_TURNS = 20;
@@ -119,7 +119,4 @@ Guidelines:
   }
 }
 
-module.exports = requireUser(
-  { endpoint: 'advisor', limit: 30, window: '1 hour' },
-  handler,
-);
+module.exports = rateLimited({ endpoint: 'advisor', limit: 40 }, handler);

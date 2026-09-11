@@ -1,5 +1,5 @@
 const { searchJson, httpsUrlOrNull, resolveCountry, Anthropic } = require('./_lib/websearch');
-const { requireUser } = require('./_lib/auth');
+const { rateLimited } = require('./_lib/ratelimit');
 
 // Each lookup costs a Claude call plus web searches, so results are reused for
 // an hour per city/category on a warm instance.
@@ -135,7 +135,4 @@ Reply with only a JSON array, no prose around it. Each element:
   }
 }
 
-module.exports = requireUser(
-  { endpoint: 'deals', limit: 6, window: '1 hour' },
-  handler,
-);
+module.exports = rateLimited({ endpoint: 'deals', limit: 12 }, handler);

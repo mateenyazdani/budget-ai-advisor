@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authedFetch } from '../lib/authedFetch';
 import '../styles/AIAdvisor.css';
 
 function AIAdvisor({ budget }) {
@@ -35,7 +34,7 @@ function AIAdvisor({ budget }) {
 
     try {
       // Call Claude API
-      const response = await authedFetch('/api/claude-advisor', {
+      const response = await fetch('/api/claude-advisor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
