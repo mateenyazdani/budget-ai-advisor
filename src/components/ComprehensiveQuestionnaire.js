@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { calculateComprehensiveBudget, ACTIVITY_OPTIONS } from '../utils/budgetCalculator';
+import { calculateComprehensiveBudget, ACTIVITY_OPTIONS, SUBSCRIPTION_OPTIONS } from '../utils/budgetCalculator';
 import '../styles/Questionnaire.css';
 
 // Only four answers are needed to produce a useful budget. Everything else has
@@ -20,7 +20,7 @@ const DEFAULTS = {
   usesCar: 'no',
   gymOption: 'none',
   activities: [],
-  subscriptions: [],
+  subscriptionPlans: {},
   hasPets: 'no',
   petCount: 0,
 };
@@ -36,10 +36,18 @@ function ComprehensiveQuestionnaire({ onSubmit, initial, onCancel }) {
   const update = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
-      const list = e.target.dataset.group === 'activities' ? 'activities' : 'subscriptions';
       setForm((prev) => ({
         ...prev,
-        [list]: checked ? [...prev[list], name] : prev[list].filter((v) => v !== name),
+        activities: checked
+          ? [...prev.activities, name]
+          : prev.activities.filter((v) => v !== name),
+      }));
+      return;
+    }
+    if (e.target.dataset.group === 'subscription') {
+      setForm((prev) => ({
+        ...prev,
+        subscriptionPlans: { ...prev.subscriptionPlans, [name]: value },
       }));
       return;
     }
@@ -243,14 +251,27 @@ function ComprehensiveQuestionnaire({ onSubmit, initial, onCancel }) {
 
             <div className="field">
               <label>Subscriptions</label>
-              <div className="chip-group">
-                {[['netflix', 'Netflix'], ['spotify', 'Spotify'], ['icloud', 'iCloud+'], ['other', 'Other apps']].map(([id, label]) => (
-                  <label key={id} className={form.subscriptions.includes(id) ? 'chip on' : 'chip'}>
-                    <input type="checkbox" name={id} checked={form.subscriptions.includes(id)} onChange={update} />
-                    {label}
-                  </label>
+              <div className="sub-grid">
+                {SUBSCRIPTION_OPTIONS.map((service) => (
+                  <div key={service.id} className="sub-row">
+                    <span className="sub-name">{service.label}</span>
+                    <select
+                      name={service.id}
+                      data-group="subscription"
+                      value={form.subscriptionPlans[service.id] || 'none'}
+                      onChange={update}
+                      aria-label={`${service.label} plan`}
+                    >
+                      {service.plans.map((plan) => (
+                        <option key={plan.id} value={plan.id}>{plan.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 ))}
               </div>
+              <span className="field-hint">
+                Plans differ a lot — a Family plan can be double an Individual one.
+              </span>
             </div>
           </div>
         )}

@@ -19,7 +19,7 @@ const SAMPLE_ANSWERS = {
   usesCar: 'no',
   gymOption: 'budget',
   activities: ['padel'],
-  subscriptions: ['netflix', 'spotify'],
+  subscriptionPlans: { netflix: 'standard', spotify: 'individual', icloud: 'gb200' },
   hasPets: 'no',
   petCount: 0,
   rentOverride: 850,

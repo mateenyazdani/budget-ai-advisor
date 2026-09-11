@@ -49,10 +49,12 @@ const countryData = {
       medications: 20,
       haircuts: 25,
       personalCare: 30,
-      netflix: 9,
-      spotify: 11,
-      icloud: 3,
-      otherSubscriptions: 10,
+      subscriptionPrices: {
+        netflix: { ads: 6.99, standard: 13.99, premium: 19.99 },
+        spotify: { student: 5.99, individual: 11.99, duo: 15.99, family: 19.99 },
+        icloud: { gb50: 0.99, gb200: 2.99, tb2: 9.99 },
+        other: { one: 10, several: 25 },
+      },
       cinema: 20,
       entertainment: 40,
       clothing: 40,
@@ -100,10 +102,12 @@ const countryData = {
       medications: 50,
       haircuts: 40,
       personalCare: 50,
-      netflix: 15,
-      spotify: 11,
-      icloud: 3,
-      otherSubscriptions: 20,
+      subscriptionPrices: {
+        netflix: { ads: 7.99, standard: 17.99, premium: 24.99 },
+        spotify: { student: 5.99, individual: 11.99, duo: 16.99, family: 19.99 },
+        icloud: { gb50: 0.99, gb200: 2.99, tb2: 9.99 },
+        other: { one: 20, several: 45 },
+      },
       cinema: 30,
       entertainment: 80,
       clothing: 80,
@@ -149,10 +153,12 @@ const countryData = {
       medications: 40,
       haircuts: 50,
       personalCare: 60,
-      netflix: 15,
-      spotify: 12,
-      icloud: 4,
-      otherSubscriptions: 25,
+      subscriptionPrices: {
+        netflix: { ads: 7.99, standard: 18.99, premium: 25.99 },
+        spotify: { student: 6.99, individual: 13.99, duo: 18.99, family: 22.99 },
+        icloud: { gb50: 1.49, gb200: 4.49, tb2: 14.99 },
+        other: { one: 25, several: 55 },
+      },
       cinema: 35,
       entertainment: 100,
       clothing: 100,
@@ -169,10 +175,70 @@ const countryData = {
 
 export const ACTIVITY_OPTIONS = Object.entries(ACTIVITY_LABELS).map(([id, label]) => ({ id, label }));
 
+// Each service has tiers that differ by a lot — a Spotify Family is roughly
+// double an Individual — so the plan is asked for rather than assumed.
+export const SUBSCRIPTION_OPTIONS = [
+  {
+    id: 'netflix',
+    label: 'Netflix',
+    plans: [
+      { id: 'none', label: 'Not subscribed' },
+      { id: 'ads', label: 'Standard with ads' },
+      { id: 'standard', label: 'Standard' },
+      { id: 'premium', label: 'Premium' },
+    ],
+  },
+  {
+    id: 'spotify',
+    label: 'Spotify',
+    plans: [
+      { id: 'none', label: 'Not subscribed' },
+      { id: 'student', label: 'Student' },
+      { id: 'individual', label: 'Individual' },
+      { id: 'duo', label: 'Duo' },
+      { id: 'family', label: 'Family' },
+    ],
+  },
+  {
+    id: 'icloud',
+    label: 'iCloud+',
+    plans: [
+      { id: 'none', label: 'Not subscribed' },
+      { id: 'gb50', label: '50 GB' },
+      { id: 'gb200', label: '200 GB' },
+      { id: 'tb2', label: '2 TB' },
+    ],
+  },
+  {
+    id: 'other',
+    label: 'Other apps',
+    plans: [
+      { id: 'none', label: 'None' },
+      { id: 'one', label: 'One or two' },
+      { id: 'several', label: 'Several' },
+    ],
+  },
+];
+
+const SUBSCRIPTION_LABELS = Object.fromEntries(
+  SUBSCRIPTION_OPTIONS.map((s) => [s.id, Object.fromEntries(s.plans.map((p) => [p.id, p.label]))])
+);
+
+// Someone who ticked a box before an option existed keeps a sensible plan.
+const LEGACY_PLAN = { netflix: 'standard', spotify: 'individual', icloud: 'gb200', other: 'one' };
+
+function resolvePlans({ subscriptionPlans, subscriptions }) {
+  if (subscriptionPlans && typeof subscriptionPlans === 'object') return subscriptionPlans;
+  if (Array.isArray(subscriptions)) {
+    return Object.fromEntries(subscriptions.map((id) => [id, LEGACY_PLAN[id] || 'none']));
+  }
+  return {};
+}
+
 export function calculateComprehensiveBudget(userProfile) {
   const {
     country, monthlyIncome, age, maritalStatus, usePublicTransport, usesCar,
-    gymOption, activities, subscriptions, hasPets, petCount,
+    gymOption, activities, subscriptions, subscriptionPlans, hasPets, petCount,
     transportCard, ridesPerMonth, childCount,
     rentOverride, billsOverride, currentSavings, categoryOverrides,
   } = userProfile;
@@ -198,6 +264,13 @@ export function calculateComprehensiveBudget(userProfile) {
   const chosenActivities = Array.isArray(activities) ? activities : [];
   const activitiesCost = chosenActivities.reduce((sum, id) => sum + (costs.activities[id] || 0), 0);
   const doesSomething = gymOption !== 'none' || chosenActivities.length > 0;
+
+  const plans = resolvePlans({ subscriptionPlans, subscriptions });
+  const planCost = (service) => {
+    const plan = plans[service];
+    if (!plan || plan === 'none') return 0;
+    return costs.subscriptionPrices[service]?.[plan] || 0;
+  };
 
   const perChild = costs.perChild;
 
@@ -248,10 +321,10 @@ export function calculateComprehensiveBudget(userProfile) {
     'Medications': costs.medications,
     'Haircuts': costs.haircuts,
     'Personal Care': costs.personalCare,
-    'Netflix': subscriptions?.includes('netflix') ? costs.netflix : 0,
-    'Spotify': subscriptions?.includes('spotify') ? costs.spotify : 0,
-    'iCloud+': subscriptions?.includes('icloud') ? costs.icloud : 0,
-    'Other Subscriptions': subscriptions?.includes('other') ? costs.otherSubscriptions : 0,
+    'Netflix': planCost('netflix'),
+    'Spotify': planCost('spotify'),
+    'iCloud+': planCost('icloud'),
+    'Other Subscriptions': planCost('other'),
     'Cinema & Entertainment': costs.cinema + costs.entertainment,
     'Clothing': costs.clothing + kids * perChild.clothing,
     'Pet Food': hasPets === 'yes' ? costs.petFood * pets : 0,
@@ -281,6 +354,12 @@ export function calculateComprehensiveBudget(userProfile) {
     childCount: kids,
     activities: chosenActivities.map((id) => ACTIVITY_LABELS[id]).filter(Boolean),
     currentSavings: money(currentSavings),
+    subscriptionPlans: plans,
+    subscriptionLabels: Object.fromEntries(
+      Object.entries(plans)
+        .filter(([, plan]) => plan && plan !== 'none')
+        .map(([service, plan]) => [service, SUBSCRIPTION_LABELS[service]?.[plan] || plan])
+    ),
     usesRealRent: rent !== null,
     usesRealBills: bills !== null,
     categoryOverrides: categoryOverrides || {},
