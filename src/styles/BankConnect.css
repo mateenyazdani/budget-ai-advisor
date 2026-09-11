@@ -541,3 +541,31 @@
   }
   .recurring-seen { display: none; }
 }
+
+.try-sample {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand);
+  color: var(--brand-dark);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.try-sample span {
+  display: block;
+  font-weight: 400;
+  font-size: 0.82rem;
+  opacity: 0.8;
+  margin-top: 3px;
+}
+
+.try-sample:hover {
+  background: #d9ece4;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseStatement, summarise } from '../lib/csvImport';
+import { sampleStatementCsv } from '../lib/sampleStatement';
 import { importTransactions } from '../lib/budgetStore';
 import {
   findRecurring, comparePlan, suggestAdjustment, applyRules, saveRule,
@@ -91,6 +92,10 @@ function BankConnect({ budget }) {
     );
   };
 
+  const trySample = () => {
+    handleFile(new File([sampleStatementCsv()], 'sample-statement.csv', { type: 'text/csv' }));
+  };
+
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
@@ -134,6 +139,11 @@ function BankConnect({ budget }) {
               onChange={(e) => handleFile(e.target.files?.[0])}
             />
           </div>
+
+          <button type="button" className="try-sample" onClick={trySample}>
+            Try it with a sample statement
+            <span>Three months of realistic transactions. Nothing of yours is used.</span>
+          </button>
 
           <div className="export-help">
             <h4>Getting the file from Revolut</h4>

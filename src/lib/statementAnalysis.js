@@ -23,12 +23,11 @@ function daysBetween(a, b) {
   return Math.abs((new Date(b) - new Date(a)) / 86400000);
 }
 
-// Spending that is variable by nature. A shop charging a similar amount two
-// months running is not a subscription, and listing the weekly supermarket as
-// one buries the charges that actually are.
-const NEVER_RECURRING = new Set([
-  'Groceries', 'Dining Out', 'Coffee & Snacks', 'Clothing', 'Miscellaneous',
-]);
+// A subscription bills about once a month. Shopping at the same place several
+// times a month is not recurring however steady the total looks — and filtering
+// by category instead would miss the whole point, since an unrecognised charge
+// like a forgotten software subscription lands in Miscellaneous.
+const MAX_CHARGES_PER_MONTH = 1.4;
 
 // A charge is recurring when the same merchant appears in separate months for
 // a similar amount. One appearance proves nothing.
@@ -37,7 +36,6 @@ export function findRecurring(transactions) {
 
   for (const t of transactions) {
     if (t.amount >= 0) continue;
-    if (NEVER_RECURRING.has(t.category)) continue;
     const key = merchantKey(t.description);
     if (key.length < 3) continue;
     if (!groups.has(key)) groups.set(key, []);
@@ -52,6 +50,7 @@ export function findRecurring(transactions) {
     const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date));
     const months = new Set(sorted.map((t) => t.date.slice(0, 7)));
     if (months.size < 2) continue;
+    if (sorted.length / months.size > MAX_CHARGES_PER_MONTH) continue;
 
     const amounts = sorted.map((t) => Math.abs(t.amount));
     const typical = amounts.reduce((s, a) => s + a, 0) / amounts.length;
