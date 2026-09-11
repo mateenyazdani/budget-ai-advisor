@@ -114,7 +114,7 @@ function App() {
         <Routes>
           <Route path="/" element={<PublicHome session={session} budget={userBudget} />} />
           <Route path="/signin" element={<AuthRoute session={session} />} />
-          <Route path="/sample" element={<SampleBudget />} /></main>} />
+          <Route path="/sample" element={<SampleBudget />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
 
