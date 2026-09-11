@@ -184,17 +184,19 @@ function Dashboard({ budget, onStartOver, onBudgetChange }) {
       </section>
 
       <div className="quick-actions">
+        <Link className="quick-card primary" to="/bank">
+          <span className="quick-icon"><BankIcon /></span>
+          <span className="quick-title">Check against reality</span>
+          <span className="quick-sub">
+            Everything above is an estimate. Drop in a statement to see what you really spent.
+          </span>
+        </Link>
         <Link className="quick-card" to="/deals">
           <span className="quick-icon"><BasketIcon /></span>
           <span className="quick-title">Cheap food &amp; deals</span>
           <span className="quick-sub">
             Places near you under {money(currency, Math.max(surplus, 0))}
           </span>
-        </Link>
-        <Link className="quick-card" to="/bank">
-          <span className="quick-icon"><BankIcon /></span>
-          <span className="quick-title">Check against reality</span>
-          <span className="quick-sub">Drop in a statement and compare</span>
         </Link>
         <Link className="quick-card" to="/advisor">
           <span className="quick-icon"><ChatIcon /></span>

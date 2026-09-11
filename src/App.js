@@ -25,8 +25,10 @@ import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 
 const NAV_ITEMS = [
   { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
+  // Second, not third: it is the only screen using real money rather than an
+  // estimate, so it is the one worth reaching for.
+  { to: '/bank', Icon: BankIcon, label: 'Planned vs actual' },
   { to: '/deals', Icon: BasketIcon, label: 'Cheap food & deals' },
-  { to: '/bank', Icon: BankIcon, label: 'Statements' },
   { to: '/advisor', Icon: ChatIcon, label: 'Ask advisor' },
 ];
 
@@ -112,7 +114,7 @@ function App() {
         <Routes>
           <Route path="/" element={<PublicHome session={session} budget={userBudget} />} />
           <Route path="/signin" element={<AuthRoute session={session} />} />
-          <Route path="/sample" element={<SampleBudget />} />
+          <Route path="/sample" element={<SampleBudget />} /></main>} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
 

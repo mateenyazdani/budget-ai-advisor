@@ -574,3 +574,19 @@ a.btn-restart {
 
   .decide-amount { font-size: 2.1rem; }
 }
+
+/* The one card that leads to real data rather than another estimate. */
+.quick-card.primary {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.quick-card.primary:hover {
+  border-color: var(--brand-dark);
+  background: var(--brand-soft);
+}
+
+.quick-card.primary .quick-sub {
+  color: var(--brand-dark);
+  opacity: 0.85;
+}

@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseStatement, summarise } from '../lib/csvImport';
 import { importTransactions } from '../lib/budgetStore';
+import {
+  findRecurring, comparePlan, suggestAdjustment, applyRules, saveRule,
+} from '../lib/statementAnalysis';
 import '../styles/BankConnect.css';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -13,7 +16,40 @@ function BankConnect({ budget }) {
   const [error, setError] = useState('');
   const [saveState, setSaveState] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [recurring, setRecurring] = useState([]);
+  const [planRows, setPlanRows] = useState([]);
+  const [adjustment, setAdjustment] = useState(null);
+  const [recategorising, setRecategorising] = useState(null);
   const inputRef = useRef(null);
+
+  const budgetCategories = budget?.categories || {};
+  const categoryNames = Object.keys(budgetCategories).sort();
+
+  const analyse = (list, monthsCovered) => {
+    const withRules = applyRules(list);
+    const totals = {};
+    for (const t of withRules) {
+      if (t.amount >= 0) continue;
+      totals[t.category] = (totals[t.category] || 0) + Math.abs(t.amount);
+    }
+    const byCategory = Object.entries(totals)
+      .map(([category, total]) => ({ category, total: Number(total.toFixed(2)) }))
+      .sort((a, b) => b.total - a.total);
+
+    const rows = comparePlan(byCategory, budgetCategories, monthsCovered);
+    setTransactions(withRules);
+    setRecurring(findRecurring(withRules));
+    setPlanRows(rows);
+    setAdjustment(suggestAdjustment(rows, budget?.surplus ?? 0));
+    return withRules;
+  };
+
+  const correctCategory = (transaction, category) => {
+    saveRule(transaction.description, category);
+    setRecategorising(null);
+    const months = Math.max(summary?.monthsCovered || 1, 1);
+    analyse(transactions.map((t) => (t.externalId === transaction.externalId ? { ...t, category } : t)), months);
+  };
 
   const handleFile = async (file) => {
     setError('');
@@ -35,11 +71,14 @@ function BankConnect({ budget }) {
       return;
     }
 
-    setTransactions(result.transactions);
-    setSummary(summarise(result.transactions));
+    const monthsCovered = Math.max(
+      new Set(result.transactions.map((t) => t.date.slice(0, 7))).size, 1
+    );
+    const analysed = analyse(result.transactions, monthsCovered);
+    setSummary({ ...summarise(analysed), monthsCovered });
 
     setSaveState('saving');
-    const { saved, skipped, error: saveError } = await importTransactions(result.transactions);
+    const { saved, skipped, error: saveError } = await importTransactions(analysed);
     if (saveError) {
       setSaveState('');
       setError('Read the file, but could not save it to your account.');
@@ -58,22 +97,18 @@ function BankConnect({ budget }) {
     handleFile(e.dataTransfer.files?.[0]);
   };
 
-  const budgeted = (category) => {
-    const value = budget?.categories?.[category];
-    return typeof value === 'number' ? value : null;
-  };
-
   const currency = summary?.currency === 'EUR' ? '€' : summary?.currency || '€';
 
   return (
     <div className="bank-container">
       <button className="btn-back" onClick={() => navigate('/dashboard')}>← Back</button>
-      <h2>🏦 Your real spending</h2>
+      <h2>Planned versus actual</h2>
 
       <p className="bank-intro">
-        Export a statement from your bank and drop it here to see what you actually spent against
-        your budget. Nothing is sent to a third party — the file is read in your browser and the
-        transactions are saved to your account.
+        Everything else in this app is an estimate. This is the one place it meets your real money:
+        drop in a statement and see what you actually spent against what you planned, what you are
+        quietly paying every month, and what to change. The file is read in your browser and never
+        uploaded.
       </p>
 
       {!summary && (
@@ -140,30 +175,63 @@ function BankConnect({ budget }) {
             </div>
           </div>
 
-          <h3 className="section-heading">Where it actually went</h3>
+          {adjustment && (
+            <div className="finding headline-finding">
+              <span className="finding-badge">Change this</span>
+              <p>
+                <strong>{adjustment.category}</strong> came to {currency}{adjustment.actual.toFixed(0)} a
+                month against a plan of {currency}{adjustment.planned.toFixed(0)}. Bringing it to{' '}
+                {currency}{adjustment.target} would free {currency}{adjustment.saving} a month
+                {adjustment.closesDeficit ? ' — enough on its own to stop the shortfall.' : '.'}
+              </p>
+            </div>
+          )}
+
+          {recurring.length > 0 && (
+            <>
+              <h3 className="section-heading">Paid every month</h3>
+              <p className="guess-note">
+                Charges that repeated across months for the same amount. Worth checking you still
+                want all of them.
+              </p>
+              <div className="recurring-list">
+                {recurring.map((r) => (
+                  <div key={r.key} className="recurring-row">
+                    <span className="recurring-name">{r.name}</span>
+                    <span className="recurring-seen">seen {r.seen}×</span>
+                    <span className="recurring-amount">{currency}{r.amount.toFixed(2)}/mo</span>
+                    <span className="recurring-yearly">{currency}{r.yearly.toFixed(0)} a year</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <h3 className="section-heading">Planned versus actual</h3>
           <p className="guess-note">
-            Categories are guessed from the description, so check anything that looks off.
+            {summary.monthsCovered > 1
+              ? `Averaged over the ${summary.monthsCovered} months in this file.`
+              : 'Categories are guessed from the description — correct any that are wrong below.'}
           </p>
 
           <div className="category-compare">
-            {summary.byCategory.map((row) => {
-              const plan = budgeted(row.category);
-              const over = plan !== null && row.total > plan;
-              return (
-                <div key={row.category} className="compare-row">
-                  <span className="compare-name">{row.category}</span>
-                  <span className="compare-actual">{currency}{row.total.toFixed(2)}</span>
-                  {plan !== null ? (
-                    <span className={`compare-plan ${over ? 'over' : 'under'}`}>
-                      {over ? '▲' : '▼'} {currency}{Math.abs(row.total - plan).toFixed(2)}{' '}
-                      {over ? 'over' : 'under'} the {currency}{plan} you budgeted
-                    </span>
-                  ) : (
-                    <span className="compare-plan none">not in your budget</span>
-                  )}
-                </div>
-              );
-            })}
+            {planRows.map((row) => (
+              <div key={row.category} className={`compare-row ${row.hot ? 'hot' : ''}`}>
+                <span className="compare-name">
+                  {row.category}
+                  {row.hot && <span className="hot-flag">running hot</span>}
+                </span>
+                <span className="compare-actual">{currency}{row.actual.toFixed(2)}</span>
+                {row.planned !== null ? (
+                  <span className={`compare-plan ${row.difference > 0 ? 'over' : 'under'}`}>
+                    {row.difference > 0 ? '▲' : '▼'} {currency}{Math.abs(row.difference).toFixed(2)}{' '}
+                    {row.difference > 0 ? 'over' : 'under'} the {currency}{row.planned} you planned
+                  </span>
+                ) : (
+                  <span className="compare-plan none">nothing planned for this</span>
+                )}
+              </div>
+            ))}
           </div>
 
           <h3 className="section-heading">Transactions</h3>
@@ -172,9 +240,26 @@ function BankConnect({ budget }) {
               <div key={t.externalId} className="transaction-row">
                 <div className="transaction-main">
                   <span className="transaction-desc">{t.description}</span>
-                  <span className="transaction-date">
-                    {t.date}{t.direction === 'out' ? ` · ${t.category}` : ' · money in'}
-                  </span>
+                  {t.direction === 'out' ? (
+                    recategorising === t.externalId ? (
+                      <select
+                        className="recat-select"
+                        autoFocus
+                        defaultValue={t.category}
+                        onChange={(e) => correctCategory(t, e.target.value)}
+                        onBlur={() => setRecategorising(null)}
+                      >
+                        {categoryNames.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    ) : (
+                      <button className="recat-button" onClick={() => setRecategorising(t.externalId)}>
+                        {t.date} · {t.category}
+                        {t.corrected && <span className="recat-mark"> · fixed</span>}
+                      </button>
+                    )
+                  ) : (
+                    <span className="transaction-date">{t.date} · money in</span>
+                  )}
                 </div>
                 <span className={`transaction-amount ${t.direction}`}>
                   {t.amount > 0 ? '+' : ''}{t.amount.toFixed(2)}
