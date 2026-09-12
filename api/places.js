@@ -37,6 +37,31 @@ const CATEGORIES = {
     textQuery: 'padel court',
     spend: { INEXPENSIVE: 20, MODERATE: 28, EXPENSIVE: 35, VERY_EXPENSIVE: 50 },
   },
+  Tennis: {
+    emoji: '🎾',
+    textQuery: 'tennis club court',
+    spend: { INEXPENSIVE: 18, MODERATE: 28, EXPENSIVE: 40, VERY_EXPENSIVE: 60 },
+  },
+  Cinema: {
+    emoji: '🎬',
+    types: ['movie_theater'],
+    spend: { INEXPENSIVE: 7, MODERATE: 11, EXPENSIVE: 15, VERY_EXPENSIVE: 22 },
+  },
+  Travel: {
+    emoji: '✈️',
+    types: ['travel_agency', 'lodging'],
+    spend: { INEXPENSIVE: 45, MODERATE: 85, EXPENSIVE: 150, VERY_EXPENSIVE: 260 },
+  },
+  Nightlife: {
+    emoji: '🍸',
+    types: ['bar', 'night_club'],
+    spend: { INEXPENSIVE: 12, MODERATE: 22, EXPENSIVE: 38, VERY_EXPENSIVE: 60 },
+  },
+  Beauty: {
+    emoji: '💈',
+    types: ['hair_care', 'beauty_salon'],
+    spend: { INEXPENSIVE: 15, MODERATE: 28, EXPENSIVE: 45, VERY_EXPENSIVE: 80 },
+  },
   Gym: {
     emoji: '💪',
     types: ['gym', 'fitness_center'],

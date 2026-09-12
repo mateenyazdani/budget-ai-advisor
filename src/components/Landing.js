@@ -5,27 +5,27 @@ import ProductShot from './ProductShot';
 import '../styles/Landing.css';
 
 const STATS = [
-  { figure: 'Today', label: 'Know what you can safely spend' },
-  { figure: 'Before month-end', label: 'Spot overspending in time to fix it' },
-  { figure: '1 minute', label: 'From nothing to a full budget' },
+  { figure: 'Nearby', label: 'Real places, with real distances' },
+  { figure: 'Verified', label: 'Every offer links to its source' },
+  { figure: '11', label: 'Categories, and growing' },
   { figure: 'Free', label: 'No card, no subscription' },
 ];
 
 const FEATURES = [
   {
+    Icon: BasketIcon,
+    title: 'The deal, attached to the place',
+    body: 'Search padel and get the courts near you with the price on them — a court at EUR 6 an hour, 1.2 km away — rather than a list of venues and a separate pile of coupons.',
+  },
+  {
     Icon: ChartIcon,
-    title: 'A budget built from your life',
-    body: 'Answer four short steps and get a full monthly breakdown — rent, transport, food, gym, padel, subscriptions — modelled on real costs for your country and age.',
+    title: 'Eleven categories, and growing',
+    body: 'Food, padel, tennis, gyms, cinema, groceries, going out, hair, shopping, travel — or type anything at all and it will go looking.',
   },
   {
     Icon: ChatIcon,
-    title: 'An advisor that reads your numbers',
-    body: 'Ask what to cut and get an answer about your actual budget, not generic advice. It will tell you when your figures do not add up.',
-  },
-  {
-    Icon: BasketIcon,
-    title: 'Cheap food and real offers',
-    body: 'Places near you that fit what you have left this month, plus current deals found across Groupon, TheFork and local sites.',
+    title: 'A budget behind it',
+    body: 'Know what you actually have spare before you book anything, and ask an advisor about your own numbers. Secondary to the deals, but there when you want it.',
   },
   {
     Icon: TagIcon,
@@ -45,9 +45,9 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: '1', title: 'Answer four steps', body: 'Income, age, transport, sports, subscriptions. Takes about a minute.' },
-  { n: '2', title: 'See where it goes', body: 'A full breakdown across 37 categories, with charts and what is left over.' },
-  { n: '3', title: 'Spend less of it', body: 'Cheaper places nearby, real offers, live prices, and an advisor to ask.' },
+  { n: '1', title: 'Say where you are', body: 'Your city, or let it find you. Madrid, Barcelona, anywhere.' },
+  { n: '2', title: 'Pick what you want', body: 'Padel, dinner, a gym, a haircut — or type anything at all.' },
+  { n: '3', title: 'Get the price, not a listing', body: 'Places near you with the offer attached, each linking to where it was found.' },
 ];
 
 const FAQS = [
@@ -88,10 +88,11 @@ function Landing({ onGetStarted }) {
 
       <header className="landing-hero">
         <span className="hero-eyebrow">Built for Spain · Works in the USA and Australia</span>
-        <h1>Know what you<br />can spend today.</h1>
+        <h1>Discover more.<br />Spend less.</h1>
         <p className="hero-body">
-          A full monthly budget in about a minute — then a straight answer on what is safe to spend
-          this week, what you are on track to save, and the one change worth making.
+          The best deals near you — food, padel, gyms, cinema, travel — with the offer attached to
+          the place, not buried in a coupon site. And a budget behind it, so you always know what
+          you have to spend.
         </p>
         <div className="hero-actions">
           <button className="btn-cta" onClick={onGetStarted}>Get started</button>
@@ -116,9 +117,9 @@ function Landing({ onGetStarted }) {
 
       <section className="landing-section" id="features">
         <span className="section-eyebrow">What it does</span>
-        <h2>Everything in one place</h2>
+        <h2>Bargains, where you are</h2>
         <p className="section-sub">
-          A budget is only useful if it changes what you spend. This does both halves.
+          Most apps tell you what you spent. This one tells you where to spend less.
         </p>
 
         <div className="feature-grid">
@@ -134,7 +135,7 @@ function Landing({ onGetStarted }) {
 
       <section className="landing-section steps-section" id="how">
         <span className="section-eyebrow">How it works</span>
-        <h2>Three steps, about a minute</h2>
+        <h2>Three taps to a better price</h2>
 
         <div className="step-grid">
           {STEPS.map((s) => (
@@ -162,8 +163,8 @@ function Landing({ onGetStarted }) {
       </section>
 
       <section className="landing-cta">
-        <h2>Find out where it&rsquo;s going</h2>
-        <p>No card, no signup fee, about a minute to set up.</p>
+        <h2>See what&rsquo;s near you</h2>
+        <p>No card, no subscription. Free while it grows.</p>
         <button className="btn-cta" onClick={onGetStarted}>Get started free →</button>
       </section>
 

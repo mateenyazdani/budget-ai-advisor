@@ -17,18 +17,16 @@ import SampleBudget from './components/SampleBudget';
 import Terms from './components/Terms';
 import ComprehensiveQuestionnaire from './components/ComprehensiveQuestionnaire';
 import Dashboard from './components/Dashboard';
-import SmartSpending from './components/SmartSpending';
+import Discover from './components/Discover';
 import BankConnect from './components/BankConnect';
 import AIAdvisor from './components/AIAdvisor';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 
 const NAV_ITEMS = [
+  { to: '/discover', Icon: BasketIcon, label: 'Discover' },
   { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
-  // Second, not third: it is the only screen using real money rather than an
-  // estimate, so it is the one worth reaching for.
   { to: '/bank', Icon: BankIcon, label: 'Planned vs actual' },
-  { to: '/deals', Icon: BasketIcon, label: 'Cheap food & deals' },
   { to: '/advisor', Icon: ChatIcon, label: 'Ask advisor' },
 ];
 
@@ -51,7 +49,7 @@ function Shell({ session, budget, children, showNav }) {
         </div>
       </header>
 
-      {budget && showNav && (
+      {showNav && (
         <nav className="App-nav" aria-label="Main">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -163,17 +161,17 @@ function App() {
           />
 
           <Route
-            path="/deals"
+            path="/discover"
             element={
               <Protected session={session}>
-                <NeedsBudget budget={userBudget}>
-                  <Shell session={session} budget={userBudget} showNav>
-                    <SmartSpending budgetRemaining={userBudget?.surplus ?? 0} />
-                  </Shell>
-                </NeedsBudget>
+                <Shell session={session} budget={userBudget} showNav>
+                  <Discover budgetRemaining={userBudget?.surplus} />
+                </Shell>
               </Protected>
             }
           />
+
+          <Route path="/deals" element={<Navigate to="/discover" replace />} />
 
           <Route
             path="/bank"
@@ -211,13 +209,13 @@ function App() {
 // Signed-out visitors get the landing page; signed-in ones go to their budget.
 function PublicHome({ session, budget }) {
   const navigate = useNavigate();
-  if (session) return <Navigate to={budget ? '/dashboard' : '/setup'} replace />;
+  if (session) return <Navigate to="/discover" replace />;
   return <Landing onGetStarted={() => navigate('/signin')} />;
 }
 
 function AuthRoute({ session }) {
   const navigate = useNavigate();
-  if (session) return <Navigate to="/dashboard" replace />;
+  if (session) return <Navigate to="/discover" replace />;
   return <SignIn onBack={() => navigate('/')} />;
 }
 

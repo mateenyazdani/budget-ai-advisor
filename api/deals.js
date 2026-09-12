@@ -8,7 +8,7 @@ const EMPTY_CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
 
-const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Gym', 'Shopping'];
+const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Tennis', 'Gym', 'Shopping', 'Cinema', 'Travel', 'Nightlife', 'Beauty'];
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
 // Free text goes into a prompt, so keep it to plain words and digits.
 const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
