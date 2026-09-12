@@ -4,62 +4,75 @@
 // with offers attached. An "offer" category — a SIM card, broadband, insurance —
 // has no venue at all, so showing a map of shops would be noise; it goes
 // straight to the deals.
+//
+// Each one also sits under one of six things a person might be after. Thirty-
+// seven choices is a wall; six is a question you can answer in a second, and the
+// thirty-seven are one tap behind it.
 
-export const CATEGORIES = [
-  // Food and drink
-  { id: 'Dining', label: 'Eat out', icon: '🍽️', group: 'Food', type: 'place' },
-  { id: 'Coffee', label: 'Coffee', icon: '☕', group: 'Food', type: 'place' },
-  { id: 'Groceries', label: 'Groceries', icon: '🛒', group: 'Food', type: 'place' },
-  { id: 'Takeaway', label: 'Takeaway', icon: '🥡', group: 'Food', type: 'place' },
-  { id: 'Nightlife', label: 'Bars', icon: '🍸', group: 'Food', type: 'place' },
-
-  // Sport and fitness
-  { id: 'Padel', label: 'Padel', icon: '🎾', group: 'Sport', type: 'place' },
-  { id: 'Tennis', label: 'Tennis', icon: '🥎', group: 'Sport', type: 'place' },
-  { id: 'Gym', label: 'Gym', icon: '💪', group: 'Sport', type: 'place' },
-  { id: 'Swimming', label: 'Swimming', icon: '🏊', group: 'Sport', type: 'place' },
-  { id: 'Football', label: 'Football', icon: '⚽', group: 'Sport', type: 'place' },
-  { id: 'Climbing', label: 'Climbing', icon: '🧗', group: 'Sport', type: 'place' },
-  { id: 'Yoga', label: 'Yoga', icon: '🧘', group: 'Sport', type: 'place' },
-  { id: 'Golf', label: 'Golf', icon: '⛳', group: 'Sport', type: 'place' },
-
-  // Going out
-  { id: 'Cinema', label: 'Cinema', icon: '🎬', group: 'Going out', type: 'place' },
-  { id: 'Museums', label: 'Museums', icon: '🏛️', group: 'Going out', type: 'place' },
-  { id: 'Bowling', label: 'Bowling', icon: '🎳', group: 'Going out', type: 'place' },
-  { id: 'Concerts', label: 'Concerts', icon: '🎤', group: 'Going out', type: 'offer' },
-
-  // Looking after yourself
-  { id: 'Beauty', label: 'Hair & beauty', icon: '💈', group: 'Personal', type: 'place' },
-  { id: 'Spa', label: 'Spa & massage', icon: '💆', group: 'Personal', type: 'place' },
-  { id: 'Dentist', label: 'Dentist', icon: '🦷', group: 'Personal', type: 'place' },
-  { id: 'Optician', label: 'Glasses', icon: '👓', group: 'Personal', type: 'place' },
-  { id: 'Pharmacy', label: 'Pharmacy', icon: '💊', group: 'Personal', type: 'place' },
-
-  // Shopping
-  { id: 'Shopping', label: 'Clothes', icon: '👕', group: 'Shopping', type: 'place' },
-  { id: 'Electronics', label: 'Electronics', icon: '📱', group: 'Shopping', type: 'place' },
-  { id: 'Furniture', label: 'Home & furniture', icon: '🛋️', group: 'Shopping', type: 'place' },
-  { id: 'Books', label: 'Books', icon: '📚', group: 'Shopping', type: 'place' },
-  { id: 'Pets', label: 'Pets', icon: '🐾', group: 'Shopping', type: 'place' },
-
-  // Travel
-  { id: 'Hotels', label: 'Hotels', icon: '🏨', group: 'Travel', type: 'place' },
-  { id: 'Flights', label: 'Flights', icon: '✈️', group: 'Travel', type: 'offer' },
-  { id: 'CarHire', label: 'Car hire', icon: '🚗', group: 'Travel', type: 'offer' },
-  { id: 'Trains', label: 'Trains & coaches', icon: '🚆', group: 'Travel', type: 'offer' },
-
-  // Bills and services — no venue, so offers only
-  { id: 'SimCard', label: 'SIM & mobile', icon: '📶', group: 'Bills', type: 'offer' },
-  { id: 'Broadband', label: 'Broadband', icon: '🌐', group: 'Bills', type: 'offer' },
-  { id: 'Energy', label: 'Energy', icon: '💡', group: 'Bills', type: 'offer' },
-  { id: 'Insurance', label: 'Insurance', icon: '🛡️', group: 'Bills', type: 'offer' },
-  { id: 'Streaming', label: 'Streaming', icon: '📺', group: 'Bills', type: 'offer' },
-  { id: 'Banking', label: 'Banking', icon: '🏦', group: 'Bills', type: 'offer' },
+export const TOP_LEVEL = [
+  { id: 'EAT', label: 'Eat', icon: '🍔', blurb: 'Restaurants, cafés, food shops' },
+  { id: 'PLAY', label: 'Play', icon: '🎾', blurb: 'Sport, cinema, going out' },
+  { id: 'SHOP', label: 'Shop', icon: '👕', blurb: 'Clothes, beauty, health' },
+  { id: 'TRAVEL', label: 'Travel', icon: '✈️', blurb: 'Hotels, flights, car hire' },
+  { id: 'HOME', label: 'Home', icon: '🏠', blurb: 'Furniture, energy, money' },
+  { id: 'TECH', label: 'Tech', icon: '💻', blurb: 'Phones, broadband, streaming' },
 ];
 
-export const GROUPS = ['Food', 'Sport', 'Going out', 'Personal', 'Shopping', 'Travel', 'Bills'];
+export const CATEGORIES = [
+  // Eat
+  { id: 'Dining', label: 'Eat out', icon: '🍽️', top: 'EAT', type: 'place' },
+  { id: 'Coffee', label: 'Coffee', icon: '☕', top: 'EAT', type: 'place' },
+  { id: 'Takeaway', label: 'Takeaway', icon: '🥡', top: 'EAT', type: 'place' },
+  { id: 'Groceries', label: 'Groceries', icon: '🛒', top: 'EAT', type: 'place' },
+  { id: 'Nightlife', label: 'Bars', icon: '🍸', top: 'EAT', type: 'place' },
+
+  // Play
+  { id: 'Padel', label: 'Padel', icon: '🎾', top: 'PLAY', type: 'place' },
+  { id: 'Tennis', label: 'Tennis', icon: '🥎', top: 'PLAY', type: 'place' },
+  { id: 'Gym', label: 'Gym', icon: '💪', top: 'PLAY', type: 'place' },
+  { id: 'Swimming', label: 'Swimming', icon: '🏊', top: 'PLAY', type: 'place' },
+  { id: 'Football', label: 'Football', icon: '⚽', top: 'PLAY', type: 'place' },
+  { id: 'Climbing', label: 'Climbing', icon: '🧗', top: 'PLAY', type: 'place' },
+  { id: 'Yoga', label: 'Yoga', icon: '🧘', top: 'PLAY', type: 'place' },
+  { id: 'Golf', label: 'Golf', icon: '⛳', top: 'PLAY', type: 'place' },
+  { id: 'Cinema', label: 'Cinema', icon: '🎬', top: 'PLAY', type: 'place' },
+  { id: 'Museums', label: 'Museums', icon: '🏛️', top: 'PLAY', type: 'place' },
+  { id: 'Bowling', label: 'Bowling', icon: '🎳', top: 'PLAY', type: 'place' },
+  { id: 'Concerts', label: 'Concerts', icon: '🎤', top: 'PLAY', type: 'offer' },
+
+  // Shop
+  { id: 'Shopping', label: 'Clothes', icon: '👕', top: 'SHOP', type: 'place' },
+  { id: 'Books', label: 'Books', icon: '📚', top: 'SHOP', type: 'place' },
+  { id: 'Pets', label: 'Pets', icon: '🐾', top: 'SHOP', type: 'place' },
+  { id: 'Beauty', label: 'Hair & beauty', icon: '💈', top: 'SHOP', type: 'place' },
+  { id: 'Spa', label: 'Spa & massage', icon: '💆', top: 'SHOP', type: 'place' },
+  { id: 'Optician', label: 'Glasses', icon: '👓', top: 'SHOP', type: 'place' },
+  { id: 'Pharmacy', label: 'Pharmacy', icon: '💊', top: 'SHOP', type: 'place' },
+  { id: 'Dentist', label: 'Dentist', icon: '🦷', top: 'SHOP', type: 'place' },
+
+  // Travel
+  { id: 'Hotels', label: 'Hotels', icon: '🏨', top: 'TRAVEL', type: 'place' },
+  { id: 'Flights', label: 'Flights', icon: '✈️', top: 'TRAVEL', type: 'offer' },
+  { id: 'CarHire', label: 'Car hire', icon: '🚗', top: 'TRAVEL', type: 'offer' },
+  { id: 'Trains', label: 'Trains & coaches', icon: '🚆', top: 'TRAVEL', type: 'offer' },
+
+  // Home
+  { id: 'Furniture', label: 'Furniture', icon: '🛋️', top: 'HOME', type: 'place' },
+  { id: 'Energy', label: 'Energy', icon: '💡', top: 'HOME', type: 'offer' },
+  { id: 'Insurance', label: 'Insurance', icon: '🛡️', top: 'HOME', type: 'offer' },
+  { id: 'Banking', label: 'Banking', icon: '🏦', top: 'HOME', type: 'offer' },
+
+  // Tech
+  { id: 'Electronics', label: 'Electronics', icon: '📱', top: 'TECH', type: 'place' },
+  { id: 'SimCard', label: 'SIM & mobile', icon: '📶', top: 'TECH', type: 'offer' },
+  { id: 'Broadband', label: 'Broadband', icon: '🌐', top: 'TECH', type: 'offer' },
+  { id: 'Streaming', label: 'Streaming', icon: '📺', top: 'TECH', type: 'offer' },
+];
 
 export function categoryById(id) {
   return CATEGORIES.find((c) => c.id === id) || null;
+}
+
+export function categoriesIn(topId) {
+  return CATEGORIES.filter((c) => c.top === topId);
 }

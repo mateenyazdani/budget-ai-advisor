@@ -92,20 +92,43 @@ function cacheSet(key, deals) {
   cache.set(key, { deals, at: Date.now() });
 }
 
+// A price is only a price if it is a plain positive number. Anything else —
+// "from 20", "20-30", null — is dropped rather than coerced, because a wrong
+// figure on a price tag is worse than no figure.
+function money(value) {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return value;
+  if (typeof value !== 'string') return null;
+  const match = value.replace(',', '.').match(/\d+(?:\.\d+)?/);
+  if (!match) return null;
+  const n = Number(match[0]);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 function cleanDeals(raw) {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((d) => d && typeof d.merchant === 'string' && typeof d.offer === 'string')
     .slice(0, 12)
-    .map((d) => ({
-      merchant: String(d.merchant).slice(0, 80),
-      offer: String(d.offer).slice(0, 160),
-      detail: d.detail ? String(d.detail).slice(0, 220) : null,
-      // A deal with no usable source is unverifiable, so the UI flags it.
-      sourceUrl: httpsUrlOrNull(d.sourceUrl),
-      sourceName: d.sourceName ? String(d.sourceName).slice(0, 60) : null,
-      validity: d.validity ? String(d.validity).slice(0, 80) : null,
-    }));
+    .map((d) => {
+      const priceBefore = money(d.priceBefore);
+      const priceNow = money(d.priceNow);
+      // The headline "61% off" is only ever computed from two real numbers that
+      // were printed on the page. It is never taken from the model's own claim.
+      const hasBoth = priceBefore !== null && priceNow !== null && priceBefore > priceNow && priceBefore > 0;
+      return {
+        merchant: String(d.merchant).slice(0, 80),
+        offer: String(d.offer).slice(0, 160),
+        detail: d.detail ? String(d.detail).slice(0, 220) : null,
+        priceBefore: hasBoth ? priceBefore : null,
+        priceNow: hasBoth ? priceNow : priceNow,
+        discountPercent: hasBoth ? Math.round(((priceBefore - priceNow) / priceBefore) * 100) : null,
+        unit: d.unit ? String(d.unit).slice(0, 24) : null,
+        // A deal with no usable source is unverifiable, so the UI flags it.
+        sourceUrl: httpsUrlOrNull(d.sourceUrl),
+        sourceName: d.sourceName ? String(d.sourceName).slice(0, 60) : null,
+        validity: d.validity ? String(d.validity).slice(0, 80) : null,
+      };
+    });
 }
 
 async function handler(req, res) {
@@ -184,9 +207,12 @@ Hard rules:
 - Report every real offer you find — a dozen is a good answer when a dozen are there. Return an empty array only if the searches genuinely turned up nothing usable.
 
 Reply with only a JSON array, no prose around it. Each element:
-{"merchant": string, "offer": string, "detail": string|null, "validity": string|null, "sourceUrl": string, "sourceName": string}
+{"merchant": string, "offer": string, "detail": string|null, "priceBefore": number|null, "priceNow": number|null, "unit": string|null, "validity": string|null, "sourceUrl": string, "sourceName": string}
 
-"offer" is the saving itself, e.g. "2-for-1 on main courses". "validity" is any stated expiry or condition, or null.`,
+"offer" is the saving itself, e.g. "2-for-1 on main courses".
+"priceBefore" and "priceNow" are the old and new prices as plain numbers, and ONLY when the page actually prints both. If the page shows one price, put it in priceNow and leave priceBefore null. If it shows neither, leave both null. Never estimate a price, never work one backwards from a percentage, and never invent a "was" price to make a discount look bigger — a missing number is always the right answer when the page does not state it.
+"unit" is what the price buys, e.g. "per month", "per hour", "per night".
+"validity" is any stated expiry or condition, or null.`,
     });
 
     const deals = cleanDeals(parsed);

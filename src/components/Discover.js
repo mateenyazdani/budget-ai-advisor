@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { attachOffers } from '../lib/matchOffers';
-import { CATEGORIES, GROUPS, categoryById } from '../lib/categories';
+import { TOP_LEVEL, CATEGORIES, categoryById, categoriesIn } from '../lib/categories';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -43,15 +43,128 @@ function Elapsed() {
 
 function SkeletonCards({ count = 3 }) {
   return (
-    <div className="result-grid" aria-hidden="true">
+    <div className="deal-grid" aria-hidden="true">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="result-card skeleton">
+        <div key={i} className="deal-card skeleton">
+          <span className="skeleton-block" />
           <span className="skeleton-line wide" />
           <span className="skeleton-line" />
-          <span className="skeleton-block" />
         </div>
       ))}
     </div>
+  );
+}
+
+const SORTS = [
+  { id: 'value', label: 'Best value' },
+  { id: 'discount', label: 'Biggest discount' },
+  { id: 'price', label: 'Cheapest' },
+  { id: 'distance', label: 'Closest' },
+  { id: 'rating', label: 'Top rated' },
+];
+
+// Nulls always sort last, whichever way the column runs. A place with no rating
+// should never outrank one with a real 4.8.
+function by(getter, direction = 'asc') {
+  return (a, b) => {
+    const va = getter(a);
+    const vb = getter(b);
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    return direction === 'asc' ? va - vb : vb - va;
+  };
+}
+
+function priceOf(item) {
+  return item.offer?.priceNow ?? item.estimatedSpend ?? null;
+}
+
+function sortItems(items, sort) {
+  const copy = [...items];
+  if (sort === 'discount') return copy.sort(by((i) => i.offer?.discountPercent, 'desc'));
+  if (sort === 'price') return copy.sort(by(priceOf));
+  if (sort === 'distance') return copy.sort(by((i) => i.distanceKm));
+  if (sort === 'rating') return copy.sort(by((i) => i.rating, 'desc'));
+
+  // Best value: a real, verified discount wins, then having an offer at all,
+  // then price, then rating.
+  return copy.sort((a, b) => {
+    const da = a.offer?.discountPercent ?? -1;
+    const db = b.offer?.discountPercent ?? -1;
+    if (da !== db) return db - da;
+    if (Boolean(b.offer) !== Boolean(a.offer)) return b.offer ? 1 : -1;
+    const pa = priceOf(a);
+    const pb = priceOf(b);
+    if (pa != null && pb != null && pa !== pb) return pa - pb;
+    return (b.rating ?? 0) - (a.rating ?? 0);
+  });
+}
+
+function DealCard({ item, icon }) {
+  const { offer } = item;
+  const showPair = offer?.priceBefore != null && offer?.priceNow != null;
+
+  return (
+    <article className={`deal-card ${offer ? 'has-offer' : ''}`}>
+      <div className="deal-top" aria-hidden="true">
+        <span className="deal-emoji">{icon}</span>
+        {offer?.discountPercent != null && (
+          <span className="deal-burn">🔥 {offer.discountPercent}% OFF</span>
+        )}
+      </div>
+
+      <h3>{item.name}</h3>
+
+      {showPair ? (
+        <p className="deal-price">
+          <span className="was">€{offer.priceBefore}</span>
+          <span className="arrow" aria-hidden="true">→</span>
+          <span className="now">€{offer.priceNow}</span>
+          {offer.unit && <span className="unit">{offer.unit}</span>}
+        </p>
+      ) : offer?.priceNow != null ? (
+        <p className="deal-price">
+          <span className="now">€{offer.priceNow}</span>
+          {offer.unit && <span className="unit">{offer.unit}</span>}
+        </p>
+      ) : item.estimatedSpend != null ? (
+        <p className="deal-price estimate">
+          <span className="now soft">about €{item.estimatedSpend}</span>
+          <span className="unit">estimated, not a quoted price</span>
+        </p>
+      ) : null}
+
+      {offer && <p className="deal-offer">{offer.offer}</p>}
+      {offer?.validity && <p className="deal-validity">{offer.validity}</p>}
+
+      <div className="deal-facts">
+        {item.rating != null && (
+          <span>⭐ {item.rating}{item.ratingCount ? ` (${item.ratingCount})` : ''}</span>
+        )}
+        {item.priceLabel && !offer && <span>{item.priceLabel}</span>}
+        {item.openNow === true && <span className="open">Open now</span>}
+      </div>
+
+      <p className="deal-where">
+        {item.distanceKm != null
+          ? `${item.distanceKm} km away`
+          : item.address || 'Online — available anywhere'}
+      </p>
+
+      <div className="deal-actions">
+        {offer?.sourceUrl && (
+          <a className="deal-cta" href={offer.sourceUrl} target="_blank" rel="noopener noreferrer">
+            See the deal
+          </a>
+        )}
+        {item.mapsUri && (
+          <a className="deal-link" href={item.mapsUri} target="_blank" rel="noopener noreferrer">
+            Map
+          </a>
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -61,7 +174,7 @@ function Discover({ budgetRemaining }) {
   const [coords, setCoords] = useState(null);
   const [locating, setLocating] = useState(true);
 
-  const [group, setGroup] = useState('All');
+  const [top, setTop] = useState(null);
   const [category, setCategory] = useState(null);
   const [activeQuery, setActiveQuery] = useState('');
   const [places, setPlaces] = useState([]);
@@ -71,13 +184,13 @@ function Discover({ budgetRemaining }) {
   const [notice, setNotice] = useState('');
   const [offersError, setOffersError] = useState('');
   const [noPriceData, setNoPriceData] = useState(false);
+  const [query, setQuery] = useState('');
 
   // The product is cheap finds, so cheap and well-liked is the starting point
   // rather than something you have to go and switch on.
   const [maxPrice, setMaxPrice] = useState(2);
   const [goodOnly, setGoodOnly] = useState(true);
   const [sort, setSort] = useState('value');
-  const [query, setQuery] = useState('');
 
   // A slow search that has been abandoned must not overwrite a newer one.
   const runId = useRef(0);
@@ -132,7 +245,6 @@ function Discover({ budgetRemaining }) {
       );
       if (maxPrice < 4) params.set('maxPrice', String(maxPrice));
       if (goodOnly) params.set('minRating', '4');
-      params.set('sort', sort);
 
       fetch(`/api/places?${params}`)
         .then((r) => r.json())
@@ -145,6 +257,7 @@ function Discover({ budgetRemaining }) {
         .catch(() => { if (runId.current === run) setPlacesState('error'); });
     } else {
       setPlacesState('skipped');
+      setNoPriceData(false);
     }
 
     const key = freeText ? `q:${freeText.toLowerCase()}` : catId;
@@ -176,13 +289,18 @@ function Discover({ budgetRemaining }) {
     } catch {
       if (runId.current === run) setOffersState('error');
     }
-  }, [coords, city, maxPrice, goodOnly, sort]);
+  }, [coords, city, maxPrice, goodOnly]);
 
   const pick = (catId) => {
     setQuery('');
     search(catId, '');
-    // The grid is long now, so the results would otherwise open off-screen.
     requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  const openTop = (topId) => {
+    setTop(topId);
+    const first = categoriesIn(topId)[0];
+    if (first) pick(first.id);
   };
 
   const applyCity = (e) => {
@@ -197,42 +315,73 @@ function Discover({ budgetRemaining }) {
   // on screen, so re-run whatever is open.
   const inputsRef = useRef('');
   useEffect(() => {
-    const stamp = `${city}|${maxPrice}|${goodOnly}|${sort}|${coords ? 'gps' : 'city'}`;
+    const stamp = `${city}|${maxPrice}|${goodOnly}|${coords ? 'gps' : 'city'}`;
     if (inputsRef.current === '') { inputsRef.current = stamp; return; }
     if (inputsRef.current === stamp) return;
     inputsRef.current = stamp;
     if (category || activeQuery) search(category, activeQuery);
-  }, [city, maxPrice, goodOnly, sort, coords, category, activeQuery, search]);
+  }, [city, maxPrice, goodOnly, coords, category, activeQuery, search]);
 
   const current = category ? categoryById(category) : null;
-  const showing = group === 'All' ? GROUPS : [group];
+  const icon = current?.icon || '🏷️';
   const { places: merged, unmatched } = attachOffers(places, offers);
+
+  // Venues and venue-less offers are the same thing to someone browsing, so
+  // they sort together rather than sitting in two separate lists.
+  const items = sortItems(
+    [
+      ...merged.map((p) => ({ ...p, key: p.id })),
+      ...unmatched.map((d, i) => ({
+        key: `offer-${d.merchant}-${i}`,
+        name: d.merchant,
+        address: null,
+        rating: null,
+        distanceKm: null,
+        estimatedSpend: null,
+        offer: d,
+      })),
+    ],
+    sort
+  );
+
   const offersLoading = offersState === 'loading';
   const placesLoading = placesState === 'loading';
-  const nothingAtAll =
-    !offersLoading && !placesLoading && merged.length === 0 && unmatched.length === 0;
+  const showing = category || activeQuery;
 
   return (
     <div className="discover">
       <header className="discover-head">
-        <h1>What are you after?</h1>
+        <h1>What are you looking for?</h1>
         <p>
-          Pick anything below and we go looking for the real, current offer — nearby where there is
-          a place to go, nationwide where there is not.
+          Real places and real offers, cheapest and best-rated first.
           {typeof budgetRemaining === 'number' && budgetRemaining > 0 && (
             <> You have <strong>€{budgetRemaining.toFixed(0)}</strong> spare this month.</>
           )}
         </p>
       </header>
 
+      <div className="top-grid">
+        {TOP_LEVEL.map((t) => (
+          <button
+            key={t.id}
+            className={`top-tile ${top === t.id ? 'active' : ''}`}
+            onClick={() => openTop(t.id)}
+          >
+            <span className="top-icon" aria-hidden="true">{t.icon}</span>
+            <span className="top-label">{t.label}</span>
+            <span className="top-blurb">{t.blurb}</span>
+          </button>
+        ))}
+      </div>
+
       <form
         className="discover-search"
-        onSubmit={(e) => { e.preventDefault(); if (query.trim()) { search(null, query.trim()); } }}
+        onSubmit={(e) => { e.preventDefault(); if (query.trim()) { setTop(null); search(null, query.trim()); } }}
       >
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search anything — sim card, gym membership, car insurance…"
+          placeholder="Or search anything — sim card, gym membership, car insurance…"
           aria-label="Search for anything"
         />
         <button type="submit">Search</button>
@@ -255,136 +404,85 @@ function Discover({ budgetRemaining }) {
         )}
       </div>
 
-      <div className="filters">
-        <div className="filter-set" role="group" aria-label="Price">
-          {[
-            { v: 1, label: '€', title: 'Cheapest only' },
-            { v: 2, label: '€€ and under', title: 'Cheap and mid-range' },
-            { v: 4, label: 'Any price', title: 'No price limit' },
-          ].map((o) => (
+      {notice && <p className="discover-notice">{notice}</p>}
+
+      {top && (
+        <div className="subcats">
+          {categoriesIn(top).map((c) => (
             <button
-              key={o.v}
-              title={o.title}
-              className={`filter-pill ${maxPrice === o.v ? 'on' : ''}`}
-              onClick={() => setMaxPrice(o.v)}
+              key={c.id}
+              className={`category-chip ${category === c.id ? 'active' : ''}`}
+              onClick={() => pick(c.id)}
             >
-              {o.label}
+              <span className="chip-icon" aria-hidden="true">{c.icon}</span>
+              <span className="chip-label">{c.label}</span>
             </button>
           ))}
         </div>
-
-        <button
-          className={`filter-pill ${goodOnly ? 'on' : ''}`}
-          onClick={() => setGoodOnly((g) => !g)}
-        >
-          ⭐ 4.0+ only
-        </button>
-
-        <div className="filter-set" role="group" aria-label="Order">
-          <button
-            className={`filter-pill ${sort === 'value' ? 'on' : ''}`}
-            onClick={() => setSort('value')}
-          >
-            Best value
-          </button>
-          <button
-            className={`filter-pill ${sort === 'distance' ? 'on' : ''}`}
-            onClick={() => setSort('distance')}
-            disabled={!coords}
-            title={coords ? '' : 'Needs your location'}
-          >
-            Closest
-          </button>
-        </div>
-      </div>
-
-      {notice && <p className="discover-notice">{notice}</p>}
-
-      <nav className="group-tabs" aria-label="Category groups">
-        {['All', ...GROUPS].map((g) => (
-          <button
-            key={g}
-            className={`group-tab ${group === g ? 'active' : ''}`}
-            onClick={() => setGroup(g)}
-          >
-            {g}
-          </button>
-        ))}
-      </nav>
-
-      {showing.map((g) => (
-        <section key={g} className="category-block">
-          {group === 'All' && <h2 className="category-block-head">{g}</h2>}
-          <div className="category-grid">
-            {CATEGORIES.filter((c) => c.group === g).map((c) => (
-              <button
-                key={c.id}
-                className={`category-chip ${category === c.id ? 'active' : ''}`}
-                onClick={() => pick(c.id)}
-              >
-                <span className="chip-icon" aria-hidden="true">{c.icon}</span>
-                <span className="chip-label">{c.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
+      )}
 
       <div ref={resultsRef} />
 
-      {(category || activeQuery) && (
+      {showing && (
         <section className="results">
-          <h2>
-            {activeQuery ? `“${activeQuery}”` : current?.label}
-            {current?.type === 'offer' ? ' — best offers' : coords ? ' near you' : ` in ${city}`}
-          </h2>
+          <div className="results-bar">
+            <h2>
+              {activeQuery ? `“${activeQuery}”` : current?.label}
+              {current?.type === 'offer' ? ' — best offers' : coords ? ' near you' : ` in ${city}`}
+            </h2>
+
+            <div className="sorts">
+              {SORTS.map((s) => (
+                <button
+                  key={s.id}
+                  className={`filter-pill ${sort === s.id ? 'on' : ''}`}
+                  onClick={() => setSort(s.id)}
+                  disabled={s.id === 'distance' && !coords}
+                  title={s.id === 'distance' && !coords ? 'Needs your location' : ''}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filters">
+            <div className="filter-set" role="group" aria-label="Price">
+              {[
+                { v: 1, label: '€' },
+                { v: 2, label: '€€ and under' },
+                { v: 4, label: 'Any price' },
+              ].map((o) => (
+                <button
+                  key={o.v}
+                  className={`filter-pill ${maxPrice === o.v ? 'on' : ''}`}
+                  onClick={() => setMaxPrice(o.v)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            <button
+              className={`filter-pill lone ${goodOnly ? 'on' : ''}`}
+              onClick={() => setGoodOnly((g) => !g)}
+            >
+              ⭐ 4.0+ only
+            </button>
+          </div>
 
           {noPriceData && maxPrice < 4 && current?.type === 'place' && (
             <p className="filter-note">
-              Google publishes no price for {current.label.toLowerCase()}, so the price filter cannot
-              apply here. These are sorted by rating instead.
+              Google publishes no prices for {current.label.toLowerCase()}, so the price filter
+              cannot apply here. These are sorted by rating instead.
             </p>
           )}
 
-          {placesLoading && merged.length === 0 && <SkeletonCards count={3} />}
+          {placesLoading && items.length === 0 && <SkeletonCards count={4} />}
 
-          {merged.length > 0 && (
-            <div className="result-grid">
-              {merged.map((p) => (
-                <article key={p.id} className={`result-card ${p.offer ? 'has-offer' : ''}`}>
-                  {p.offer && <span className="offer-flag">Deal found</span>}
-                  <h3>{p.name}</h3>
-                  {p.address && <p className="result-address">{p.address}</p>}
-
-                  <div className="result-facts">
-                    {p.rating != null && <span>⭐ {p.rating}{p.ratingCount ? ` (${p.ratingCount})` : ''}</span>}
-                    {p.distanceKm != null && <span>{p.distanceKm} km</span>}
-                    {p.priceLabel && <span>{p.priceLabel}</span>}
-                    {p.openNow === true && <span className="open">Open now</span>}
-                  </div>
-
-                  {p.offer ? (
-                    <div className="result-offer">
-                      <strong>{p.offer.offer}</strong>
-                      {p.offer.validity && <span className="offer-validity">{p.offer.validity}</span>}
-                      {p.offer.sourceUrl && (
-                        <a href={p.offer.sourceUrl} target="_blank" rel="noopener noreferrer">
-                          Check on {p.offer.sourceName || 'source'}
-                        </a>
-                      )}
-                    </div>
-                  ) : (
-                    p.estimatedSpend != null && (
-                      <p className="result-estimate">Typically about €{p.estimatedSpend} — estimated</p>
-                    )
-                  )}
-
-                  {p.mapsUri && (
-                    <a className="result-map" href={p.mapsUri} target="_blank" rel="noopener noreferrer">
-                      Open in Maps
-                    </a>
-                  )}
-                </article>
+          {items.length > 0 && (
+            <div className="deal-grid">
+              {items.map((item) => (
+                <DealCard key={item.key} item={item} icon={icon} />
               ))}
             </div>
           )}
@@ -399,49 +497,29 @@ function Discover({ budgetRemaining }) {
             </>
           )}
 
-          {unmatched.length > 0 && (
-            <>
-              {merged.length > 0 && (
-                <>
-                  <h3 className="unmatched-head">Other offers in {city}</h3>
-                  <p className="unmatched-note">Found on the web but not tied to a place near you.</p>
-                </>
-              )}
-              <div className="result-grid">
-                {unmatched.map((d, i) => (
-                  <article key={`${d.merchant}-${i}`} className="result-card offer-only">
-                    <h3>{d.merchant}</h3>
-                    <div className="result-offer">
-                      <strong>{d.offer}</strong>
-                      {d.detail && <span className="offer-detail">{d.detail}</span>}
-                      {d.validity && <span className="offer-validity">{d.validity}</span>}
-                      {d.sourceUrl && (
-                        <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">
-                          Check on {d.sourceName || 'source'}
-                        </a>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
-
-          {nothingAtAll && offersState !== 'error' && (
+          {!offersLoading && !placesLoading && items.length === 0 && offersState !== 'error' && (
             <p className="results-status">
-              Nothing found for this in {city}. Offers are only shown when they can be verified on a
-              real page, so an empty result means nothing could be — not that nothing exists.
+              Nothing matched in {city}. Try “Any price”, or turn off the 4.0+ filter — offers are
+              only shown when they can be verified on a real page, so an empty result means nothing
+              could be, not that nothing exists.
             </p>
           )}
 
           {offersState === 'error' && (
             <p className="results-status">
               {offersError || 'The offer search could not finish.'}
-              {merged.length > 0 && ' The places above are still real.'}{' '}
+              {items.length > 0 && ' The places above are still real.'}{' '}
               <button className="linklike" onClick={() => search(category, activeQuery)}>Try again</button>
             </p>
           )}
         </section>
+      )}
+
+      {!showing && (
+        <p className="results-status">
+          {CATEGORIES.length} categories across the six above. Pick one to see what is going cheap
+          near you.
+        </p>
       )}
     </div>
   );
