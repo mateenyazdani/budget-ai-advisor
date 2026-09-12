@@ -10,6 +10,23 @@ const cache = new Map();
 
 const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Tennis', 'Gym', 'Shopping', 'Cinema', 'Travel', 'Nightlife', 'Beauty'];
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
+
+// A category label is written to read well on a button; a search needs the
+// words people actually write when hunting for that deal. Searching the bare
+// word "padel" found nothing, while "padel court booking offer" found eight.
+const CATEGORY_QUERIES = {
+  Dining: 'restaurant deals and discount menus',
+  Groceries: 'supermarket offers and grocery discounts',
+  Coffee: 'café and breakfast deals',
+  Padel: 'padel court booking offers and discounts',
+  Tennis: 'tennis court hire and club membership offers',
+  Gym: 'gym membership deals and day passes',
+  Shopping: 'clothing and retail discounts',
+  Cinema: 'cinema ticket offers and discount days',
+  Travel: 'hotel and travel deals',
+  Nightlife: 'bar and nightlife drink offers',
+  Beauty: 'hairdresser and beauty salon offers',
+};
 // Free text goes into a prompt, so keep it to plain words and digits.
 const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
 
@@ -85,7 +102,7 @@ async function handler(req, res) {
   // A category is just a query with a friendlier name. Treating it as one gives
   // it the stronger prompt and the page fetching that typed searches get —
   // without which a category browse finds almost nothing.
-  const effectiveQuery = query || (category === 'All' ? null : category.toLowerCase());
+  const effectiveQuery = query || (category === 'All' ? null : CATEGORY_QUERIES[category] || category.toLowerCase());
   const focus = effectiveQuery || 'any everyday spending category';
 
   try {
