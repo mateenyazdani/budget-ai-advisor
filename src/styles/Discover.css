@@ -393,3 +393,78 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Where you are, and what counts as cheap */
+
+.discover-where {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.city-status.located {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+.filter-set {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--brand-soft);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.filter-pill {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-pill:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.filter-pill.on {
+  background: var(--surface);
+  color: var(--brand-dark);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.09);
+}
+
+.filter-pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* The lone toggle has no track behind it, so it carries its own outline. */
+.filters > .filter-pill {
+  border: 1px solid var(--line);
+}
+
+.filters > .filter-pill.on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.filter-note {
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+  margin: -4px 0 10px;
+  max-width: 620px;
+}

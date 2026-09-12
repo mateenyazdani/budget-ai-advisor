@@ -19,18 +19,21 @@ const FIELD_MASK = [
 const CATEGORIES = {
   Dining: {
     emoji: '🍽️',
+    priceData: true,
     text: 'restaurants',
     types: ['restaurant'],
     spend: { INEXPENSIVE: 12, MODERATE: 25, EXPENSIVE: 45, VERY_EXPENSIVE: 80 },
   },
   Groceries: {
     emoji: '🛒',
+    priceData: true,
     text: 'supermarkets',
     types: ['supermarket', 'grocery_store'],
     spend: { INEXPENSIVE: 20, MODERATE: 35, EXPENSIVE: 55, VERY_EXPENSIVE: 80 },
   },
   Coffee: {
     emoji: '☕',
+    priceData: true,
     text: 'cafés',
     types: ['cafe', 'coffee_shop'],
     spend: { INEXPENSIVE: 3, MODERATE: 5, EXPENSIVE: 8, VERY_EXPENSIVE: 12 },
@@ -55,12 +58,14 @@ const CATEGORIES = {
   },
   Travel: {
     emoji: '✈️',
+    priceData: true,
     text: 'hotels',
     types: ['travel_agency', 'lodging'],
     spend: { INEXPENSIVE: 45, MODERATE: 85, EXPENSIVE: 150, VERY_EXPENSIVE: 260 },
   },
   Nightlife: {
     emoji: '🍸',
+    priceData: true,
     text: 'bars',
     types: ['bar', 'night_club'],
     spend: { INEXPENSIVE: 12, MODERATE: 22, EXPENSIVE: 38, VERY_EXPENSIVE: 60 },
@@ -79,12 +84,14 @@ const CATEGORIES = {
   },
   Shopping: {
     emoji: '👕',
+    priceData: true,
     text: 'clothes shops',
     types: ['clothing_store', 'shopping_mall', 'department_store'],
     spend: { INEXPENSIVE: 20, MODERATE: 40, EXPENSIVE: 70, VERY_EXPENSIVE: 120 },
   },
   Takeaway: {
     emoji: '🥡',
+    priceData: true,
     text: 'takeaway food',
     types: ['meal_takeaway', 'fast_food_restaurant'],
     spend: { INEXPENSIVE: 9, MODERATE: 15, EXPENSIVE: 24, VERY_EXPENSIVE: 38 },
@@ -157,30 +164,35 @@ const CATEGORIES = {
   },
   Electronics: {
     emoji: '📱',
+    priceData: true,
     text: 'electronics shops',
     types: ['electronics_store'],
     spend: { INEXPENSIVE: 30, MODERATE: 90, EXPENSIVE: 200, VERY_EXPENSIVE: 400 },
   },
   Furniture: {
     emoji: '🛋️',
+    priceData: true,
     text: 'furniture shops',
     types: ['furniture_store', 'home_goods_store'],
     spend: { INEXPENSIVE: 35, MODERATE: 90, EXPENSIVE: 200, VERY_EXPENSIVE: 400 },
   },
   Books: {
     emoji: '📚',
+    priceData: true,
     text: 'bookshops',
     types: ['book_store'],
     spend: { INEXPENSIVE: 10, MODERATE: 18, EXPENSIVE: 28, VERY_EXPENSIVE: 45 },
   },
   Pets: {
     emoji: '🐾',
+    priceData: true,
     text: 'pet shops',
     types: ['pet_store', 'veterinary_care'],
     spend: { INEXPENSIVE: 15, MODERATE: 30, EXPENSIVE: 55, VERY_EXPENSIVE: 95 },
   },
   Hotels: {
     emoji: '🏨',
+    priceData: true,
     text: 'hotels',
     types: ['lodging'],
     spend: { INEXPENSIVE: 50, MODERATE: 95, EXPENSIVE: 165, VERY_EXPENSIVE: 280 },
@@ -195,6 +207,33 @@ const ALL_CATEGORY = {
 };
 
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
+
+const PRICE_BANDS = [
+  'PRICE_LEVEL_INEXPENSIVE',
+  'PRICE_LEVEL_MODERATE',
+  'PRICE_LEVEL_EXPENSIVE',
+  'PRICE_LEVEL_VERY_EXPENSIVE',
+];
+
+// Lower is better. A place Google has no price for sits mid-table rather than
+// being flattered to the top or buried.
+const PRICE_RANK = {
+  PRICE_LEVEL_FREE: 0,
+  PRICE_LEVEL_INEXPENSIVE: 1,
+  PRICE_LEVEL_MODERATE: 2,
+  PRICE_LEVEL_EXPENSIVE: 3,
+  PRICE_LEVEL_VERY_EXPENSIVE: 4,
+};
+
+// Cheap and well-liked, in that order, with a rating pulling a place up by at
+// most about one price band. Sorting by distance alone was putting the nearest
+// expensive restaurant above a cheaper, better one four streets away.
+function valueScore(place) {
+  const band = PRICE_RANK[place.priceLevel] ?? 2.2;
+  const rating = typeof place.rating === 'number' ? place.rating : 3.9;
+  const confident = (place.userRatingCount ?? 0) >= 50 ? 1 : 0.5;
+  return band - (rating - 4) * confident;
+}
 
 const PRICE_LABELS = {
   PRICE_LEVEL_FREE: 'Free',
@@ -258,14 +297,26 @@ module.exports = async function handler(req, res) {
 
   const radius = Math.min(Math.max(Number(req.query.radius) || 3000, 500), 20000);
 
-  const useTextSearch = !hasCoords || Boolean(category.textQuery);
+  // "Budget but good" is a filter, not a sort. Google applies both server-side,
+  // but only on the text endpoint.
+  const maxPrice = category.priceData ? Math.min(Math.max(Number(req.query.maxPrice) || 0, 0), 4) : 0;
+  const minRating = category.priceData ? Math.min(Math.max(Number(req.query.minRating) || 0, 0), 5) : 0;
+  const filtering = maxPrice > 0 || minRating > 0;
+
+  const useTextSearch = !hasCoords || filtering || Boolean(category.textQuery);
+  const filters = {
+    ...(maxPrice > 0 ? { priceLevels: PRICE_BANDS.slice(0, maxPrice) } : {}),
+    ...(minRating > 0 ? { minRating: Math.round(minRating * 2) / 2 } : {}),
+  };
+
   const body = !hasCoords
-    ? { textQuery: `${category.text} in ${city}`, maxResultCount: 20 }
+    ? { textQuery: `${category.text} in ${city}`, maxResultCount: 20, ...filters }
     : useTextSearch
       ? {
-          textQuery: category.textQuery,
+          textQuery: category.textQuery || category.text,
           maxResultCount: 20,
           locationBias: { circle: { center: { latitude: lat, longitude: lng }, radius } },
+          ...filters,
         }
       : {
           includedTypes: category.types,
@@ -295,6 +346,7 @@ module.exports = async function handler(req, res) {
     const places = (data.places || []).map((place) => {
       const priceLevel = place.priceLevel || null;
       return {
+        priceLevel,
         id: place.id,
         name: place.displayName?.text || 'Unnamed place',
         address: place.formattedAddress || null,
@@ -312,9 +364,23 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    places.sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
+    if (req.query.sort === 'distance' && hasCoords) {
+      places.sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
+    } else {
+      places.sort((a, b) => {
+        const diff = valueScore(a) - valueScore(b);
+        if (Math.abs(diff) > 0.01) return diff;
+        return (a.distanceKm ?? 999) - (b.distanceKm ?? 999);
+      });
+    }
 
-    return res.status(200).json({ configured: true, places });
+    return res.status(200).json({
+      configured: true,
+      places,
+      filtered: filtering,
+      // So the UI can explain why a price filter had no effect here.
+      priceData: Boolean(category.priceData),
+    });
   } catch (error) {
     console.error('Places request failed:', error);
     return res.status(502).json({ error: 'Could not reach the places service.' });

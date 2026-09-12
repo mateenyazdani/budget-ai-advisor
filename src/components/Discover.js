@@ -70,29 +70,41 @@ function Discover({ budgetRemaining }) {
   const [offersState, setOffersState] = useState('idle');
   const [notice, setNotice] = useState('');
   const [offersError, setOffersError] = useState('');
+  const [noPriceData, setNoPriceData] = useState(false);
+
+  // The product is cheap finds, so cheap and well-liked is the starting point
+  // rather than something you have to go and switch on.
+  const [maxPrice, setMaxPrice] = useState(2);
+  const [goodOnly, setGoodOnly] = useState(true);
+  const [sort, setSort] = useState('value');
   const [query, setQuery] = useState('');
 
   // A slow search that has been abandoned must not overwrite a newer one.
   const runId = useRef(0);
   const resultsRef = useRef(null);
 
-  useEffect(() => {
+  const askForLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocating(false);
+      setNotice('This browser cannot share a location, so results cover the city below.');
       return;
     }
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setNotice('');
         setLocating(false);
       },
       () => {
-        setNotice('Location is off, so results cover the city below rather than what is closest to you.');
+        setNotice('');
         setLocating(false);
       },
       { timeout: 10000 }
     );
   }, []);
+
+  useEffect(() => { askForLocation(); }, [askForLocation]);
 
   // Venues and offers come from different services and take very different
   // amounts of time — about a second against half a minute — so they load
@@ -118,11 +130,16 @@ function Discover({ budgetRemaining }) {
           ? { lat: String(coords.lat), lng: String(coords.lng), category: catId }
           : { city, category: catId }
       );
+      if (maxPrice < 4) params.set('maxPrice', String(maxPrice));
+      if (goodOnly) params.set('minRating', '4');
+      params.set('sort', sort);
+
       fetch(`/api/places?${params}`)
         .then((r) => r.json())
         .then((d) => {
           if (runId.current !== run) return;
           setPlaces(d.places || []);
+          setNoPriceData(d.priceData === false);
           setPlacesState(d.configured === false ? 'unconfigured' : 'done');
         })
         .catch(() => { if (runId.current === run) setPlacesState('error'); });
@@ -159,7 +176,7 @@ function Discover({ budgetRemaining }) {
     } catch {
       if (runId.current === run) setOffersState('error');
     }
-  }, [coords, city]);
+  }, [coords, city, maxPrice, goodOnly, sort]);
 
   const pick = (catId) => {
     setQuery('');
@@ -176,13 +193,16 @@ function Discover({ budgetRemaining }) {
     localStorage.setItem('userCity', next);
   };
 
-  // A city change invalidates everything on screen, so re-run whatever is open.
-  const cityRef = useRef(city);
+  // A city change, a new location fix or a filter change all invalidate what is
+  // on screen, so re-run whatever is open.
+  const inputsRef = useRef('');
   useEffect(() => {
-    if (cityRef.current === city) return;
-    cityRef.current = city;
+    const stamp = `${city}|${maxPrice}|${goodOnly}|${sort}|${coords ? 'gps' : 'city'}`;
+    if (inputsRef.current === '') { inputsRef.current = stamp; return; }
+    if (inputsRef.current === stamp) return;
+    inputsRef.current = stamp;
     if (category || activeQuery) search(category, activeQuery);
-  }, [city, category, activeQuery, search]);
+  }, [city, maxPrice, goodOnly, sort, coords, category, activeQuery, search]);
 
   const current = category ? categoryById(category) : null;
   const showing = group === 'All' ? GROUPS : [group];
@@ -218,12 +238,65 @@ function Discover({ budgetRemaining }) {
         <button type="submit">Search</button>
       </form>
 
-      <form className="discover-city" onSubmit={applyCity}>
-        <span className="city-pin" aria-hidden="true">📍</span>
-        <input value={cityDraft} onChange={(e) => setCityDraft(e.target.value)} aria-label="Your city" />
-        <button type="submit">Change</button>
-        {locating && <span className="city-status">finding you…</span>}
-      </form>
+      <div className="discover-where">
+        <form className="discover-city" onSubmit={applyCity}>
+          <span className="city-pin" aria-hidden="true">📍</span>
+          <input value={cityDraft} onChange={(e) => setCityDraft(e.target.value)} aria-label="Your city" />
+          <button type="submit">Change</button>
+        </form>
+        {locating ? (
+          <span className="city-status">finding you…</span>
+        ) : coords ? (
+          <span className="city-status located">Using your exact location</span>
+        ) : (
+          <button type="button" className="linklike" onClick={askForLocation}>
+            Use my location instead
+          </button>
+        )}
+      </div>
+
+      <div className="filters">
+        <div className="filter-set" role="group" aria-label="Price">
+          {[
+            { v: 1, label: '€', title: 'Cheapest only' },
+            { v: 2, label: '€€ and under', title: 'Cheap and mid-range' },
+            { v: 4, label: 'Any price', title: 'No price limit' },
+          ].map((o) => (
+            <button
+              key={o.v}
+              title={o.title}
+              className={`filter-pill ${maxPrice === o.v ? 'on' : ''}`}
+              onClick={() => setMaxPrice(o.v)}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          className={`filter-pill ${goodOnly ? 'on' : ''}`}
+          onClick={() => setGoodOnly((g) => !g)}
+        >
+          ⭐ 4.0+ only
+        </button>
+
+        <div className="filter-set" role="group" aria-label="Order">
+          <button
+            className={`filter-pill ${sort === 'value' ? 'on' : ''}`}
+            onClick={() => setSort('value')}
+          >
+            Best value
+          </button>
+          <button
+            className={`filter-pill ${sort === 'distance' ? 'on' : ''}`}
+            onClick={() => setSort('distance')}
+            disabled={!coords}
+            title={coords ? '' : 'Needs your location'}
+          >
+            Closest
+          </button>
+        </div>
+      </div>
 
       {notice && <p className="discover-notice">{notice}</p>}
 
@@ -263,8 +336,15 @@ function Discover({ budgetRemaining }) {
         <section className="results">
           <h2>
             {activeQuery ? `“${activeQuery}”` : current?.label}
-            {current?.type === 'offer' ? ' — best offers' : ` in ${city}`}
+            {current?.type === 'offer' ? ' — best offers' : coords ? ' near you' : ` in ${city}`}
           </h2>
+
+          {noPriceData && maxPrice < 4 && current?.type === 'place' && (
+            <p className="filter-note">
+              Google publishes no price for {current.label.toLowerCase()}, so the price filter cannot
+              apply here. These are sorted by rating instead.
+            </p>
+          )}
 
           {placesLoading && merged.length === 0 && <SkeletonCards count={3} />}
 
