@@ -39,24 +39,28 @@ const CATEGORIES = {
     spend: { INEXPENSIVE: 3, MODERATE: 5, EXPENSIVE: 8, VERY_EXPENSIVE: 12 },
   },
   Padel: {
+    unit: 'per court hour',
     emoji: '🎾',
     text: 'padel courts',
     textQuery: 'padel court',
     spend: { INEXPENSIVE: 20, MODERATE: 28, EXPENSIVE: 35, VERY_EXPENSIVE: 50 },
   },
   Tennis: {
+    unit: 'per court hour',
     emoji: '🎾',
     text: 'tennis clubs',
     textQuery: 'tennis club court',
     spend: { INEXPENSIVE: 18, MODERATE: 28, EXPENSIVE: 40, VERY_EXPENSIVE: 60 },
   },
   Cinema: {
+    unit: 'per ticket',
     emoji: '🎬',
     text: 'cinemas',
     types: ['movie_theater'],
     spend: { INEXPENSIVE: 7, MODERATE: 11, EXPENSIVE: 15, VERY_EXPENSIVE: 22 },
   },
   Travel: {
+    unit: 'per night',
     emoji: '✈️',
     priceData: true,
     text: 'hotels',
@@ -71,12 +75,14 @@ const CATEGORIES = {
     spend: { INEXPENSIVE: 12, MODERATE: 22, EXPENSIVE: 38, VERY_EXPENSIVE: 60 },
   },
   Beauty: {
+    unit: 'per visit',
     emoji: '💈',
     text: 'hairdressers',
     types: ['hair_care', 'beauty_salon'],
     spend: { INEXPENSIVE: 15, MODERATE: 28, EXPENSIVE: 45, VERY_EXPENSIVE: 80 },
   },
   Gym: {
+    unit: 'per month',
     emoji: '💪',
     text: 'gyms',
     types: ['gym', 'fitness_center'],
@@ -97,60 +103,70 @@ const CATEGORIES = {
     spend: { INEXPENSIVE: 9, MODERATE: 15, EXPENSIVE: 24, VERY_EXPENSIVE: 38 },
   },
   Swimming: {
+    unit: 'per swim',
     emoji: '🏊',
     text: 'public swimming pools',
     textQuery: 'public swimming pool',
     spend: { INEXPENSIVE: 5, MODERATE: 9, EXPENSIVE: 15, VERY_EXPENSIVE: 25 },
   },
   Football: {
+    unit: 'per pitch hour',
     emoji: '⚽',
     text: 'football pitches to hire',
     textQuery: 'football pitch hire',
     spend: { INEXPENSIVE: 12, MODERATE: 20, EXPENSIVE: 32, VERY_EXPENSIVE: 50 },
   },
   Climbing: {
+    unit: 'per day pass',
     emoji: '🧗',
     text: 'climbing walls',
     textQuery: 'climbing wall gym',
     spend: { INEXPENSIVE: 12, MODERATE: 18, EXPENSIVE: 26, VERY_EXPENSIVE: 40 },
   },
   Yoga: {
+    unit: 'per class',
     emoji: '🧘',
     text: 'yoga studios',
     textQuery: 'yoga pilates studio',
     spend: { INEXPENSIVE: 10, MODERATE: 16, EXPENSIVE: 25, VERY_EXPENSIVE: 40 },
   },
   Golf: {
+    unit: 'per round',
     emoji: '⛳',
     text: 'golf courses',
     types: ['golf_course'],
     spend: { INEXPENSIVE: 25, MODERATE: 45, EXPENSIVE: 80, VERY_EXPENSIVE: 140 },
   },
   Museums: {
+    unit: 'per ticket',
     emoji: '🏛️',
     text: 'museums',
     types: ['museum', 'art_gallery'],
     spend: { INEXPENSIVE: 6, MODERATE: 12, EXPENSIVE: 18, VERY_EXPENSIVE: 28 },
   },
   Bowling: {
+    unit: 'per game',
     emoji: '🎳',
     text: 'bowling alleys',
     types: ['bowling_alley'],
     spend: { INEXPENSIVE: 9, MODERATE: 14, EXPENSIVE: 20, VERY_EXPENSIVE: 32 },
   },
   Spa: {
+    unit: 'per treatment',
     emoji: '💆',
     text: 'spas',
     types: ['spa'],
     spend: { INEXPENSIVE: 25, MODERATE: 45, EXPENSIVE: 75, VERY_EXPENSIVE: 130 },
   },
   Dentist: {
+    unit: 'per check-up',
     emoji: '🦷',
     text: 'dentists',
     types: ['dentist'],
     spend: { INEXPENSIVE: 40, MODERATE: 70, EXPENSIVE: 120, VERY_EXPENSIVE: 200 },
   },
   Optician: {
+    unit: 'per pair',
     emoji: '👓',
     text: 'opticians',
     textQuery: 'optician glasses store',
@@ -191,6 +207,7 @@ const CATEGORIES = {
     spend: { INEXPENSIVE: 15, MODERATE: 30, EXPENSIVE: 55, VERY_EXPENSIVE: 95 },
   },
   Hotels: {
+    unit: 'per night',
     emoji: '🏨',
     priceData: true,
     text: 'hotels',
@@ -380,6 +397,14 @@ module.exports = async function handler(req, res) {
       filtered: filtering,
       // So the UI can explain why a price filter had no effect here.
       priceData: Boolean(category.priceData),
+      // What this kind of thing usually costs, for the many venues Google
+      // publishes no price for at all. It describes the category, never the
+      // specific place, and the UI has to say so.
+      typical: {
+        low: category.spend.INEXPENSIVE,
+        high: category.spend.EXPENSIVE,
+        unit: category.unit || null,
+      },
     });
   } catch (error) {
     console.error('Places request failed:', error);

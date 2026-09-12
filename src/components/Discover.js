@@ -101,7 +101,7 @@ function sortItems(items, sort) {
   });
 }
 
-function DealCard({ item, icon }) {
+function DealCard({ item, icon, typical }) {
   const { offer } = item;
   const showPair = offer?.priceBefore != null && offer?.priceNow != null;
 
@@ -131,7 +131,19 @@ function DealCard({ item, icon }) {
       ) : item.estimatedSpend != null ? (
         <p className="deal-price estimate">
           <span className="now soft">about €{item.estimatedSpend}</span>
-          <span className="unit">estimated, not a quoted price</span>
+          <span className="unit">
+            from Google's price band{typical?.unit ? `, ${typical.unit}` : ''} — not a quoted price
+          </span>
+        </p>
+      ) : typical ? (
+        // Google prices almost nothing outside food and shops, which left a
+        // padel court or a dentist showing no cost at all.
+        <p className="deal-price estimate">
+          <span className="now soft">€{typical.low}–{typical.high}</span>
+          <span className="unit">
+            typical for this kind of place{typical.unit ? `, ${typical.unit}` : ''} — not this
+            venue's price
+          </span>
         </p>
       ) : null}
 
@@ -181,9 +193,12 @@ function Discover({ budgetRemaining }) {
   const [offers, setOffers] = useState([]);
   const [placesState, setPlacesState] = useState('idle');
   const [offersState, setOffersState] = useState('idle');
-  const [notice, setNotice] = useState('');
+  const [locError, setLocError] = useState('');
+  const [blocked, setBlocked] = useState(false);
+  const [accuracy, setAccuracy] = useState(null);
   const [offersError, setOffersError] = useState('');
   const [noPriceData, setNoPriceData] = useState(false);
+  const [typical, setTypical] = useState(null);
   const [query, setQuery] = useState('');
 
   // The product is cheap finds, so cheap and well-liked is the starting point
@@ -199,25 +214,51 @@ function Discover({ budgetRemaining }) {
   const askForLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocating(false);
-      setNotice('This browser cannot share a location, so results cover the city below.');
+      setLocError('This browser cannot share a location, so results cover the city below.');
       return;
     }
     setLocating(true);
+    setLocError('');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setNotice('');
+        setAccuracy(pos.coords.accuracy ?? null);
+        setLocError('');
         setLocating(false);
       },
-      () => {
-        setNotice('');
+      (err) => {
         setLocating(false);
+        // Saying nothing here made the button look broken: you pressed it and
+        // the page carried on exactly as before.
+        setLocError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Your browser is blocking location for this site.'
+            : err.code === err.TIMEOUT
+              ? 'Finding you took too long. Try again, or set the city by hand.'
+              : 'Your device could not give a location just now. Try again, or set the city by hand.'
+        );
       },
-      { timeout: 10000 }
+      // Street-level matters here: a 2 km fix would put the wrong restaurants
+      // at the top of a list sorted by distance.
+      { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
     );
   }, []);
 
   useEffect(() => { askForLocation(); }, [askForLocation]);
+
+  // A denied permission cannot be re-prompted by script, so the button must
+  // stop pretending it can and explain where the switch actually is.
+  useEffect(() => {
+    if (!navigator.permissions?.query) return;
+    let status;
+    const sync = () => setBlocked(status.state === 'denied');
+    navigator.permissions.query({ name: 'geolocation' }).then((s) => {
+      status = s;
+      sync();
+      s.onchange = sync;
+    }).catch(() => {});
+    return () => { if (status) status.onchange = null; };
+  }, []);
 
   // Venues and offers come from different services and take very different
   // amounts of time — about a second against half a minute — so they load
@@ -252,12 +293,14 @@ function Discover({ budgetRemaining }) {
           if (runId.current !== run) return;
           setPlaces(d.places || []);
           setNoPriceData(d.priceData === false);
+          setTypical(d.typical || null);
           setPlacesState(d.configured === false ? 'unconfigured' : 'done');
         })
         .catch(() => { if (runId.current === run) setPlacesState('error'); });
     } else {
       setPlacesState('skipped');
       setNoPriceData(false);
+      setTypical(null);
     }
 
     const key = freeText ? `q:${freeText.toLowerCase()}` : catId;
@@ -396,7 +439,9 @@ function Discover({ budgetRemaining }) {
         {locating ? (
           <span className="city-status">finding you…</span>
         ) : coords ? (
-          <span className="city-status located">Using your exact location</span>
+          <span className="city-status located">
+            Using your location{accuracy != null && ` · accurate to about ${Math.round(accuracy)} m`}
+          </span>
         ) : (
           <button type="button" className="linklike" onClick={askForLocation}>
             Use my location instead
@@ -404,7 +449,20 @@ function Discover({ budgetRemaining }) {
         )}
       </div>
 
-      {notice && <p className="discover-notice">{notice}</p>}
+      {(locError || (blocked && !coords)) && (
+        <div className="discover-notice">
+          <p>{locError || 'Your browser is blocking location for this site.'}</p>
+          {blocked && (
+            <p className="notice-how">
+              A blocked site cannot be asked again from the page, so the switch is in the browser:
+              click the icon at the left of the address bar (a slider, or “View site information”),
+              set <strong>Location</strong> to <strong>Allow</strong>, then reload. On Safari it is
+              Settings → Websites → Location. Until then everything still works from the city box —
+              you just lose distances.
+            </p>
+          )}
+        </div>
+      )}
 
       {top && (
         <div className="subcats">
@@ -482,7 +540,7 @@ function Discover({ budgetRemaining }) {
           {items.length > 0 && (
             <div className="deal-grid">
               {items.map((item) => (
-                <DealCard key={item.key} item={item} icon={icon} />
+                <DealCard key={item.key} item={item} icon={icon} typical={typical} />
               ))}
             </div>
           )}

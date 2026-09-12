@@ -539,3 +539,10 @@
   margin: -4px 0 10px;
   max-width: 620px;
 }
+
+.notice-how {
+  margin-top: 7px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  opacity: 0.92;
+}
