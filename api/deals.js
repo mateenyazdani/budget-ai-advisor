@@ -82,7 +82,11 @@ async function handler(req, res) {
     return res.status(200).json({ configured: true, deals: cached, cached: true });
   }
 
-  const focus = query || (category === 'All' ? 'any everyday spending category' : category.toLowerCase());
+  // A category is just a query with a friendlier name. Treating it as one gives
+  // it the stronger prompt and the page fetching that typed searches get —
+  // without which a category browse finds almost nothing.
+  const effectiveQuery = query || (category === 'All' ? null : category.toLowerCase());
+  const focus = effectiveQuery || 'any everyday spending category';
 
   try {
     const parsed = await searchJson({
@@ -90,15 +94,15 @@ async function handler(req, res) {
       countryCode: country.code,
       // Search snippets carry a headline like "up to 70% off" but rarely the
       // actual offer, so a typed search opens the pages it finds.
-      maxUses: query ? 4 : 4,
-      fetchUses: query ? 3 : 0,
-      prompt: query
-        ? `Find current deals, discounts and cheap options for "${query}" available to someone in ${city}, ${country.name}.`
-        : `Find current money-saving offers in ${city}, ${country.name} for ${focus}.`,
+      maxUses: 4,
+      fetchUses: effectiveQuery ? 3 : 0,
+      prompt: effectiveQuery
+        ? `Find current deals, discounts and cheap options for "${effectiveQuery}" available to someone in ${city}, ${country.name}.`
+        : `Find current money-saving offers in ${city}, ${country.name}.`,
       system: `You find real, currently-advertised money-saving offers people can actually use.
 
-${query
-  ? `The user is looking for: "${query}". They live in ${city}, ${country.name}.
+${effectiveQuery
+  ? `The user is looking for: "${effectiveQuery}". They live in ${city}, ${country.name}.
 
 Include nationwide and online offers as well as local ones — for SIM cards, broadband, insurance, subscriptions and most products, the best deal is usually a national or online one, and a country-wide offer is a correct answer. Only restrict to ${city} for things that are inherently local, such as a restaurant, gym or court booking.
 
