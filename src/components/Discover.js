@@ -69,6 +69,7 @@ function Discover({ budgetRemaining }) {
   const [placesState, setPlacesState] = useState('idle');
   const [offersState, setOffersState] = useState('idle');
   const [notice, setNotice] = useState('');
+  const [offersError, setOffersError] = useState('');
   const [query, setQuery] = useState('');
 
   // A slow search that has been abandoned must not overwrite a newer one.
@@ -86,7 +87,7 @@ function Discover({ budgetRemaining }) {
         setLocating(false);
       },
       () => {
-        setNotice('Location is off, so results are for the city below rather than exactly where you are.');
+        setNotice('Location is off, so results cover the city below rather than what is closest to you.');
         setLocating(false);
       },
       { timeout: 10000 }
@@ -104,14 +105,19 @@ function Discover({ budgetRemaining }) {
     setActiveQuery(freeText || '');
     setPlaces([]);
     setOffers([]);
+    setOffersError('');
 
     // A SIM card, broadband or insurance has no premises to visit, so asking
     // Google for nearby shops would only add noise and a wait.
-    if (cat && cat.type === 'place' && coords) {
+    if (cat && cat.type === 'place') {
       setPlacesState('loading');
-      const params = new URLSearchParams({
-        lat: String(coords.lat), lng: String(coords.lng), category: catId,
-      });
+      // Without location permission we still know the city, which is enough to
+      // find the venues — just not to measure how far away they are.
+      const params = new URLSearchParams(
+        coords
+          ? { lat: String(coords.lat), lng: String(coords.lng), category: catId }
+          : { city, category: catId }
+      );
       fetch(`/api/places?${params}`)
         .then((r) => r.json())
         .then((d) => {
@@ -120,8 +126,6 @@ function Discover({ budgetRemaining }) {
           setPlacesState(d.configured === false ? 'unconfigured' : 'done');
         })
         .catch(() => { if (runId.current === run) setPlacesState('error'); });
-    } else if (cat && cat.type === 'place') {
-      setPlacesState('nolocation');
     } else {
       setPlacesState('skipped');
     }
@@ -145,7 +149,7 @@ function Discover({ budgetRemaining }) {
       if (runId.current !== run) return;
       if (!data || !response.ok) {
         setOffersState('error');
-        setNotice(data?.error || '');
+        setOffersError(data?.error || '');
         return;
       }
       const deals = data.deals || [];
@@ -352,7 +356,7 @@ function Discover({ budgetRemaining }) {
 
           {offersState === 'error' && (
             <p className="results-status">
-              The offer search could not finish.
+              {offersError || 'The offer search could not finish.'}
               {merged.length > 0 && ' The places above are still real.'}{' '}
               <button className="linklike" onClick={() => search(category, activeQuery)}>Try again</button>
             </p>
