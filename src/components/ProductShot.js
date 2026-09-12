@@ -16,7 +16,7 @@ function ProductShot() {
     <div className="product-shot" aria-hidden="true">
       <div className="shot-chrome">
         <span className="dot" /><span className="dot" /><span className="dot" />
-        <span className="shot-url">budget-ai-advisor.vercel.app</span>
+        <span className="shot-url">bargainly.app</span>
       </div>
 
       <div className="shot-body">

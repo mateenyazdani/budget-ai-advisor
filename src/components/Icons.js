@@ -56,7 +56,7 @@ export function Wordmark({ className = '' }) {
         <rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor" />
         <path d="M8 15.5V11m4 4.5V8.5m4 7V12.5" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" />
       </svg>
-      <span className="wordmark-text">Budget<span className="wordmark-accent">AI</span></span>
+      <span className="wordmark-text">Bargain<span className="wordmark-accent">ly</span></span>
     </span>
   );
 }

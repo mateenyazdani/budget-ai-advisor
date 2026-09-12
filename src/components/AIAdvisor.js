@@ -7,7 +7,7 @@ function AIAdvisor({ budget }) {
   const [messages, setMessages] = useState([
     {
       type: 'assistant',
-      content: `Hi! I'm your AI budget advisor. I've analyzed your ${budget.country} budget and I'm ready to help you optimize it. What would you like to know about?`,
+      content: `Hi! I'm the Bargainly advisor. I've analyzed your ${budget.country} budget and I'm ready to help you optimize it. What would you like to know about?`,
     },
   ]);
   const [input, setInput] = useState('');

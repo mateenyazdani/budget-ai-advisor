@@ -1,6 +1,7 @@
-# budget-ai-advisor
+# Bargainly
 
-AI-powered budgeting app with Claude.
+Know what you can safely spend, catch what you are quietly paying every
+month, and find the cheaper option nearby.
 
 ## Setup
 

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Wordmark } from './Icons';
 import '../styles/LegalPage.css';
 
 function Terms() {
   return (
     <div className="legal-page">
       <nav className="legal-nav">
-        <Link to="/" className="legal-logo">💰 Budget AI</Link>
+        <Link to="/" className="legal-logo"><Wordmark /></Link>
         <Link to="/">Back to site</Link>
       </nav>
 
