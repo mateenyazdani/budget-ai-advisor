@@ -33,13 +33,13 @@ function extractJson(text) {
 // Runs one Claude turn with server-side web search and returns parsed JSON.
 // Returns null when the model answered but produced nothing parseable, which
 // callers should treat as "no results" rather than as a failure.
-async function searchJson({ system, prompt, city, countryCode, maxUses = 4, fetchUses = 0 }) {
+async function searchJson({ system, prompt, city, countryCode, maxUses = 4, fetchUses = 0, effort = 'low' }) {
   const client = new Anthropic();
 
   const params = {
     model: 'claude-opus-5',
     max_tokens: 8000,
-    output_config: { effort: 'low' },
+    output_config: { effort },
     tools: [
       {
         type: 'web_search_20260209',
@@ -92,16 +92,23 @@ Always run a web search before fetching. You may only fetch a URL that appeared 
     .map((block) => block.text)
     .join('\n');
 
-  // Server tools fail with a 200 and an error object in the result block, so
-  // a broken search looks exactly like a search that found nothing.
+  // Server tools fail with a 200 and an error object in the result block, so a
+  // broken search looks exactly like a search that found nothing. Counting the
+  // calls separates "searched hard and found nothing" from "barely looked".
+  let searches = 0;
+  let fetches = 0;
   for (const block of response.content) {
     if (block.type === 'web_search_tool_result' || block.type === 'web_fetch_tool_result') {
+      if (block.type === 'web_search_tool_result') searches += 1;
+      else fetches += 1;
       const content = block.content;
       if (content && !Array.isArray(content) && content.error_code) {
         console.error('%s error: %s', block.type, content.error_code);
       }
     }
   }
+  console.log('searchJson: effort=%s %d/%d searches, %d/%d fetches, stop=%s',
+    effort, searches, maxUses, fetches, fetchUses, response.stop_reason);
 
   const parsed = extractJson(text);
   if (parsed === null) {

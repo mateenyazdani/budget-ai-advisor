@@ -157,7 +157,10 @@ async function handler(req, res) {
       // Search snippets carry a headline like "up to 70% off" but rarely the
       // actual offer, so a typed search opens the pages it finds.
       maxUses: 4,
-      fetchUses: effectiveQuery ? 3 : 0,
+      // One successful search with three page fetches took 59.7 seconds against
+      // a 60-second function limit. A search that hits the wall returns nothing
+      // at all, which is worse than one that reads one page fewer.
+      fetchUses: effectiveQuery ? 2 : 0,
       prompt: effectiveQuery
         ? `Find current deals, discounts and cheap options for "${effectiveQuery}" available to someone in ${city}, ${country.name}.`
         : `Find current money-saving offers in ${city}, ${country.name}.`,
@@ -170,14 +173,15 @@ Include nationwide and online offers as well as local ones — for SIM cards, br
 
 Cheap standing prices count, not just limited-time discounts: if a provider simply offers the best rate, report it as the offer.`
   : `Search the web for offers in ${city}, ${country.name}, focused on ${focus}.`}
-Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.
-Offers may be online-only rather than tied to a shop — for things like SIM cards, broadband or insurance, a nationwide deal is a good answer.
+${NATIONAL.has(category) && !query
+  ? `Go to the providers' own pages and to comparison sites. Coupon sites do not carry this kind of offer, so do not spend searches on them.`
+  : `Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.`}
 
 Hard rules:
 - Only report an offer you actually found in a search result. Never invent one, never guess at a discount percentage, and never pad the list to look fuller.
 - Every offer needs the URL of the page you found it on.
-- Prefer offers from the merchant's own site or a well-known local deals site.
-- If you cannot find real offers, return an empty array. An empty array is a correct answer.
+- Prefer offers from the merchant's own site or a well-known comparison or deals site.
+- Report every real offer you find — a dozen is a good answer when a dozen are there. Return an empty array only if the searches genuinely turned up nothing usable.
 
 Reply with only a JSON array, no prose around it. Each element:
 {"merchant": string, "offer": string, "detail": string|null, "validity": string|null, "sourceUrl": string, "sourceName": string}
@@ -195,6 +199,15 @@ Reply with only a JSON array, no prose around it. Each element:
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {
       return res.status(429).json({ error: 'Too many requests. Try again shortly.' });
+    }
+    // A spent API balance arrives as a generic 400. Left unnamed it looks like
+    // the search is broken, and nobody would think to check the billing page.
+    if (/credit balance is too low/i.test(error?.message || '')) {
+      console.error('Deal search stopped: Anthropic credit exhausted.');
+      return res.status(503).json({
+        error: 'Offer search is paused — the account that pays for it is out of credit.',
+        deals: [],
+      });
     }
     console.error('Deal search failed:', error);
     return res.status(502).json({ error: 'Could not search for deals right now.' });
