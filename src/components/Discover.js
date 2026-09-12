@@ -352,7 +352,8 @@ function Discover({ budgetRemaining }) {
 
           {offersState === 'error' && (
             <p className="results-status">
-              The offer search could not finish. The places above are still real.{' '}
+              The offer search could not finish.
+              {merged.length > 0 && ' The places above are still real.'}{' '}
               <button className="linklike" onClick={() => search(category, activeQuery)}>Try again</button>
             </p>
           )}
