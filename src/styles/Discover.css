@@ -94,11 +94,12 @@
   font-size: 0.86rem;
 }
 
-/* The six things a person might be after */
+/* The six things a person might be after. Fixed at three across, because
+   auto-fit put five on one row and left Tech stranded on its own. */
 
 .top-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 
