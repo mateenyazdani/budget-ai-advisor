@@ -23,8 +23,10 @@ import AIAdvisor from './components/AIAdvisor';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 
+// Browsing deals needs nothing about you, so it is the one item a signed-out
+// visitor sees. The rest are all tied to a personal budget.
 const NAV_ITEMS = [
-  { to: '/discover', Icon: BasketIcon, label: 'Discover' },
+  { to: '/discover', Icon: BasketIcon, label: 'Discover', public: true },
   { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
   { to: '/bank', Icon: BankIcon, label: 'Planned vs actual' },
   { to: '/advisor', Icon: ChatIcon, label: 'Ask advisor' },
@@ -33,6 +35,7 @@ const NAV_ITEMS = [
 function Shell({ session, budget, children, showNav }) {
   const navigate = useNavigate();
   const username = session?.user?.email?.split('@')[0];
+  const navItems = session ? NAV_ITEMS : NAV_ITEMS.filter((i) => i.public);
 
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut();
@@ -44,14 +47,20 @@ function Shell({ session, budget, children, showNav }) {
       <header className="App-header">
         <h1><Wordmark /></h1>
         <div className="header-user">
-          <span>@{username}</span>
-          <button className="btn-logout" onClick={signOut}>Sign out</button>
+          {session ? (
+            <>
+              <span>@{username}</span>
+              <button className="btn-logout" onClick={signOut}>Sign out</button>
+            </>
+          ) : (
+            <NavLink className="btn-logout" to="/signin">Sign in</NavLink>
+          )}
         </div>
       </header>
 
       {showNav && (
         <nav className="App-nav" aria-label="Main">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -163,11 +172,9 @@ function App() {
           <Route
             path="/discover"
             element={
-              <Protected session={session}>
-                <Shell session={session} budget={userBudget} showNav>
-                  <Discover budgetRemaining={userBudget?.surplus} />
-                </Shell>
-              </Protected>
+              <Shell session={session} budget={userBudget} showNav>
+                <Discover budgetRemaining={userBudget?.surplus} />
+              </Shell>
             }
           />
 
