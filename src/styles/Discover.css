@@ -96,49 +96,88 @@
 
 /* Categories */
 
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+.group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+
+.group-tab {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.group-tab:hover {
+  background: var(--line-faint, rgba(0, 0, 0, 0.04));
+  color: var(--ink);
+}
+
+.group-tab.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.category-block {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.category-tile {
+.category-block-head {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+/* Compact enough that all thirty-odd categories read as choice rather than
+   as a wall. */
+.category-grid {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 999px;
   cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s, transform 0.15s;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.category-tile:hover {
+.category-chip:hover {
   border-color: var(--brand);
-  transform: translateY(-2px);
 }
 
-.category-tile.active {
+.category-chip.active {
   border-color: var(--brand);
-  background: var(--brand-soft);
+  background: var(--brand);
+  color: white;
 }
 
-.tile-icon {
-  font-size: 1.5rem;
-  margin-bottom: 4px;
-}
-
-.tile-label {
-  font-weight: 650;
-  font-size: 0.94rem;
-}
-
-.tile-blurb {
-  font-size: 0.78rem;
-  color: var(--ink-faint);
+.chip-icon {
+  font-size: 1.05rem;
 }
 
 /* Results */
@@ -154,6 +193,76 @@
   line-height: 1.6;
   padding: 12px 0;
   max-width: 620px;
+}
+
+.results-status.searching {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  flex-shrink: 0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+.elapsed {
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.84rem;
+}
+
+.linklike {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--brand);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Placeholders hold the shape of what is coming, so the page does not jump
+   when the offers land. */
+.result-card.skeleton {
+  gap: 12px;
+  pointer-events: none;
+}
+
+.skeleton-line,
+.skeleton-block {
+  display: block;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--line) 25%, var(--line-faint, #f1f1f0) 50%, var(--line) 75%);
+  background-size: 300% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+.skeleton-line { height: 12px; width: 55%; }
+.skeleton-line.wide { height: 16px; width: 80%; }
+.skeleton-block { height: 52px; border-radius: var(--radius-sm); }
+
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .skeleton-line,
+  .skeleton-block {
+    animation: none;
+  }
 }
 
 .result-grid {
@@ -231,7 +340,8 @@
   line-height: 1.45;
 }
 
-.offer-validity {
+.offer-validity,
+.offer-detail {
   font-size: 0.76rem;
   color: var(--brand-dark);
   opacity: 0.8;
@@ -275,10 +385,6 @@
 }
 
 @media (max-width: 640px) {
-  .category-grid {
-    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-  }
-
   .discover-search {
     flex-direction: column;
   }

@@ -8,7 +8,15 @@ const EMPTY_CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
 
-const CATEGORIES = ['All', 'Dining', 'Groceries', 'Coffee', 'Padel', 'Tennis', 'Gym', 'Shopping', 'Cinema', 'Travel', 'Nightlife', 'Beauty'];
+const CATEGORIES = [
+  'All', 'Dining', 'Coffee', 'Groceries', 'Takeaway', 'Nightlife',
+  'Padel', 'Tennis', 'Gym', 'Swimming', 'Football', 'Climbing', 'Yoga', 'Golf',
+  'Cinema', 'Museums', 'Bowling', 'Concerts',
+  'Beauty', 'Spa', 'Dentist', 'Optician', 'Pharmacy',
+  'Shopping', 'Electronics', 'Furniture', 'Books', 'Pets',
+  'Hotels', 'Flights', 'CarHire', 'Trains', 'Travel',
+  'SimCard', 'Broadband', 'Energy', 'Insurance', 'Streaming', 'Banking',
+];
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
 
 // A category label is written to read well on a button; a search needs the
@@ -26,7 +34,43 @@ const CATEGORY_QUERIES = {
   Travel: 'hotel and travel deals',
   Nightlife: 'bar and nightlife drink offers',
   Beauty: 'hairdresser and beauty salon offers',
+  Takeaway: 'takeaway and food delivery discount codes',
+  Swimming: 'public swimming pool prices and passes',
+  Football: 'five-a-side football pitch hire offers',
+  Climbing: 'climbing wall day pass and membership offers',
+  Yoga: 'yoga and pilates class packs and offers',
+  Golf: 'golf green fee offers',
+  Museums: 'museum free entry times and discounted tickets',
+  Bowling: 'bowling offers and cheap games',
+  Concerts: 'concert and gig ticket offers',
+  Spa: 'spa day and massage offers',
+  Dentist: 'dental check-up and cleaning offers',
+  Optician: 'glasses and eye test offers',
+  Pharmacy: 'pharmacy and parapharmacy discounts',
+  Electronics: 'electronics and phone deals',
+  Furniture: 'furniture and homeware sales',
+  Books: 'bookshop discounts and offers',
+  Pets: 'pet food and vet offers',
+  Hotels: 'hotel deals and discount rates',
+  Flights: 'cheap flight deals and airline offers',
+  CarHire: 'car hire deals and discount codes',
+  Trains: 'train and coach ticket offers and railcards',
+  // No venue for these, so the search is the whole feature.
+  SimCard: 'cheapest SIM only mobile plans and prepaid deals',
+  Broadband: 'cheapest fibre broadband and internet deals',
+  Energy: 'cheapest electricity and gas tariffs',
+  Insurance: 'cheap car, home and travel insurance deals',
+  Streaming: 'streaming subscription deals and bundle offers',
+  Banking: 'bank account switching offers and fee-free accounts',
 };
+// A SIM plan or an insurance quote is the same offer in Valencia as in Madrid,
+// so these are cached per country. One person's wait then serves everyone in
+// the country rather than only the people in their city.
+const NATIONAL = new Set([
+  'SimCard', 'Broadband', 'Energy', 'Insurance', 'Streaming', 'Banking',
+  'Flights', 'CarHire', 'Trains', 'Electronics', 'Books',
+]);
+
 // Free text goes into a prompt, so keep it to plain words and digits.
 const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
 
@@ -93,7 +137,8 @@ async function handler(req, res) {
     return res.status(400).json({ error: 'Search for a product or service in plain words.' });
   }
 
-  const cacheKey = `${city.toLowerCase()}|${country.code}|${query ? `q:${query.toLowerCase()}` : category}`;
+  const scope = !query && NATIONAL.has(category) ? 'national' : city.toLowerCase();
+  const cacheKey = `${scope}|${country.code}|${query ? `q:${query.toLowerCase()}` : category}`;
   const cached = cacheGet(cacheKey);
   if (cached) {
     return res.status(200).json({ configured: true, deals: cached, cached: true });
@@ -156,4 +201,6 @@ Reply with only a JSON array, no prose around it. Each element:
   }
 }
 
-module.exports = rateLimited({ endpoint: 'deals', limit: 12 }, handler);
+// Browsing is the product now: thirty-odd categories to look through, one
+// lookup each. Twelve an hour ran out before someone had seen a third of them.
+module.exports = rateLimited({ endpoint: 'deals', limit: 40 }, handler);
