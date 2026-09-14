@@ -10,13 +10,17 @@
 // thirty-seven are one tap behind it.
 
 export const TOP_LEVEL = [
-  { id: 'EAT', label: 'Eat', icon: '🍔', blurb: 'Restaurants, cafés, food shops' },
-  { id: 'PLAY', label: 'Play', icon: '🎾', blurb: 'Sport, cinema, going out' },
-  { id: 'SHOP', label: 'Shop', icon: '👕', blurb: 'Clothes, beauty, health' },
-  { id: 'TRAVEL', label: 'Travel', icon: '✈️', blurb: 'Hotels, flights, car hire' },
-  { id: 'HOME', label: 'Home', icon: '🏠', blurb: 'Furniture, energy, money' },
-  { id: 'TECH', label: 'Tech', icon: '💻', blurb: 'Phones, broadband, streaming' },
+  { id: 'EAT', label: 'Eat', icon: '🍔', headline: 'Eat well, pay less.', blurb: 'Restaurants, cafés, food shops' },
+  { id: 'PLAY', label: 'Play', icon: '🎾', headline: 'Play more, pay less.', blurb: 'Sport, cinema, going out' },
+  { id: 'SHOP', label: 'Shop', icon: '👕', headline: 'Shop smart, pay less.', blurb: 'Clothes, beauty, health' },
+  { id: 'TRAVEL', label: 'Travel', icon: '✈️', headline: 'Go further, pay less.', blurb: 'Hotels, flights, car hire' },
+  { id: 'HOME', label: 'Home', icon: '🏠', headline: 'Run the home for less.', blurb: 'Furniture, energy, money' },
+  { id: 'TECH', label: 'Tech', icon: '💻', headline: 'Stay connected for less.', blurb: 'Phones, broadband, streaming' },
 ];
+
+export function topById(id) {
+  return TOP_LEVEL.find((t) => t.id === id) || null;
+}
 
 export const CATEGORIES = [
   // Eat

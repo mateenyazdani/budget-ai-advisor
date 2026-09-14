@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { attachOffers } from '../lib/matchOffers';
 import PinForm from './PinForm';
-import { TOP_LEVEL, categoryById, categoriesIn } from '../lib/categories';
+import { TOP_LEVEL, categoryById, categoriesIn, topById } from '../lib/categories';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -464,7 +464,7 @@ function Discover({ budgetRemaining, session }) {
   return (
     <div className="discover">
       <header className="discover-head">
-        <h1>Eat well, pay less.</h1>
+        <h1>{topById(top)?.headline || 'Spend less on all of it.'}</h1>
         <p>
           Every good place near you, ranked by what it actually costs.
           {typeof budgetRemaining === 'number' && budgetRemaining > 0 && (

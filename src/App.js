@@ -53,7 +53,7 @@ function Shell({ session, budget, children, showNav }) {
   return (
     <>
       <header className="App-header">
-        <h1><Wordmark /></h1>
+        <div className="App-wordmark"><Wordmark /></div>
         <div className="header-user">
           {session ? (
             <>

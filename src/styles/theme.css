@@ -90,3 +90,11 @@ summary:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The wordmark is a logo, not a page heading — the page's own h1 should be the
+   biggest thing on screen. */
+.App-wordmark {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
