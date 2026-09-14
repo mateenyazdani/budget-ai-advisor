@@ -2,10 +2,18 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "budget-ai-advisor",
+      "name": "bargainly-cra",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "bargainly-api",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vercel", "dev"],
+      "port": 3001,
+      "autoPort": true
     }
   ]
 }

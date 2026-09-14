@@ -194,3 +194,163 @@ security definer set search_path = public
 as $$
   delete from public.api_usage where called_at < now() - interval '2 days';
 $$;
+
+-- ============================================================================
+-- Social layer: usernames, follows, and the pins that fill the world map.
+-- ============================================================================
+
+-- Everything below rests on one rule: a pin is visible to its author and to
+-- that author's *friends*, where a friend is someone the follow runs both ways
+-- with. A one-way follower sees nothing. That rule lives in Postgres, not in
+-- the app, so a missed filter in a query cannot leak anyone's map.
+
+-- ----------------------------------------------------------------- profiles
+
+alter table public.profiles
+  add column if not exists display_name text,
+  add column if not exists avatar_emoji text default '🙂',
+  add column if not exists home_country text;
+
+-- A username is how you are found, so it has to be unique case-insensitively:
+-- @Marta and @marta must not be two different people.
+create unique index if not exists profiles_username_lower_idx
+  on public.profiles (lower(username));
+
+-- Seeding the username from the email prefix was harmless while usernames were
+-- only decorative. Against a unique index it is a live failure: the second
+-- marta@… to sign up raises, and because the trigger runs inside the signup
+-- transaction, that person cannot create an account at all. So the seed now
+-- steps aside for a suffix, and gives up rather than blocking the signup.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  base text := regexp_replace(lower(split_part(new.email, '@', 1)), '[^a-z0-9_]', '', 'g');
+  candidate text;
+begin
+  if base is null or char_length(base) < 3 then
+    base := 'friend';
+  end if;
+
+  -- A handful of tries, then leave it null: the profile screen asks for a
+  -- username anyway, and a blocked signup is far worse than a blank handle.
+  for i in 0..9 loop
+    candidate := case when i = 0 then base else base || i::text end;
+    begin
+      insert into public.profiles (id, username) values (new.id, candidate);
+      return new;
+    exception when unique_violation then
+      -- Taken. Try the next suffix.
+    end;
+  end loop;
+
+  insert into public.profiles (id, username) values (new.id, null)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+-- Finding a friend means reading a profile that is not yours, so the old
+-- owner-only read policy has to widen. Only the handful of columns below are
+-- ever exposed, and only to someone signed in.
+drop policy if exists "own profile: read" on public.profiles;
+drop policy if exists "profiles: read" on public.profiles;
+create policy "profiles: read" on public.profiles
+  for select using (auth.role() = 'authenticated');
+
+-- ------------------------------------------------------------------ follows
+
+create table if not exists public.follows (
+  follower_id uuid not null references auth.users on delete cascade,
+  following_id uuid not null references auth.users on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (follower_id, following_id),
+  -- Following yourself would make you your own friend and clutter every list.
+  constraint no_self_follow check (follower_id <> following_id)
+);
+
+create index if not exists follows_following_idx
+  on public.follows (following_id);
+
+alter table public.follows enable row level security;
+
+-- You may read a follow row you are on either side of, so both "who I follow"
+-- and "who follows me" work, but nobody can enumerate a stranger's graph.
+drop policy if exists "follows: read" on public.follows;
+create policy "follows: read" on public.follows
+  for select using (auth.uid() = follower_id or auth.uid() = following_id);
+
+drop policy if exists "follows: create own" on public.follows;
+create policy "follows: create own" on public.follows
+  for insert with check (auth.uid() = follower_id);
+
+drop policy if exists "follows: delete own" on public.follows;
+create policy "follows: delete own" on public.follows
+  for delete using (auth.uid() = follower_id);
+
+-- Mutual follow, asked as one question. Security definer so the lookup is not
+-- itself filtered by the policy above, which would make it always false when
+-- checking two other people.
+create or replace function public.is_friend(a uuid, b uuid)
+returns boolean
+language sql
+stable
+security definer set search_path = public
+as $$
+  select exists (
+    select 1 from public.follows f1
+    join public.follows f2
+      on f1.follower_id = f2.following_id
+     and f1.following_id = f2.follower_id
+    where f1.follower_id = a and f1.following_id = b
+  );
+$$;
+
+-- --------------------------------------------------------------------- pins
+
+create table if not exists public.pins (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users on delete cascade,
+
+  -- Google's place id when the pin came from a venue the app found, so two
+  -- friends rating the same restaurant land on the same point.
+  place_id text,
+  name text not null,
+  category text,
+
+  -- Denormalised on purpose: the map groups by country before it has ever
+  -- loaded a single pin's detail, and an ISO code beats parsing an address.
+  country_code text not null,
+  country_name text,
+  city text,
+  lat double precision not null check (lat between -90 and 90),
+  lng double precision not null check (lng between -180 and 180),
+
+  rating smallint not null check (rating between 1 and 5),
+  -- What it actually cost this person, which is the whole point: a price a
+  -- friend really paid beats a price band.
+  price_paid numeric(12,2) check (price_paid >= 0),
+  currency text default '€',
+  note text check (char_length(note) <= 500),
+
+  created_at timestamptz not null default now(),
+  -- One verdict per person per place. Changing your mind edits the pin.
+  unique (user_id, place_id)
+);
+
+create index if not exists pins_country_idx on public.pins (country_code);
+create index if not exists pins_user_idx on public.pins (user_id, created_at desc);
+
+alter table public.pins enable row level security;
+
+drop policy if exists "pins: read own and friends" on public.pins;
+create policy "pins: read own and friends" on public.pins
+  for select using (
+    auth.uid() = user_id or public.is_friend(auth.uid(), user_id)
+  );
+
+drop policy if exists "pins: write own" on public.pins;
+create policy "pins: write own" on public.pins
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

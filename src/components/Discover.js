@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { attachOffers } from '../lib/matchOffers';
-import { TOP_LEVEL, CATEGORIES, categoryById, categoriesIn } from '../lib/categories';
+import PinForm from './PinForm';
+import { TOP_LEVEL, categoryById, categoriesIn } from '../lib/categories';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -101,7 +105,55 @@ function sortItems(items, sort) {
   });
 }
 
-function DealCard({ item, icon, typical }) {
+// Leaflet's default marker is a PNG the bundler rewrites and then cannot find,
+// so the marker is drawn as an element carrying the category's own emoji.
+function resultIcon(emoji) {
+  return L.divIcon({
+    className: 'result-pin-wrap',
+    html: `<span class="result-pin">${emoji}</span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -16],
+  });
+}
+
+function ResultsMap({ items, icon, centre }) {
+  const pinned = items.filter((i) => i.lat != null && i.lng != null);
+  if (pinned.length === 0) {
+    return (
+      <p className="results-status">
+        None of these carry a location, so there is nothing to put on a map. Online-only offers
+        live in the list.
+      </p>
+    );
+  }
+  const middle = centre || [pinned[0].lat, pinned[0].lng];
+
+  return (
+    <div className="results-map">
+      <MapContainer center={middle} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {pinned.map((p) => (
+          <Marker key={p.key} position={[p.lat, p.lng]} icon={resultIcon(icon)}>
+            <Popup>
+              <strong>{p.name}</strong>
+              {p.rating != null && <div>⭐ {p.rating}</div>}
+              {p.distanceKm != null && <div>{p.distanceKm} km away</div>}
+              {p.mapsUri && (
+                <a href={p.mapsUri} target="_blank" rel="noopener noreferrer">Open in Maps</a>
+              )}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+}
+
+function DealCard({ item, icon, typical, onPin }) {
   const { offer } = item;
   const showPair = offer?.priceBefore != null && offer?.priceNow != null;
 
@@ -175,19 +227,28 @@ function DealCard({ item, icon, typical }) {
             Map
           </a>
         )}
+        {/* Only a place you can stand in can be pinned to a map. An online SIM
+            deal has no coordinates and would land in the sea off Africa. */}
+        {onPin && item.lat != null && (
+          <button type="button" className="deal-link pin-it" onClick={() => onPin(item)}>
+            I've been
+          </button>
+        )}
       </div>
     </article>
   );
 }
 
-function Discover({ budgetRemaining }) {
+function Discover({ budgetRemaining, session }) {
+  // The place being rated, if the pin sheet is open over the results.
+  const [pinning, setPinning] = useState(null);
   const [city, setCity] = useState(() => localStorage.getItem('userCity') || 'Madrid');
   const [cityDraft, setCityDraft] = useState(city);
   const [coords, setCoords] = useState(null);
   const [locating, setLocating] = useState(true);
 
-  const [top, setTop] = useState(null);
-  const [category, setCategory] = useState(null);
+  const [top, setTop] = useState('EAT');
+  const [category, setCategory] = useState('Dining');
   const [activeQuery, setActiveQuery] = useState('');
   const [places, setPlaces] = useState([]);
   const [offers, setOffers] = useState([]);
@@ -206,6 +267,8 @@ function Discover({ budgetRemaining }) {
   const [maxPrice, setMaxPrice] = useState(2);
   const [goodOnly, setGoodOnly] = useState(true);
   const [sort, setSort] = useState('value');
+  const [view, setView] = useState('list');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // A slow search that has been abandoned must not overwrite a newer one.
   const runId = useRef(0);
@@ -334,6 +397,13 @@ function Discover({ budgetRemaining }) {
     }
   }, [coords, city, maxPrice, goodOnly]);
 
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || locating) return;
+    started.current = true;
+    search(category, '');
+  }, [locating, category, search]);
+
   const pick = (catId) => {
     setQuery('');
     search(catId, '');
@@ -394,28 +464,27 @@ function Discover({ budgetRemaining }) {
   return (
     <div className="discover">
       <header className="discover-head">
-        <h1>What are you looking for?</h1>
+        <h1>Eat well, pay less.</h1>
         <p>
-          Real places and real offers, cheapest and best-rated first.
+          Every good place near you, ranked by what it actually costs.
           {typeof budgetRemaining === 'number' && budgetRemaining > 0 && (
             <> You have <strong>€{budgetRemaining.toFixed(0)}</strong> spare this month.</>
           )}
         </p>
       </header>
 
-      <div className="top-grid">
+      <nav className="top-rail" aria-label="What are you after">
         {TOP_LEVEL.map((t) => (
           <button
             key={t.id}
-            className={`top-tile ${top === t.id ? 'active' : ''}`}
+            className={`rail-item ${top === t.id ? 'active' : ''}`}
             onClick={() => openTop(t.id)}
           >
-            <span className="top-icon" aria-hidden="true">{t.icon}</span>
-            <span className="top-label">{t.label}</span>
-            <span className="top-blurb">{t.blurb}</span>
+            <span className="rail-icon" aria-hidden="true">{t.icon}</span>
+            <span className="rail-label">{t.label}</span>
           </button>
         ))}
-      </div>
+      </nav>
 
       <form
         className="discover-search"
@@ -485,48 +554,62 @@ function Discover({ budgetRemaining }) {
         <section className="results">
           <div className="results-bar">
             <h2>
+              {items.length > 0 && <span className="count">{items.length}</span>}
               {activeQuery ? `“${activeQuery}”` : current?.label}
               {current?.type === 'offer' ? ' — best offers' : coords ? ' near you' : ` in ${city}`}
             </h2>
 
-            <div className="sorts">
-              {SORTS.map((s) => (
-                <button
-                  key={s.id}
-                  className={`filter-pill ${sort === s.id ? 'on' : ''}`}
-                  onClick={() => setSort(s.id)}
-                  disabled={s.id === 'distance' && !coords}
-                  title={s.id === 'distance' && !coords ? 'Needs your location' : ''}
-                >
-                  {s.label}
-                </button>
-              ))}
+            <div className="bar-controls">
+              <div className="view-toggle" role="group" aria-label="View">
+                <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>List</button>
+                <button className={view === 'map' ? 'on' : ''} onClick={() => setView('map')}>Map</button>
+              </div>
+
+              <label className="sort-select">
+                <span className="sr-only">Order</span>
+                <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                  {SORTS.map((s) => (
+                    <option key={s.id} value={s.id} disabled={s.id === 'distance' && !coords}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                className={`bar-btn ${filtersOpen || maxPrice !== 2 || !goodOnly ? 'on' : ''}`}
+                onClick={() => setFiltersOpen((o) => !o)}
+              >
+                Filters
+              </button>
             </div>
           </div>
 
-          <div className="filters">
-            <div className="filter-set" role="group" aria-label="Price">
-              {[
-                { v: 1, label: '€' },
-                { v: 2, label: '€€ and under' },
-                { v: 4, label: 'Any price' },
-              ].map((o) => (
-                <button
-                  key={o.v}
-                  className={`filter-pill ${maxPrice === o.v ? 'on' : ''}`}
-                  onClick={() => setMaxPrice(o.v)}
-                >
-                  {o.label}
-                </button>
-              ))}
+          {filtersOpen && (
+            <div className="filters">
+              <div className="filter-set" role="group" aria-label="Price">
+                {[
+                  { v: 1, label: '€' },
+                  { v: 2, label: '€€ and under' },
+                  { v: 4, label: 'Any price' },
+                ].map((o) => (
+                  <button
+                    key={o.v}
+                    className={`filter-pill ${maxPrice === o.v ? 'on' : ''}`}
+                    onClick={() => setMaxPrice(o.v)}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                className={`filter-pill lone ${goodOnly ? 'on' : ''}`}
+                onClick={() => setGoodOnly((g) => !g)}
+              >
+                ⭐ 4.0+ only
+              </button>
             </div>
-            <button
-              className={`filter-pill lone ${goodOnly ? 'on' : ''}`}
-              onClick={() => setGoodOnly((g) => !g)}
-            >
-              ⭐ 4.0+ only
-            </button>
-          </div>
+          )}
 
           {noPriceData && maxPrice < 4 && current?.type === 'place' && (
             <p className="filter-note">
@@ -537,10 +620,24 @@ function Discover({ budgetRemaining }) {
 
           {placesLoading && items.length === 0 && <SkeletonCards count={4} />}
 
-          {items.length > 0 && (
+          {items.length > 0 && view === 'map' && (
+            <ResultsMap
+              items={items}
+              icon={icon}
+              centre={coords ? [coords.lat, coords.lng] : null}
+            />
+          )}
+
+          {items.length > 0 && view === 'list' && (
             <div className="deal-grid">
               {items.map((item) => (
-                <DealCard key={item.key} item={item} icon={icon} typical={typical} />
+                <DealCard
+                  key={item.key}
+                  item={item}
+                  icon={icon}
+                  typical={typical}
+                  onPin={session ? setPinning : null}
+                />
               ))}
             </div>
           )}
@@ -573,11 +670,13 @@ function Discover({ budgetRemaining }) {
         </section>
       )}
 
-      {!showing && (
-        <p className="results-status">
-          {CATEGORIES.length} categories across the six above. Pick one to see what is going cheap
-          near you.
-        </p>
+
+      {pinning && (
+        <PinForm
+          place={{ ...pinning, city }}
+          category={category}
+          onClose={() => setPinning(null)}
+        />
       )}
     </div>
   );

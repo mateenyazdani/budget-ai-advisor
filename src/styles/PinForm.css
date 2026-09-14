@@ -1,0 +1,56 @@
+.pin-form-backdrop {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(22, 22, 29, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+
+.pin-form {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 24px;
+  width: 100%; max-width: 420px; position: relative;
+  max-height: 90vh; overflow-y: auto;
+}
+.pin-form h3 { font-size: 18px; padding-right: 24px; }
+.pin-form-where { color: var(--ink-faint); font-size: 13px; margin-bottom: 16px; }
+
+.pin-form-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; font-size: 24px; line-height: 1;
+  color: var(--ink-faint); cursor: pointer;
+}
+
+.pin-stars { border: none; margin-bottom: 16px; }
+.pin-stars legend { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.star {
+  background: none; border: none; cursor: pointer;
+  font-size: 30px; line-height: 1; color: var(--line-strong); padding: 0 2px;
+}
+.star.on { color: #d9a441; }
+
+.pin-field { display: block; margin-bottom: 16px; }
+.pin-field > span { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+.pin-field input, .pin-field textarea {
+  width: 100%; padding: 10px 12px; font-size: 15px; font-family: inherit;
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); resize: vertical;
+}
+.pin-field small { display: block; color: var(--ink-faint); font-size: 12px; margin-top: 4px; }
+
+.pin-form-error { color: var(--negative); font-size: 13px; margin-bottom: 12px; }
+.pin-form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.pin-form-privacy { font-size: 12px; color: var(--ink-faint); text-align: right; margin-top: 10px; }
+
+.btn-ghost {
+  background: none; border: 1px solid var(--line-strong);
+  border-radius: var(--radius); padding: 9px 16px;
+  font-size: 14px; cursor: pointer; color: var(--ink-soft);
+}
+
+/* The pin action sits among the links on a venue card but has to read as the
+   one thing on the card that changes something. */
+.deal-link.pin-it {
+  border-color: var(--brand); color: var(--brand);
+  background: var(--brand-soft); cursor: pointer; font: inherit; font-size: 13px;
+}
+.header-username { color: inherit; text-decoration: none; font-weight: 600; }
+.header-username:hover { text-decoration: underline; }

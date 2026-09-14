@@ -11,7 +11,18 @@ const FIELD_MASK = [
   'places.priceLevel',
   'places.currentOpeningHours.openNow',
   'places.googleMapsUri',
+  // Pins are grouped by country on the world map, so the country has to come
+  // from Google rather than being guessed from the end of an address string.
+  'places.addressComponents',
 ].join(',');
+
+// Google returns the country as one entry in a list of address components, in
+// the venue's own language for the long name but always ISO-3166 for the short.
+function countryOf(place) {
+  const match = (place.addressComponents || []).find((c) => (c.types || []).includes('country'));
+  if (!match) return { code: null, name: null };
+  return { code: match.shortText || null, name: match.longText || null };
+}
 
 // Google returns a price *band*, never an actual price. These are rough
 // per-visit spends for each band so the UI can filter against a daily budget;
@@ -362,6 +373,7 @@ module.exports = async function handler(req, res) {
     const data = await response.json();
     const places = (data.places || []).map((place) => {
       const priceLevel = place.priceLevel || null;
+      const country = countryOf(place);
       return {
         priceLevel,
         id: place.id,
@@ -378,6 +390,12 @@ module.exports = async function handler(req, res) {
           : null,
         mapsUri: place.googleMapsUri || null,
         emoji: category.emoji,
+        // Carried through so rating a place can drop a pin without a second
+        // lookup for where on Earth the place actually is.
+        lat: place.location?.latitude ?? null,
+        lng: place.location?.longitude ?? null,
+        countryCode: country.code,
+        countryName: country.name,
       };
     });
 

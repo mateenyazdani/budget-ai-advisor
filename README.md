@@ -1,7 +1,42 @@
 # Bargainly
 
 Know what you can safely spend, catch what you are quietly paying every
-month, and find the cheaper option nearby.
+month, and find the cheaper option nearby — then put the good ones on a map
+your friends can see.
+
+## The friends map
+
+The centre of the app is `/map`: a world map of places your friends rated,
+with what they actually paid. It works like this.
+
+1. Everyone picks a **username** at `/profile`. That is how people find you.
+2. You **follow** someone at `/friends`. Nothing is shared yet.
+3. When they follow you back you are **friends**, and each of you can see the
+   other's pins. A one-way follow shows nothing in either direction.
+4. Rating a place on `/discover` — the **I've been** button on a venue card —
+   drops a **pin**: a score out of five, the price you paid, and a sentence.
+
+Zoomed out, the map shows one bubble per country, sized by how many places are
+pinned there and positioned at the mean of those pins. Past zoom 5 it switches
+to the individual places. Tapping a country in the sidebar flies to it.
+
+### Why mutual, and where that rule lives
+
+"Friends" means the follow runs both ways, so nobody's map is readable by a
+stranger who followed them once. That rule is a row level security policy on
+`public.pins`, enforced by `public.is_friend(a, b)` in Postgres — not a filter
+in a query. A query that forgets to filter returns nothing it should not,
+because the database refuses rather than the application remembering.
+
+`profiles` is the one table that is readable by any signed-in user, because
+searching for a friend by username means reading a row that is not yours. Only
+username, display name, emoji and home country are exposed.
+
+### Map tiles
+
+The map is Leaflet with OpenStreetMap tiles, which need no API key and no
+account. Markers are drawn as HTML elements rather than Leaflet's default PNG,
+which a bundler rewrites and then cannot find.
 
 ## Setup
 

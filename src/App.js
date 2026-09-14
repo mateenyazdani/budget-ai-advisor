@@ -10,6 +10,9 @@ import {
 } from 'react-router-dom';
 import './styles/App.css';
 import { Wordmark, ChartIcon, BasketIcon, BankIcon, ChatIcon } from './components/Icons';
+import WorldMap from './components/WorldMap';
+import Friends from './components/Friends';
+import Profile from './components/Profile';
 import Landing from './components/Landing';
 import SignIn from './components/SignIn';
 import Privacy from './components/Privacy';
@@ -26,7 +29,12 @@ import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 // Browsing deals needs nothing about you, so it is the one item a signed-out
 // visitor sees. The rest are all tied to a personal budget.
 const NAV_ITEMS = [
+  // The map comes first because it is the reason to come back: your friends put
+  // something new on it while you were away. Discover stays public, since
+  // browsing deals still needs nothing about you.
+  { to: '/map', Icon: () => <span aria-hidden="true">🌍</span>, label: 'Map' },
   { to: '/discover', Icon: BasketIcon, label: 'Discover', public: true },
+  { to: '/friends', Icon: () => <span aria-hidden="true">👥</span>, label: 'Friends' },
   { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
   { to: '/bank', Icon: BankIcon, label: 'Planned vs actual' },
   { to: '/advisor', Icon: ChatIcon, label: 'Ask advisor' },
@@ -49,7 +57,7 @@ function Shell({ session, budget, children, showNav }) {
         <div className="header-user">
           {session ? (
             <>
-              <span>@{username}</span>
+              <NavLink className="header-username" to="/profile">@{username}</NavLink>
               <button className="btn-logout" onClick={signOut}>Sign out</button>
             </>
           ) : (
@@ -173,8 +181,41 @@ function App() {
             path="/discover"
             element={
               <Shell session={session} budget={userBudget} showNav>
-                <Discover budgetRemaining={userBudget?.surplus} />
+                <Discover budgetRemaining={userBudget?.surplus} session={session} />
               </Shell>
+            }
+          />
+
+          {/* The map reads as an invitation when signed out rather than a
+              redirect to a sign-in wall, so it is not wrapped in Protected. */}
+          <Route
+            path="/map"
+            element={
+              <Shell session={session} budget={userBudget} showNav>
+                <WorldMap session={session} />
+              </Shell>
+            }
+          />
+
+          <Route
+            path="/friends"
+            element={
+              <Protected session={session}>
+                <Shell session={session} budget={userBudget} showNav>
+                  <Friends session={session} />
+                </Shell>
+              </Protected>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <Protected session={session}>
+                <Shell session={session} budget={userBudget} showNav>
+                  <Profile session={session} />
+                </Shell>
+              </Protected>
             }
           />
 
@@ -216,13 +257,13 @@ function App() {
 // Signed-out visitors get the landing page; signed-in ones go to their budget.
 function PublicHome({ session, budget }) {
   const navigate = useNavigate();
-  if (session) return <Navigate to="/discover" replace />;
+  if (session) return <Navigate to="/map" replace />;
   return <Landing onGetStarted={() => navigate('/signin')} />;
 }
 
 function AuthRoute({ session }) {
   const navigate = useNavigate();
-  if (session) return <Navigate to="/discover" replace />;
+  if (session) return <Navigate to="/map" replace />;
   return <SignIn onBack={() => navigate('/')} />;
 }
 
