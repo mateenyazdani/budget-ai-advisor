@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { attachOffers } from '../lib/matchOffers';
 import PinForm from './PinForm';
+import { loadWantToTry, saveWantToTry, removeWantToTry } from '../lib/wantToTry';
 import { TOP_LEVEL, categoryById, categoriesIn, topById } from '../lib/categories';
 import '../styles/Discover.css';
 
@@ -153,7 +154,7 @@ function ResultsMap({ items, icon, centre }) {
   );
 }
 
-function DealCard({ item, icon, typical, onPin }) {
+function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
   const { offer } = item;
   const showPair = offer?.priceBefore != null && offer?.priceNow != null;
 
@@ -227,8 +228,18 @@ function DealCard({ item, icon, typical, onPin }) {
             Map
           </a>
         )}
-        {/* Only a place you can stand in can be pinned to a map. An online SIM
-            deal has no coordinates and would land in the sea off Africa. */}
+        {/* Only a place you can stand in can be pinned or bookmarked. An online
+            SIM deal has no coordinates and would land in the sea off Africa. */}
+        {onToggleWant && item.lat != null && !wanted && (
+          <button type="button" className="deal-link" onClick={() => onToggleWant(item)}>
+            🔖 Want to try
+          </button>
+        )}
+        {onToggleWant && item.lat != null && wanted && (
+          <button type="button" className="deal-link want-on" onClick={() => onToggleWant(item)}>
+            🔖 Saved
+          </button>
+        )}
         {onPin && item.lat != null && (
           <button type="button" className="deal-link pin-it" onClick={() => onPin(item)}>
             I've been
@@ -242,6 +253,7 @@ function DealCard({ item, icon, typical, onPin }) {
 function Discover({ budgetRemaining, session }) {
   // The place being rated, if the pin sheet is open over the results.
   const [pinning, setPinning] = useState(null);
+  const [wantIds, setWantIds] = useState(() => new Set());
   const [city, setCity] = useState(() => localStorage.getItem('userCity') || 'Madrid');
   const [cityDraft, setCityDraft] = useState(city);
   const [coords, setCoords] = useState(null);
@@ -249,6 +261,10 @@ function Discover({ budgetRemaining, session }) {
 
   const [top, setTop] = useState('EAT');
   const [category, setCategory] = useState('Dining');
+
+  // Declared early: toggleWant below closes over it, and a const referenced
+  // before its declaration in the same scope is a crash, not a stale value.
+  const current = category ? categoryById(category) : null;
   const [activeQuery, setActiveQuery] = useState('');
   const [places, setPlaces] = useState([]);
   const [offers, setOffers] = useState([]);
@@ -308,6 +324,35 @@ function Discover({ budgetRemaining, session }) {
   }, []);
 
   useEffect(() => { askForLocation(); }, [askForLocation]);
+
+  useEffect(() => {
+    if (!session) { setWantIds(new Set()); return; }
+    loadWantToTry().then((rows) => setWantIds(new Set(rows.map((r) => r.place_id))));
+  }, [session]);
+
+  const toggleWant = useCallback(async (item) => {
+    const already = wantIds.has(item.id);
+    // Optimistic: a bookmark toggle should feel instant, and a failed write
+    // just gets silently corrected back on the next load.
+    setWantIds((prev) => {
+      const next = new Set(prev);
+      already ? next.delete(item.id) : next.add(item.id);
+      return next;
+    });
+    if (already) {
+      await removeWantToTry(item.id);
+    } else {
+      await saveWantToTry({
+        id: item.id,
+        name: item.name,
+        category: current?.id,
+        address: item.address,
+        lat: item.lat,
+        lng: item.lng,
+        countryCode: item.countryCode,
+      });
+    }
+  }, [wantIds, current]);
 
   // A denied permission cannot be re-prompted by script, so the button must
   // stop pretending it can and explain where the switch actually is.
@@ -435,7 +480,6 @@ function Discover({ budgetRemaining, session }) {
     if (category || activeQuery) search(category, activeQuery);
   }, [city, maxPrice, goodOnly, coords, category, activeQuery, search]);
 
-  const current = category ? categoryById(category) : null;
   const icon = current?.icon || '🏷️';
   const { places: merged, unmatched } = attachOffers(places, offers);
 
@@ -637,6 +681,8 @@ function Discover({ budgetRemaining, session }) {
                   icon={icon}
                   typical={typical}
                   onPin={session ? setPinning : null}
+                  onToggleWant={session ? toggleWant : null}
+                  wanted={wantIds.has(item.id)}
                 />
               ))}
             </div>
@@ -676,6 +722,13 @@ function Discover({ budgetRemaining, session }) {
           place={{ ...pinning, city }}
           category={category}
           onClose={() => setPinning(null)}
+          onSaved={() => {
+            // Having actually been supersedes wanting to go.
+            if (wantIds.has(pinning.id)) {
+              setWantIds((prev) => { const next = new Set(prev); next.delete(pinning.id); return next; });
+              removeWantToTry(pinning.id);
+            }
+          }}
         />
       )}
     </div>

@@ -4,6 +4,13 @@ import { supabase } from './supabase';
 // a sentence about why. Row level security decides who may read it — this file
 // never filters by friendship, because a filter you can forget is not a rule.
 
+// The old five-star field stays populated so anything still reading `rating`
+// (the world map's marker label, the profile list) keeps working without
+// having to know a score out of ten exists.
+function ratingFromScore(score) {
+  return Math.max(1, Math.min(5, Math.round(score / 2)));
+}
+
 export async function savePin(pin) {
   if (!supabase) return { error: 'Not connected.' };
   const { data: auth } = await supabase.auth.getUser();
@@ -27,7 +34,9 @@ export async function savePin(pin) {
     city: pin.city || null,
     lat: pin.lat,
     lng: pin.lng,
-    rating: pin.rating,
+    sentiment: pin.sentiment,
+    score: pin.score,
+    rating: ratingFromScore(pin.score),
     price_paid: pin.pricePaid ?? null,
     currency: pin.currency || '€',
     note: pin.note || null,
@@ -42,6 +51,22 @@ export async function savePin(pin) {
     .maybeSingle();
 
   return error ? { error: error.message } : { ok: true, pin: data };
+}
+
+// My own pins in one sentiment bucket, ascending by score — the exact list a
+// new pin gets slotted into by comparison.
+export async function loadMyPinsBySentiment(sentiment) {
+  if (!supabase) return [];
+  const { data: auth } = await supabase.auth.getUser();
+  const me = auth?.user?.id;
+  if (!me) return [];
+  const { data } = await supabase
+    .from('pins')
+    .select('id, place_id, name, sentiment, score')
+    .eq('user_id', me)
+    .eq('sentiment', sentiment)
+    .order('score', { ascending: true });
+  return data || [];
 }
 
 export async function deletePin(id) {

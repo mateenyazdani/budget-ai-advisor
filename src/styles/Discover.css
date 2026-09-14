@@ -642,3 +642,8 @@
   line-height: 1.55;
   opacity: 0.92;
 }
+
+.deal-link.want-on {
+  color: var(--brand-dark);
+  font-weight: 700;
+}

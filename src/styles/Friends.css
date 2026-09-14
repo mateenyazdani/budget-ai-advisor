@@ -53,3 +53,24 @@
   background: var(--surface); color: var(--ink);
 }
 .avatar-input { width: 52px; text-align: center; flex: none !important; font-size: 18px !important; }
+
+/* Recent: friends' verdicts, chronological rather than grouped by place — the
+   same pins the world map shows, read as a feed instead. */
+.feed-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface);
+}
+.feed-body { flex: 1; min-width: 0; }
+.feed-line { font-size: 14px; line-height: 1.4; margin: 0; }
+.feed-cat { color: var(--ink-faint); }
+.feed-score {
+  display: inline-block; margin-top: 3px;
+  font-size: 12px; font-weight: 700; color: var(--brand-dark);
+  background: var(--brand-soft); padding: 2px 8px; border-radius: 999px;
+}
+.feed-note {
+  font-size: 13px; color: var(--ink-soft); font-style: italic;
+  margin: 5px 0 0;
+}
+.feed-list { gap: 8px; }

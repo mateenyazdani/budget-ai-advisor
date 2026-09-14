@@ -354,3 +354,18 @@ create policy "pins: read own and friends" on public.pins
 drop policy if exists "pins: write own" on public.pins;
 create policy "pins: write own" on public.pins
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ------------------------------------------------------- pins: ranked score
+
+-- A star out of five is the same five buckets everyone else uses. Beli's
+-- actual mechanic is a comparison: pick a place you already rated and ask
+-- which was better, which produces a score with real separation between two
+-- places you'd otherwise both call "4 stars". Added rather than replacing
+-- `rating`, so anything still reading it keeps working.
+alter table public.pins add column if not exists sentiment text
+  check (sentiment in ('like', 'fine', 'dislike'));
+alter table public.pins add column if not exists score numeric(3,1)
+  check (score between 0 and 10);
+
+create index if not exists pins_user_sentiment_idx
+  on public.pins (user_id, sentiment, score);

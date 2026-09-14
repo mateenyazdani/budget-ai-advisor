@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { loadGraph, searchUsers, follow, unfollow } from '../lib/social';
+import { loadVisiblePins } from '../lib/pins';
+import { categoryById } from '../lib/categories';
+import { SENTIMENTS } from '../lib/ranking';
 import '../styles/Friends.css';
 
 function PersonRow({ person, action, onAction, busy, hint }) {
@@ -20,9 +23,34 @@ function PersonRow({ person, action, onAction, busy, hint }) {
   );
 }
 
+// One recent verdict from someone the viewer follows both ways — what they
+// rated, out of ten, and what they said about it.
+function FeedRow({ pin }) {
+  const sentiment = SENTIMENTS.find((s) => s.id === pin.sentiment);
+  const cat = categoryById(pin.category);
+  return (
+    <li className="feed-row">
+      <span className="person-avatar" aria-hidden="true">{pin.author?.avatar_emoji || '🙂'}</span>
+      <div className="feed-body">
+        <p className="feed-line">
+          <strong>@{pin.author?.username || 'someone'}</strong>
+          {' '}{sentiment?.emoji || '📍'} rated{' '}
+          <strong>{pin.name}</strong>
+          {cat && <span className="feed-cat"> {cat.icon}</span>}
+        </p>
+        {pin.score != null && (
+          <span className="feed-score">{Number(pin.score).toFixed(1)}/10</span>
+        )}
+        {pin.note && <p className="feed-note">“{pin.note}”</p>}
+      </div>
+    </li>
+  );
+}
+
 function Friends({ session }) {
   const me = session?.user?.id;
   const [graph, setGraph] = useState({ friends: [], following: [], followers: [] });
+  const [feed, setFeed] = useState([]);
   const [term, setTerm] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -33,6 +61,14 @@ function Friends({ session }) {
   }, [me]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  useEffect(() => {
+    if (!me) return;
+    // Every pin the viewer is allowed to see, already row-level-security
+    // filtered to their own and their mutual friends' — the feed is just that
+    // list read chronologically instead of grouped by place.
+    loadVisiblePins().then((all) => setFeed(all.filter((p) => p.user_id !== me).slice(0, 20)));
+  }, [me]);
 
   // A search on every keystroke would be a request per letter. Waiting a beat
   // after typing stops turns one search per word.
@@ -66,6 +102,15 @@ function Friends({ session }) {
         Maps are mutual. You see someone's pins once you both follow each other —
         a one-way follow shows nothing.
       </p>
+
+      {feed.length > 0 && (
+        <div className="friend-block">
+          <h3>Recent</h3>
+          <ul className="person-list feed-list">
+            {feed.map((pin) => <FeedRow key={pin.id} pin={pin} />)}
+          </ul>
+        </div>
+      )}
 
       <div className="friend-search">
         <input
