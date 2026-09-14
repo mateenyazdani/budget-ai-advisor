@@ -647,3 +647,25 @@
   color: var(--brand-dark);
   font-weight: 700;
 }
+
+/* What friends thought of this exact venue, surfaced right where you'd act on
+   it — not buried behind a separate Friends tab nobody would go check. */
+.friend-verdict { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+
+.verdict-chip {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.verdict-chip.mine {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.verdict-chip.friends {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}

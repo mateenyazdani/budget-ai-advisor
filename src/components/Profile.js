@@ -84,28 +84,33 @@ function Profile({ session }) {
       </form>
 
       <div className="friend-block">
-        <h3>Your pins <span className="count">{mine.length}</span></h3>
+        <h3>Your ranking <span className="count">{mine.length}</span></h3>
         {!mine.length && <p className="friends-note">Nothing pinned yet.</p>}
-        <ul className="person-list">
-          {mine.map((pin) => {
-            const sentiment = SENTIMENTS.find((s) => s.id === pin.sentiment);
-            return (
-              <li key={pin.id} className="person-row">
-                <span className="person-id">
-                  <strong>{pin.name}</strong>
-                  <span className="person-name">
-                    {pin.score != null
-                      ? <>{sentiment?.emoji} {Number(pin.score).toFixed(1)}/10</>
-                      : '★'.repeat(pin.rating)}
-                    {pin.price_paid != null && ` · ${pin.currency}${Number(pin.price_paid).toFixed(2)}`}
-                    {pin.country_name && ` · ${pin.country_name}`}
+        {/* Best to worst, numbered — the actual point of scoring places by
+            comparison rather than by star: it produces an order, not a pile. */}
+        <ol className="person-list ranked-list">
+          {[...mine]
+            .sort((a, b) => Number(b.score ?? b.rating * 2) - Number(a.score ?? a.rating * 2))
+            .map((pin, i) => {
+              const sentiment = SENTIMENTS.find((s) => s.id === pin.sentiment);
+              return (
+                <li key={pin.id} className="person-row ranked-row">
+                  <span className="rank-num">{i + 1}</span>
+                  <span className="person-id">
+                    <strong>{pin.name}</strong>
+                    <span className="person-name">
+                      {pin.score != null
+                        ? <>{sentiment?.emoji} {Number(pin.score).toFixed(1)}/10</>
+                        : '★'.repeat(pin.rating)}
+                      {pin.price_paid != null && ` · ${pin.currency}${Number(pin.price_paid).toFixed(2)}`}
+                      {pin.country_name && ` · ${pin.country_name}`}
+                    </span>
                   </span>
-                </span>
-                <button className="btn-follow" onClick={() => remove(pin.id)}>Remove</button>
-              </li>
-            );
-          })}
-        </ul>
+                  <button className="btn-follow" onClick={() => remove(pin.id)}>Remove</button>
+                </li>
+              );
+            })}
+        </ol>
       </div>
 
       <div className="friend-block">

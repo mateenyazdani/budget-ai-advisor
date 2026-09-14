@@ -369,3 +369,40 @@ alter table public.pins add column if not exists score numeric(3,1)
 
 create index if not exists pins_user_sentiment_idx
   on public.pins (user_id, sentiment, score);
+
+-- --------------------------------------------------------- pin photos
+
+-- A pin's photo carries the same privacy as the pin itself, so it is a
+-- private bucket with the same "own or mutual friend" rule as the pins
+-- table — never a public URL, always a signed one.
+insert into storage.buckets (id, name, public)
+values ('pin-photos', 'pin-photos', false)
+on conflict (id) do nothing;
+
+alter table public.pins add column if not exists photo_path text;
+
+-- Objects are stored at "<user_id>/<pin_id>.<ext>", so the path itself says
+-- who took it without a second lookup.
+drop policy if exists "pin photos: read own and friends" on storage.objects;
+create policy "pin photos: read own and friends" on storage.objects
+  for select using (
+    bucket_id = 'pin-photos'
+    and (
+      auth.uid()::text = (storage.foldername(name))[1]
+      or public.is_friend(auth.uid(), ((storage.foldername(name))[1])::uuid)
+    )
+  );
+
+drop policy if exists "pin photos: write own" on storage.objects;
+create policy "pin photos: write own" on storage.objects
+  for insert with check (
+    bucket_id = 'pin-photos'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "pin photos: delete own" on storage.objects;
+create policy "pin photos: delete own" on storage.objects
+  for delete using (
+    bucket_id = 'pin-photos'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );

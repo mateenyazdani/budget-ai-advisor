@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { savePin } from '../lib/pins';
+import { savePin, uploadPinPhoto } from '../lib/pins';
 import { loadMyPinsBySentiment } from '../lib/pins';
 import { SENTIMENTS, nextComparison, afterComparison, scoreFromInsertion } from '../lib/ranking';
 import '../styles/PinForm.css';
@@ -9,7 +9,7 @@ import '../styles/PinForm.css';
 // felt, how it stacks up against places they already rated, what it cost, and
 // why — in that order, because "4 stars" means nothing next to another 4-star
 // place until you've said which one was actually better.
-function PinForm({ place, category, onClose, onSaved }) {
+function PinForm({ place, category, session, onClose, onSaved }) {
   // sentiment -> comparing -> details -> saving
   const [step, setStep] = useState('sentiment');
   const [sentiment, setSentiment] = useState(null);
@@ -22,10 +22,29 @@ function PinForm({ place, category, onClose, onSaved }) {
   const [round, setRound] = useState(0);
 
   const [score, setScore] = useState(null);
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [price, setPrice] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // The preview is a blob URL, which leaks memory if never revoked — once
+  // when a new photo replaces it, once when the form itself closes.
+  useEffect(() => () => { if (photoPreview) URL.revokeObjectURL(photoPreview); }, [photoPreview]);
+
+  const pickPhoto = (file) => {
+    if (!file) return;
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const removePhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhoto(null);
+    setPhotoPreview(null);
+  };
 
   const missingLocation = !Number.isFinite(place?.lat) || !place?.countryCode;
 
@@ -79,7 +98,19 @@ function PinForm({ place, category, onClose, onSaved }) {
     setSaving(true);
     setError('');
 
+    // Generated here, not by Postgres, so the photo can be uploaded to its
+    // final path before the row that points at it exists — if the upload
+    // fails, nothing gets saved half-finished.
+    const pinId = crypto.randomUUID();
+    let photoPath = null;
+    if (photo && session?.user?.id) {
+      const uploaded = await uploadPinPhoto(session.user.id, pinId, photo);
+      if (uploaded.error) { setSaving(false); setError(`Photo failed to upload: ${uploaded.error}`); return; }
+      photoPath = uploaded.path;
+    }
+
     const result = await savePin({
+      id: pinId,
       placeId: place.id,
       name: place.name,
       category,
@@ -90,6 +121,7 @@ function PinForm({ place, category, onClose, onSaved }) {
       lng: place.lng,
       sentiment,
       score,
+      photoPath,
       pricePaid: price === '' ? null : Number(price),
       note: note.trim() || null,
     });
@@ -150,6 +182,28 @@ function PinForm({ place, category, onClose, onSaved }) {
               <strong>{score?.toFixed(1)}</strong>
               <span className="pin-score-of10">/10</span>
             </div>
+
+            <label className="pin-photo-picker">
+              {photoPreview ? (
+                <img src={photoPreview} alt="" className="pin-photo-preview" />
+              ) : (
+                <span className="pin-photo-empty">
+                  <span className="pin-photo-icon" aria-hidden="true">📷</span>
+                  Take a photo
+                </span>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => pickPhoto(e.target.files?.[0])}
+              />
+            </label>
+            {photoPreview && (
+              <button type="button" className="pin-photo-remove" onClick={removePhoto}>
+                Remove photo
+              </button>
+            )}
 
             <label className="pin-field">
               <span>What did you pay?</span>

@@ -11,6 +11,7 @@ import {
 import './styles/App.css';
 import { Wordmark, ChartIcon, BasketIcon, BankIcon, ChatIcon } from './components/Icons';
 import WorldMap from './components/WorldMap';
+import Feed from './components/Feed';
 import Friends from './components/Friends';
 import Profile from './components/Profile';
 import Landing from './components/Landing';
@@ -29,10 +30,11 @@ import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 // Browsing deals needs nothing about you, so it is the one item a signed-out
 // visitor sees. The rest are all tied to a personal budget.
 const NAV_ITEMS = [
-  // The map comes first because it is the reason to come back: your friends put
-  // something new on it while you were away. Discover stays public, since
-  // browsing deals still needs nothing about you.
-  { to: '/map', Icon: () => <span aria-hidden="true">🌍</span>, label: 'Map' },
+  // Feed comes first because it is the reason to come back: a new card at the
+  // top means a friend did something since you last looked. A bubble moving
+  // slightly on a map does not carry the same pull. The map itself is not
+  // gone — Feed links out to it for anyone who wants the geography instead.
+  { to: '/feed', Icon: () => <span aria-hidden="true">📸</span>, label: 'Feed' },
   { to: '/discover', Icon: BasketIcon, label: 'Discover', public: true },
   { to: '/friends', Icon: () => <span aria-hidden="true">👥</span>, label: 'Friends' },
   { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
@@ -198,6 +200,17 @@ function App() {
           />
 
           <Route
+            path="/feed"
+            element={
+              <Protected session={session}>
+                <Shell session={session} budget={userBudget} showNav>
+                  <Feed session={session} />
+                </Shell>
+              </Protected>
+            }
+          />
+
+          <Route
             path="/friends"
             element={
               <Protected session={session}>
@@ -254,16 +267,17 @@ function App() {
   );
 }
 
-// Signed-out visitors get the landing page; signed-in ones go to their budget.
+// Signed-out visitors get the landing page; signed-in ones go straight to
+// what changed while they were away.
 function PublicHome({ session, budget }) {
   const navigate = useNavigate();
-  if (session) return <Navigate to="/map" replace />;
+  if (session) return <Navigate to="/feed" replace />;
   return <Landing onGetStarted={() => navigate('/signin')} />;
 }
 
 function AuthRoute({ session }) {
   const navigate = useNavigate();
-  if (session) return <Navigate to="/map" replace />;
+  if (session) return <Navigate to="/feed" replace />;
   return <SignIn onBack={() => navigate('/')} />;
 }
 

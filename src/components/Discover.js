@@ -5,6 +5,8 @@ import 'leaflet/dist/leaflet.css';
 import { attachOffers } from '../lib/matchOffers';
 import PinForm from './PinForm';
 import { loadWantToTry, saveWantToTry, removeWantToTry } from '../lib/wantToTry';
+import { loadVisiblePins } from '../lib/pins';
+import { SENTIMENTS } from '../lib/ranking';
 import { TOP_LEVEL, categoryById, categoriesIn, topById } from '../lib/categories';
 import '../styles/Discover.css';
 
@@ -203,6 +205,27 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
       {offer && <p className="deal-offer">{offer.offer}</p>}
       {offer?.validity && <p className="deal-validity">{offer.validity}</p>}
 
+      {item.verdict && (item.verdict.mine || item.verdict.friends.length > 0) && (
+        <p className="friend-verdict">
+          {item.verdict.mine && (
+            <span className="verdict-chip mine">
+              You: {Number(item.verdict.mine.score ?? item.verdict.mine.rating * 2).toFixed(1)}/10
+            </span>
+          )}
+          {item.verdict.friends.length > 0 && (
+            <span className="verdict-chip friends">
+              {SENTIMENTS.find((s) => s.id === item.verdict.friends[0].sentiment)?.emoji || '📍'}{' '}
+              {item.verdict.friends.length === 1
+                ? `${item.verdict.friends[0].author?.username || 'A friend'} rated it ${Number(item.verdict.friends[0].score ?? item.verdict.friends[0].rating * 2).toFixed(1)}/10`
+                : `${item.verdict.friends.length} friends, avg ${(
+                    item.verdict.friends.reduce((sum, p) => sum + Number(p.score ?? p.rating * 2), 0) /
+                    item.verdict.friends.length
+                  ).toFixed(1)}/10`}
+            </span>
+          )}
+        </p>
+      )}
+
       <div className="deal-facts">
         {item.rating != null && (
           <span>⭐ {item.rating}{item.ratingCount ? ` (${item.ratingCount})` : ''}</span>
@@ -254,6 +277,7 @@ function Discover({ budgetRemaining, session }) {
   // The place being rated, if the pin sheet is open over the results.
   const [pinning, setPinning] = useState(null);
   const [wantIds, setWantIds] = useState(() => new Set());
+  const [visiblePins, setVisiblePins] = useState([]);
   const [city, setCity] = useState(() => localStorage.getItem('userCity') || 'Madrid');
   const [cityDraft, setCityDraft] = useState(city);
   const [coords, setCoords] = useState(null);
@@ -328,6 +352,11 @@ function Discover({ budgetRemaining, session }) {
   useEffect(() => {
     if (!session) { setWantIds(new Set()); return; }
     loadWantToTry().then((rows) => setWantIds(new Set(rows.map((r) => r.place_id))));
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) { setVisiblePins([]); return; }
+    loadVisiblePins().then(setVisiblePins);
   }, [session]);
 
   const toggleWant = useCallback(async (item) => {
@@ -483,11 +512,23 @@ function Discover({ budgetRemaining, session }) {
   const icon = current?.icon || '🏷️';
   const { places: merged, unmatched } = attachOffers(places, offers);
 
+  // Keyed by Google's place id, so a venue card can be matched against the
+  // pins your friends left on this exact place — separate from your own,
+  // since "you rated this" and "2 friends rated this" read differently.
+  const verdictsByPlace = new Map();
+  for (const pin of visiblePins) {
+    if (!pin.place_id) continue;
+    const bucket = verdictsByPlace.get(pin.place_id) || { mine: null, friends: [] };
+    if (pin.user_id === session?.user?.id) bucket.mine = pin;
+    else bucket.friends.push(pin);
+    verdictsByPlace.set(pin.place_id, bucket);
+  }
+
   // Venues and venue-less offers are the same thing to someone browsing, so
   // they sort together rather than sitting in two separate lists.
   const items = sortItems(
     [
-      ...merged.map((p) => ({ ...p, key: p.id })),
+      ...merged.map((p) => ({ ...p, key: p.id, verdict: verdictsByPlace.get(p.id) || null })),
       ...unmatched.map((d, i) => ({
         key: `offer-${d.merchant}-${i}`,
         name: d.merchant,
@@ -721,6 +762,7 @@ function Discover({ budgetRemaining, session }) {
         <PinForm
           place={{ ...pinning, city }}
           category={category}
+          session={session}
           onClose={() => setPinning(null)}
           onSaved={() => {
             // Having actually been supersedes wanting to go.
