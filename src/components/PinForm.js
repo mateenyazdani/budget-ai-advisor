@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { savePin, uploadPinPhoto } from '../lib/pins';
+import { savePin, uploadPinPhoto, pinPhotoUrl } from '../lib/pins';
 import { loadMyPinsBySentiment } from '../lib/pins';
 import { SENTIMENTS, nextComparison, afterComparison, scoreFromInsertion } from '../lib/ranking';
 import '../styles/PinForm.css';
@@ -9,10 +9,16 @@ import '../styles/PinForm.css';
 // felt, how it stacks up against places they already rated, what it cost, and
 // why — in that order, because "4 stars" means nothing next to another 4-star
 // place until you've said which one was actually better.
-function PinForm({ place, category, session, onClose, onSaved }) {
+//
+// `initial` is the pin being edited, if any. Editing skips straight past the
+// sentiment and comparison steps — fixing a typo in a note should not force
+// a fresh round of "which was better" — but a link back into that flow is
+// still there for anyone who genuinely wants to re-rank it.
+function PinForm({ place, category, session, initial, onClose, onSaved }) {
+  const isEdit = Boolean(initial);
   // sentiment -> comparing -> details -> saving
-  const [step, setStep] = useState('sentiment');
-  const [sentiment, setSentiment] = useState(null);
+  const [step, setStep] = useState(isEdit ? 'details' : 'sentiment');
+  const [sentiment, setSentiment] = useState(initial?.sentiment || null);
 
   // The binary search's own state: the sorted bucket, and the [lo, hi) window
   // still to narrow. Once lo === hi, that index is where this place belongs.
@@ -21,29 +27,50 @@ function PinForm({ place, category, session, onClose, onSaved }) {
   const [hi, setHi] = useState(0);
   const [round, setRound] = useState(0);
 
-  const [score, setScore] = useState(null);
+  const [score, setScore] = useState(initial?.score ?? null);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [price, setPrice] = useState('');
-  const [note, setNote] = useState('');
+  const [existingPhotoPath, setExistingPhotoPath] = useState(initial?.photo_path || null);
+  const [price, setPrice] = useState(initial?.price_paid != null ? String(initial.price_paid) : '');
+  const [note, setNote] = useState(initial?.note || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // The preview is a blob URL, which leaks memory if never revoked — once
-  // when a new photo replaces it, once when the form itself closes.
+  // The existing photo lives behind a signed URL, not a plain src — it has to
+  // be fetched before there is anything to show as the starting preview.
+  useEffect(() => {
+    if (!initial?.photo_path) return;
+    let cancelled = false;
+    pinPhotoUrl(initial.photo_path).then((url) => { if (!cancelled) setPhotoPreview(url); });
+    return () => { cancelled = true; };
+  }, [initial?.photo_path]);
+
+  // The preview is a blob URL when it came from a freshly picked file, which
+  // leaks memory if never revoked. A signed URL (the existing-photo case) is
+  // not a blob and revoking it is a harmless no-op.
   useEffect(() => () => { if (photoPreview) URL.revokeObjectURL(photoPreview); }, [photoPreview]);
 
   const pickPhoto = (file) => {
     if (!file) return;
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhoto(file);
+    setExistingPhotoPath(null);
     setPhotoPreview(URL.createObjectURL(file));
   };
 
   const removePhoto = () => {
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhoto(null);
+    setExistingPhotoPath(null);
     setPhotoPreview(null);
+  };
+
+  // The escape hatch out of a quick edit, into a full re-rank against
+  // everything else already rated in whichever bucket it ends up in.
+  const rerank = () => {
+    setSentiment(null);
+    setScore(null);
+    setStep('sentiment');
   };
 
   const missingLocation = !Number.isFinite(place?.lat) || !place?.countryCode;
@@ -98,11 +125,13 @@ function PinForm({ place, category, session, onClose, onSaved }) {
     setSaving(true);
     setError('');
 
-    // Generated here, not by Postgres, so the photo can be uploaded to its
-    // final path before the row that points at it exists — if the upload
-    // fails, nothing gets saved half-finished.
-    const pinId = crypto.randomUUID();
-    let photoPath = null;
+    // An edit keeps the pin's existing id, so a new photo overwrites the same
+    // storage path instead of orphaning the old file. A fresh pin generates
+    // one here rather than letting Postgres do it, so the photo can be
+    // uploaded to its final path before the row that points at it exists —
+    // if the upload fails, nothing gets saved half-finished.
+    const pinId = initial?.id || crypto.randomUUID();
+    let photoPath = existingPhotoPath;
     if (photo && session?.user?.id) {
       const uploaded = await uploadPinPhoto(session.user.id, pinId, photo);
       if (uploaded.error) { setSaving(false); setError(`Photo failed to upload: ${uploaded.error}`); return; }
@@ -135,7 +164,12 @@ function PinForm({ place, category, session, onClose, onSaved }) {
   const sentimentMeta = SENTIMENTS.find((s) => s.id === sentiment);
 
   return (
-    <div className="pin-form-backdrop" role="dialog" aria-modal="true" aria-label={`Rate ${place?.name}`}>
+    <div
+      className="pin-form-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${isEdit ? 'Edit' : 'Rate'} ${place?.name}`}
+    >
       <div className="pin-form">
         <button type="button" className="pin-form-close" onClick={onClose} aria-label="Close">×</button>
 
@@ -181,6 +215,11 @@ function PinForm({ place, category, session, onClose, onSaved }) {
               <span aria-hidden="true">{sentimentMeta?.emoji}</span>
               <strong>{score?.toFixed(1)}</strong>
               <span className="pin-score-of10">/10</span>
+              {isEdit && (
+                <button type="button" className="pin-rerank-link" onClick={rerank}>
+                  Change how it compares
+                </button>
+              )}
             </div>
 
             <label className="pin-photo-picker">
@@ -235,7 +274,7 @@ function PinForm({ place, category, session, onClose, onSaved }) {
             <div className="pin-form-actions">
               <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
               <button type="submit" className="btn-cta" disabled={saving}>
-                {saving ? 'Pinning…' : 'Pin it'}
+                {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Pin it'}
               </button>
             </div>
             <p className="pin-form-privacy">Only people you both follow can see this.</p>

@@ -119,3 +119,10 @@
   color: var(--negative); font-size: 12px; font-weight: 600; cursor: pointer;
   padding: 0;
 }
+
+.pin-rerank-link {
+  margin-left: auto;
+  background: none; border: none;
+  color: var(--brand-dark); font-size: 12px; font-weight: 600;
+  text-decoration: underline; cursor: pointer; padding: 0;
+}

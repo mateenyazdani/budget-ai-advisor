@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getProfile, claimUsername, normaliseUsername } from '../lib/social';
 import { loadVisiblePins, deletePin } from '../lib/pins';
 import { loadWantToTry, removeWantToTry } from '../lib/wantToTry';
 import { SENTIMENTS } from '../lib/ranking';
+import PinForm from './PinForm';
 import '../styles/Friends.css';
 
 // The signup trigger seeds a username from the email address, which is both
@@ -16,6 +17,12 @@ function Profile({ session }) {
   const [error, setError] = useState('');
   const [mine, setMine] = useState([]);
   const [wantList, setWantList] = useState([]);
+  const [editing, setEditing] = useState(null);
+
+  const refreshMine = useCallback(
+    () => loadVisiblePins().then((all) => setMine(all.filter((p) => p.user_id === me))),
+    [me]
+  );
 
   useEffect(() => {
     if (!me) return;
@@ -24,9 +31,9 @@ function Profile({ session }) {
       setDraft(p?.username || '');
       setAvatar(p?.avatar_emoji || '🙂');
     });
-    loadVisiblePins().then((all) => setMine(all.filter((p) => p.user_id === me)));
+    refreshMine();
     loadWantToTry().then(setWantList);
-  }, [me]);
+  }, [me, refreshMine]);
 
   const save = async (e) => {
     e.preventDefault();
@@ -106,12 +113,35 @@ function Profile({ session }) {
                       {pin.country_name && ` · ${pin.country_name}`}
                     </span>
                   </span>
-                  <button className="btn-follow" onClick={() => remove(pin.id)}>Remove</button>
+                  <span className="ranked-actions">
+                    <button className="btn-follow" onClick={() => setEditing(pin)}>Edit</button>
+                    <button className="btn-follow" onClick={() => remove(pin.id)}>Remove</button>
+                  </span>
                 </li>
               );
             })}
         </ol>
       </div>
+
+      {editing && (
+        <PinForm
+          place={{
+            id: editing.place_id,
+            name: editing.name,
+            address: editing.city ? `${editing.city}, ${editing.country_name || ''}`.trim() : null,
+            countryCode: editing.country_code,
+            countryName: editing.country_name,
+            city: editing.city,
+            lat: editing.lat,
+            lng: editing.lng,
+          }}
+          category={editing.category}
+          session={session}
+          initial={editing}
+          onClose={() => setEditing(null)}
+          onSaved={refreshMine}
+        />
+      )}
 
       <div className="friend-block">
         <h3>Want to try <span className="count">{wantList.length}</span></h3>
