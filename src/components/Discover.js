@@ -411,18 +411,29 @@ function Discover({ budgetRemaining, session }) {
     setOffersError('');
 
     // A SIM card, broadband or insurance has no premises to visit, so asking
-    // Google for nearby shops would only add noise and a wait.
-    if (cat && cat.type === 'place') {
+    // Google for nearby shops would only add noise and a wait. A typed name
+    // has no such category to check, and Google is exactly what "where is
+    // this place" needs — it was skipped entirely before, so a name search
+    // only ever reached the deals search and never a single real venue.
+    if ((cat && cat.type === 'place') || (!cat && freeText)) {
       setPlacesState('loading');
       // Without location permission we still know the city, which is enough to
       // find the venues — just not to measure how far away they are.
       const params = new URLSearchParams(
         coords
-          ? { lat: String(coords.lat), lng: String(coords.lng), category: catId }
-          : { city, category: catId }
+          ? { lat: String(coords.lat), lng: String(coords.lng) }
+          : { city }
       );
-      if (maxPrice < 4) params.set('maxPrice', String(maxPrice));
-      if (goodOnly) params.set('minRating', '4');
+      if (freeText) {
+        // A place found by name is being looked up specifically, not browsed
+        // — filtering it out for being pricey would just hide the thing that
+        // was searched for.
+        params.set('query', freeText);
+      } else {
+        params.set('category', catId);
+        if (maxPrice < 4) params.set('maxPrice', String(maxPrice));
+        if (goodOnly) params.set('minRating', '4');
+      }
 
       fetch(`/api/places?${params}`)
         .then((r) => r.json())

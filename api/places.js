@@ -236,6 +236,10 @@ const ALL_CATEGORY = {
 
 const CITY_PATTERN = /^[\p{L}\p{M}\s'’.,-]+$/u;
 
+// Free text goes straight into a Google text search, so keep it to plain
+// words — the same shape the deals search already requires of a typed query.
+const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
+
 const PRICE_BANDS = [
   'PRICE_LEVEL_INEXPENSIVE',
   'PRICE_LEVEL_MODERATE',
@@ -317,8 +321,20 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Either lat and lng, or a city, is required.' });
   }
 
+  // A name typed into the search box — "tuk tuk", "zara" — has no category
+  // button behind it, so it was never reaching Google at all: only the deals
+  // search saw it, and that search has nothing to say about where a place is
+  // or how far away it sits.
+  const rawQuery = String(req.query.query || '').trim().slice(0, 60);
+  const freeQuery = rawQuery && QUERY_PATTERN.test(rawQuery) ? rawQuery : null;
+  if (rawQuery && !freeQuery) {
+    return res.status(400).json({ error: 'Search for a place in plain words.' });
+  }
+
   const requested = String(req.query.category || 'All');
-  const category = requested === 'All' ? ALL_CATEGORY : CATEGORIES[requested];
+  const category = freeQuery
+    ? { ...ALL_CATEGORY, text: freeQuery, textQuery: freeQuery, priceData: false }
+    : requested === 'All' ? ALL_CATEGORY : CATEGORIES[requested];
   if (!category) {
     return res.status(400).json({ error: 'Unknown category.' });
   }
@@ -331,7 +347,7 @@ module.exports = async function handler(req, res) {
   const minRating = category.priceData ? Math.min(Math.max(Number(req.query.minRating) || 0, 0), 5) : 0;
   const filtering = maxPrice > 0 || minRating > 0;
 
-  const useTextSearch = !hasCoords || filtering || Boolean(category.textQuery);
+  const useTextSearch = !hasCoords || filtering || Boolean(category.textQuery) || Boolean(freeQuery);
   const filters = {
     ...(maxPrice > 0 ? { priceLevels: PRICE_BANDS.slice(0, maxPrice) } : {}),
     ...(minRating > 0 ? { minRating: Math.round(minRating * 2) / 2 } : {}),
