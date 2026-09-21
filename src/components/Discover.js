@@ -249,6 +249,20 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
             See the deal
           </a>
         )}
+        {/* A real, dialable number from Google — not a booking API, which
+            would need a partnership with TheFork/OpenTable this app does not
+            have. Calling is the one booking path that needs no partner. It
+            becomes the main action when there is no deal link to be one. */}
+        {item.phone && (
+          <a className={offer?.sourceUrl ? 'deal-link' : 'deal-cta'} href={`tel:${item.phone}`}>
+            📞 Call to book
+          </a>
+        )}
+        {item.website && (
+          <a className="deal-link" href={item.website} target="_blank" rel="noopener noreferrer">
+            Website
+          </a>
+        )}
         {item.mapsUri && (
           <a className="deal-link" href={item.mapsUri} target="_blank" rel="noopener noreferrer">
             Map

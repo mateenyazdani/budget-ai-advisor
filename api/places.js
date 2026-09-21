@@ -11,6 +11,11 @@ const FIELD_MASK = [
   'places.priceLevel',
   'places.currentOpeningHours.openNow',
   'places.googleMapsUri',
+  // A real phone number and site are what actually let someone book — the
+  // deals search alone had no way to get someone from "found it" to "reserved
+  // it" unless a deal page happened to be a booking page too.
+  'places.internationalPhoneNumber',
+  'places.websiteUri',
   // Pins are grouped by country on the world map, so the country has to come
   // from Google rather than being guessed from the end of an address string.
   'places.addressComponents',
@@ -435,6 +440,10 @@ module.exports = async function handler(req, res) {
           ? Number(distanceKm(lat, lng, place.location.latitude, place.location.longitude).toFixed(1))
           : null,
         mapsUri: place.googleMapsUri || null,
+        // A tel: link only works with a real, dialable number — Google
+        // returns it pre-formatted with a country code when it has one.
+        phone: place.internationalPhoneNumber || null,
+        website: place.websiteUri || null,
         emoji: category.emoji,
         // Carried through so rating a place can drop a pin without a second
         // lookup for where on Earth the place actually is.
