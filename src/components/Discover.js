@@ -167,6 +167,9 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
         {offer?.discountPercent != null && (
           <span className="deal-burn">🔥 {offer.discountPercent}% OFF</span>
         )}
+        {item.withinBudget === true && offer?.discountPercent == null && (
+          <span className="deal-fits">🎯 Fits your budget</span>
+        )}
       </div>
 
       <h3>{item.name}</h3>
@@ -302,9 +305,11 @@ function Discover({ budgetRemaining, session }) {
   const [typical, setTypical] = useState(null);
   const [query, setQuery] = useState('');
 
-  // The product is cheap finds, so cheap and well-liked is the starting point
-  // rather than something you have to go and switch on.
-  const [maxPrice, setMaxPrice] = useState(2);
+  // "How much do you want to spend" is the product now, not a background
+  // filter — it starts unset (Any) so picking an amount is a deliberate act,
+  // not something quietly narrowing results before anyone asked it to.
+  const [budget, setBudget] = useState(null);
+  const [budgetInput, setBudgetInput] = useState('');
   const [goodOnly, setGoodOnly] = useState(true);
   const [sort, setSort] = useState('value');
   const [view, setView] = useState('list');
@@ -431,7 +436,7 @@ function Discover({ budgetRemaining, session }) {
         params.set('query', freeText);
       } else {
         params.set('category', catId);
-        if (maxPrice < 4) params.set('maxPrice', String(maxPrice));
+        if (budget) params.set('budget', String(budget));
         if (goodOnly) params.set('minRating', '4');
       }
 
@@ -451,7 +456,9 @@ function Discover({ budgetRemaining, session }) {
       setTypical(null);
     }
 
-    const key = freeText ? `q:${freeText.toLowerCase()}` : catId;
+    // A deal that fit no budget and one found for "under €10" are different
+    // answers to different questions, so they cannot share a cache entry.
+    const key = `${freeText ? `q:${freeText.toLowerCase()}` : catId}${budget ? `|<=${budget}` : ''}`;
     const cachedOffers = readOffers(city, key);
     if (cachedOffers) {
       setOffers(cachedOffers);
@@ -463,6 +470,7 @@ function Discover({ budgetRemaining, session }) {
     const dealParams = new URLSearchParams({ city });
     if (freeText) dealParams.set('query', freeText);
     else dealParams.set('category', catId);
+    if (budget) dealParams.set('budget', String(budget));
 
     try {
       const response = await fetch(`/api/deals?${dealParams}`);
@@ -480,7 +488,7 @@ function Discover({ budgetRemaining, session }) {
     } catch {
       if (runId.current === run) setOffersState('error');
     }
-  }, [coords, city, maxPrice, goodOnly]);
+  }, [coords, city, budget, goodOnly]);
 
   const started = useRef(false);
   useEffect(() => {
@@ -513,12 +521,12 @@ function Discover({ budgetRemaining, session }) {
   // on screen, so re-run whatever is open.
   const inputsRef = useRef('');
   useEffect(() => {
-    const stamp = `${city}|${maxPrice}|${goodOnly}|${coords ? 'gps' : 'city'}`;
+    const stamp = `${city}|${budget}|${goodOnly}|${coords ? 'gps' : 'city'}`;
     if (inputsRef.current === '') { inputsRef.current = stamp; return; }
     if (inputsRef.current === stamp) return;
     inputsRef.current = stamp;
     if (category || activeQuery) search(category, activeQuery);
-  }, [city, maxPrice, goodOnly, coords, category, activeQuery, search]);
+  }, [city, budget, goodOnly, coords, category, activeQuery, search]);
 
   const icon = current?.icon || '🏷️';
   const { places: merged, unmatched } = attachOffers(places, offers);
@@ -581,6 +589,54 @@ function Discover({ budgetRemaining, session }) {
           </button>
         ))}
       </nav>
+
+      {/* The headline interaction: pick an amount, see what actually fits it,
+          near you, right now. Everything else on the page is secondary to
+          this — it starts unset so choosing one is a deliberate step. */}
+      <div className="budget-bar">
+        <span className="budget-label">How much do you want to spend?</span>
+        <div className="budget-chips">
+          {[10, 15, 20, 30].map((v) => (
+            <button
+              key={v}
+              type="button"
+              className={`budget-chip ${budget === v ? 'on' : ''}`}
+              onClick={() => { setBudget((b) => (b === v ? null : v)); setBudgetInput(''); }}
+            >
+              €{v}
+            </button>
+          ))}
+          <form
+            className="budget-custom"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const n = Math.round(Number(budgetInput));
+              if (Number.isFinite(n) && n > 0) setBudget(n);
+            }}
+          >
+            <span className="budget-custom-sign" aria-hidden="true">€</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              inputMode="numeric"
+              value={budgetInput}
+              onChange={(e) => setBudgetInput(e.target.value)}
+              placeholder="Custom"
+              aria-label="Custom budget in euros"
+            />
+          </form>
+          {budget != null && (
+            <button
+              type="button"
+              className="budget-chip budget-clear"
+              onClick={() => { setBudget(null); setBudgetInput(''); }}
+            >
+              Any price
+            </button>
+          )}
+        </div>
+      </div>
 
       <form
         className="discover-search"
@@ -653,6 +709,7 @@ function Discover({ budgetRemaining, session }) {
               {items.length > 0 && <span className="count">{items.length}</span>}
               {activeQuery ? `“${activeQuery}”` : current?.label}
               {current?.type === 'offer' ? ' — best offers' : coords ? ' near you' : ` in ${city}`}
+              {budget != null && <span className="budget-tag">under €{budget}</span>}
             </h2>
 
             <div className="bar-controls">
@@ -673,7 +730,7 @@ function Discover({ budgetRemaining, session }) {
               </label>
 
               <button
-                className={`bar-btn ${filtersOpen || maxPrice !== 2 || !goodOnly ? 'on' : ''}`}
+                className={`bar-btn ${filtersOpen || !goodOnly ? 'on' : ''}`}
                 onClick={() => setFiltersOpen((o) => !o)}
               >
                 Filters
@@ -683,21 +740,6 @@ function Discover({ budgetRemaining, session }) {
 
           {filtersOpen && (
             <div className="filters">
-              <div className="filter-set" role="group" aria-label="Price">
-                {[
-                  { v: 1, label: '€' },
-                  { v: 2, label: '€€ and under' },
-                  { v: 4, label: 'Any price' },
-                ].map((o) => (
-                  <button
-                    key={o.v}
-                    className={`filter-pill ${maxPrice === o.v ? 'on' : ''}`}
-                    onClick={() => setMaxPrice(o.v)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
               <button
                 className={`filter-pill lone ${goodOnly ? 'on' : ''}`}
                 onClick={() => setGoodOnly((g) => !g)}
@@ -707,10 +749,10 @@ function Discover({ budgetRemaining, session }) {
             </div>
           )}
 
-          {noPriceData && maxPrice < 4 && current?.type === 'place' && (
+          {noPriceData && budget && current?.type === 'place' && (
             <p className="filter-note">
-              Google publishes no prices for {current.label.toLowerCase()}, so the price filter
-              cannot apply here. These are sorted by rating instead.
+              Google publishes no prices for {current.label.toLowerCase()}, so €{budget} cannot be
+              checked against them here. These are sorted by rating instead.
             </p>
           )}
 

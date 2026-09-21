@@ -71,6 +71,8 @@ const NATIONAL = new Set([
   'Flights', 'CarHire', 'Trains', 'Electronics', 'Books',
 ]);
 
+const RESTAURANT_CATEGORIES = new Set(['Dining', 'Coffee', 'Takeaway']);
+
 // Free text goes into a prompt, so keep it to plain words and digits.
 const QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\s'’&+.,-]{2,60}$/u;
 
@@ -153,6 +155,10 @@ async function handler(req, res) {
   const country = resolveCountry(req.query.country || 'ES');
   const category = CATEGORIES.includes(req.query.category) ? req.query.category : 'All';
 
+  // The same "how much do you want to spend" the places search uses — a menu
+  // that costs more than this is not a match, whatever the discount looks like.
+  const budget = Math.min(Math.max(Number(req.query.budget) || 0, 0), 500) || null;
+
   // A typed search wins over the category buttons when present.
   const rawQuery = String(req.query.query || '').trim().slice(0, 60);
   const query = rawQuery && QUERY_PATTERN.test(rawQuery) ? rawQuery : null;
@@ -161,7 +167,7 @@ async function handler(req, res) {
   }
 
   const scope = !query && NATIONAL.has(category) ? 'national' : city.toLowerCase();
-  const cacheKey = `${scope}|${country.code}|${query ? `q:${query.toLowerCase()}` : category}`;
+  const cacheKey = `${scope}|${country.code}|${query ? `q:${query.toLowerCase()}` : category}${budget ? `|<=${budget}` : ''}`;
   const cached = cacheGet(cacheKey);
   if (cached) {
     return res.status(200).json({ configured: true, deals: cached, cached: true });
@@ -196,9 +202,14 @@ Include nationwide and online offers as well as local ones — for SIM cards, br
 
 Cheap standing prices count, not just limited-time discounts: if a provider simply offers the best rate, report it as the offer.`
   : `Search the web for offers in ${city}, ${country.name}, focused on ${focus}.`}
+${budget
+  ? `\nThe person wants to spend about €${budget} or less, total. Only report an offer whose actual price fits that — a fixed menu, a set price, or a deal whose final cost stays at or under it. Skip anything that would come to more, however good the discount looks.\n`
+  : ''}
 ${NATIONAL.has(category) && !query
   ? `Go to the providers' own pages and to comparison sites. Coupon sites do not carry this kind of offer, so do not spend searches on them.`
-  : `Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.`}
+  : RESTAURANT_CATEGORIES.has(category) || /restaurant|menu|food|dining|coffee/i.test(effectiveQuery || '')
+    ? `Search TheFork, Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results. TheFork (thefork.es / thefork.com) is the leading restaurant reservation and discount site in Spain — check it directly for menú del día prices and reservation-linked discounts.`
+    : `Search Groupon, Tiendeo, Ofertia and the merchants' own sites, as well as general results.`}
 
 Hard rules:
 - Only report an offer you actually found in a search result. Never invent one, never guess at a discount percentage, and never pad the list to look fuller.

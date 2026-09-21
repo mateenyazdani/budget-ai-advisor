@@ -257,6 +257,20 @@ const PRICE_RANK = {
   PRICE_LEVEL_VERY_EXPENSIVE: 4,
 };
 
+// A euro amount cannot be sent to Google directly — its own price filter only
+// understands bands. So "up to €10" becomes "whichever bands this category's
+// own spend table says cost €10 or less", falling back to the cheapest band
+// rather than zero results when even that is over budget.
+function bandForBudget(budget, spendTable) {
+  const order = ['INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE'];
+  let band = 1;
+  for (let i = 0; i < order.length; i += 1) {
+    if (spendTable[order[i]] <= budget) band = i + 1;
+    else break;
+  }
+  return band;
+}
+
 // Cheap and well-liked, in that order, with a rating pulling a place up by at
 // most about one price band. Sorting by distance alone was putting the nearest
 // expensive restaurant above a cheaper, better one four streets away.
@@ -341,9 +355,18 @@ module.exports = async function handler(req, res) {
 
   const radius = Math.min(Math.max(Number(req.query.radius) || 3000, 500), 20000);
 
+  // "I want to spend €10" is the actual product now, not a €/€€/€€€ picker —
+  // it drives Google's own price band filter and, more precisely, which
+  // results get sorted to the top afterwards.
+  const budget = category.priceData ? Math.min(Math.max(Number(req.query.budget) || 0, 0), 500) : 0;
+  const hasBudget = budget > 0;
+  const budgetBand = hasBudget ? bandForBudget(budget, category.spend) : 0;
+
   // "Budget but good" is a filter, not a sort. Google applies both server-side,
   // but only on the text endpoint.
-  const maxPrice = category.priceData ? Math.min(Math.max(Number(req.query.maxPrice) || 0, 0), 4) : 0;
+  const maxPrice = category.priceData
+    ? Math.min(Math.max(Number(req.query.maxPrice) || budgetBand || 0, 0), 4)
+    : 0;
   const minRating = category.priceData ? Math.min(Math.max(Number(req.query.minRating) || 0, 0), 5) : 0;
   const filtering = maxPrice > 0 || minRating > 0;
 
@@ -390,6 +413,7 @@ module.exports = async function handler(req, res) {
     const places = (data.places || []).map((place) => {
       const priceLevel = place.priceLevel || null;
       const country = countryOf(place);
+      const estimatedSpend = estimateSpend(priceLevel, category.spend);
       return {
         priceLevel,
         id: place.id,
@@ -398,7 +422,10 @@ module.exports = async function handler(req, res) {
         rating: typeof place.rating === 'number' ? place.rating : null,
         ratingCount: place.userRatingCount ?? null,
         priceLabel: PRICE_LABELS[priceLevel] || null,
-        estimatedSpend: estimateSpend(priceLevel, category.spend),
+        estimatedSpend,
+        // Google's own band filter is coarse — this says whether the actual
+        // estimate fits, so the UI can say so and the sort can trust it.
+        withinBudget: hasBudget ? (estimatedSpend == null || estimatedSpend <= budget) : null,
         openNow: place.currentOpeningHours?.openNow ?? null,
         // Without a location to measure from there is no honest distance.
         distanceKm: hasCoords && place.location
@@ -419,6 +446,9 @@ module.exports = async function handler(req, res) {
       places.sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
     } else {
       places.sort((a, b) => {
+        // A place confirmed over budget sinks below everything else, whatever
+        // its rating — the whole point of setting one.
+        if (hasBudget && a.withinBudget !== b.withinBudget) return a.withinBudget ? -1 : 1;
         const diff = valueScore(a) - valueScore(b);
         if (Math.abs(diff) > 0.01) return diff;
         return (a.distanceKm ?? 999) - (b.distanceKm ?? 999);
@@ -428,6 +458,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       configured: true,
       places,
+      budget: hasBudget ? budget : null,
       filtered: filtering,
       // So the UI can explain why a price filter had no effect here.
       priceData: Boolean(category.priceData),
