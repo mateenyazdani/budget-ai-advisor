@@ -33,7 +33,10 @@ const CATEGORIES = {
     priceData: true,
     text: 'restaurants',
     types: ['restaurant'],
-    spend: { INEXPENSIVE: 12, MODERATE: 25, EXPENSIVE: 45, VERY_EXPENSIVE: 80 },
+    // €12 as the floor of "cheap" meant a €10 budget could never match a
+    // single restaurant, anywhere — every real menu del día or bocadillo
+    // place undercuts that, so the estimate itself was wrong, not the filter.
+    spend: { INEXPENSIVE: 9, MODERATE: 25, EXPENSIVE: 45, VERY_EXPENSIVE: 80 },
   },
   Groceries: {
     emoji: '🛒',
