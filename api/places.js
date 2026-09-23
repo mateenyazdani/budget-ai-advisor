@@ -16,6 +16,10 @@ const FIELD_MASK = [
   // it" unless a deal page happened to be a booking page too.
   'places.internationalPhoneNumber',
   'places.websiteUri',
+  // A card with a real photo is a different thing to look at than a card
+  // with an emoji. Only the reference travels to the client — the actual
+  // image is fetched through /api/photo so the Google key never does.
+  'places.photos',
   // Pins are grouped by country on the world map, so the country has to come
   // from Google rather than being guessed from the end of an address string.
   'places.addressComponents',
@@ -444,6 +448,7 @@ module.exports = async function handler(req, res) {
         // returns it pre-formatted with a country code when it has one.
         phone: place.internationalPhoneNumber || null,
         website: place.websiteUri || null,
+        photoRef: place.photos?.[0]?.name || null,
         emoji: category.emoji,
         // Carried through so rating a place can drop a pin without a second
         // lookup for where on Earth the place actually is.
