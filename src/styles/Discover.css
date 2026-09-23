@@ -822,3 +822,45 @@
   .deal-card, .category-chip, .budget-chip, .rail-item, .filter-pill,
   .view-toggle button, .bar-btn { transition: none; }
 }
+
+/* A real photo of the place, not an emoji — the single biggest visual change
+   a card can get. Badges sit on it with a scrim, mirroring the feed card's
+   own photo treatment so the two surfaces read as one product. */
+.deal-photo-wrap {
+  position: relative;
+  margin: -1px -1px 12px;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius) var(--radius) 0 0;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+
+.deal-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.deal-photo-emoji {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(22, 22, 29, 0.2);
+}
+
+.deal-photo-badges {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}

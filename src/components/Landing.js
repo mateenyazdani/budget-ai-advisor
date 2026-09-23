@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Wordmark, ChartIcon, ChatIcon, BasketIcon, TagIcon, TrainIcon, BankIcon } from './Icons';
 import ProductShot from './ProductShot';
+import RealPlaces from './RealPlaces';
+import { useReveal } from '../lib/useReveal';
 import { CATEGORIES } from '../lib/categories';
 import '../styles/Landing.css';
 
@@ -77,6 +79,10 @@ const FAQS = [
 ];
 
 function Landing({ onGetStarted }) {
+  const [featuresRef, featuresIn] = useReveal();
+  const [stepsRef, stepsIn] = useReveal();
+  const [faqRef, faqIn] = useReveal();
+
   return (
     <div className="landing">
       <nav className="landing-nav">
@@ -107,6 +113,8 @@ function Landing({ onGetStarted }) {
         </div>
       </header>
 
+      <RealPlaces />
+
       <section className="stat-band">
         <div className="stat-row">
           {STATS.map((s) => (
@@ -118,7 +126,7 @@ function Landing({ onGetStarted }) {
         </div>
       </section>
 
-      <section className="landing-section" id="features">
+      <section ref={featuresRef} className={`landing-section reveal ${featuresIn ? 'in' : ''}`} id="features">
         <span className="section-eyebrow">What it does</span>
         <h2>Bargains, where you are</h2>
         <p className="section-sub">
@@ -136,7 +144,7 @@ function Landing({ onGetStarted }) {
         </div>
       </section>
 
-      <section className="landing-section steps-section" id="how">
+      <section ref={stepsRef} className={`landing-section steps-section reveal ${stepsIn ? 'in' : ''}`} id="how">
         <span className="section-eyebrow">How it works</span>
         <h2>Three taps to a better price</h2>
 
@@ -151,7 +159,7 @@ function Landing({ onGetStarted }) {
         </div>
       </section>
 
-      <section className="landing-section" id="faq">
+      <section ref={faqRef} className={`landing-section reveal ${faqIn ? 'in' : ''}`} id="faq">
         <span className="section-eyebrow">FAQ</span>
         <h2>Questions, answered</h2>
 

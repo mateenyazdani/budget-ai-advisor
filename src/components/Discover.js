@@ -160,17 +160,39 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
   const { offer } = item;
   const showPair = offer?.priceBefore != null && offer?.priceNow != null;
 
+  const badges = (
+    <>
+      {offer?.discountPercent != null && (
+        <span className="deal-burn">🔥 {offer.discountPercent}% OFF</span>
+      )}
+      {item.withinBudget === true && offer?.discountPercent == null && (
+        <span className="deal-fits">🎯 Fits your budget</span>
+      )}
+    </>
+  );
+
   return (
     <article className={`deal-card ${offer ? 'has-offer' : ''}`}>
-      <div className="deal-top" aria-hidden="true">
-        <span className="deal-emoji">{icon}</span>
-        {offer?.discountPercent != null && (
-          <span className="deal-burn">🔥 {offer.discountPercent}% OFF</span>
-        )}
-        {item.withinBudget === true && offer?.discountPercent == null && (
-          <span className="deal-fits">🎯 Fits your budget</span>
-        )}
-      </div>
+      {item.photoRef ? (
+        // A real photo of the actual place, not an emoji — fetched through
+        // /api/photo so the Google key stays server-side. The badges move
+        // onto the image itself once there's a photo to sit on.
+        <div className="deal-photo-wrap">
+          <img
+            className="deal-photo"
+            src={`/api/photo?ref=${encodeURIComponent(item.photoRef)}&w=800`}
+            alt=""
+            loading="lazy"
+          />
+          <span className="deal-photo-emoji" aria-hidden="true">{icon}</span>
+          <div className="deal-photo-badges" aria-hidden="true">{badges}</div>
+        </div>
+      ) : (
+        <div className="deal-top" aria-hidden="true">
+          <span className="deal-emoji">{icon}</span>
+          {badges}
+        </div>
+      )}
 
       <h3>{item.name}</h3>
 
