@@ -77,6 +77,11 @@ function Dashboard({ budget, onStartOver, onBudgetChange }) {
             <span className="decide-note">
               Day-to-day spending only, across the {insight.daysLeft} days left this month.
             </span>
+            {insight.safeToday > 0 && (
+              <Link className="decide-cta" to={`/discover?budget=${insight.safeToday}`}>
+                See what fits {money(currency, insight.safeToday)} today →
+              </Link>
+            )}
           </div>
 
           <div className="decide-side">

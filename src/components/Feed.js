@@ -46,6 +46,20 @@ function FeedCard({ pin, photoUrl }) {
           )}
           {pin.city && <span>{pin.city}</span>}
         </div>
+
+        {/* A review with nowhere to go from it is just a scroll-past. Built
+            from the pin's own coordinates — the one thing every pin has,
+            unlike phone or website, which are only known at search time. */}
+        {Number.isFinite(pin.lat) && Number.isFinite(pin.lng) && (
+          <a
+            className="feed-map-cta"
+            href={`https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open in Maps →
+          </a>
+        )}
       </div>
     </article>
   );
@@ -66,6 +80,7 @@ function timeAgo(iso) {
 function Feed({ session }) {
   const [pins, setPins] = useState(null); // null = loading
   const [photos, setPhotos] = useState({});
+  const [term, setTerm] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +107,20 @@ function Feed({ session }) {
         <Link to="/map" className="feed-map-link">View on map →</Link>
       </header>
 
+      {/* A friend visiting from out of town does not want the whole feed —
+          they want "what did anyone say about padel". Filters what has
+          already loaded rather than a second query. */}
+      {pins?.length > 0 && (
+        <input
+          className="feed-search"
+          type="search"
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          placeholder="Search what friends have rated — padel, tacos, a name…"
+          aria-label="Search the feed"
+        />
+      )}
+
       {pins === null && <p className="friends-note">Loading…</p>}
 
       {pins?.length === 0 && (
@@ -104,13 +133,27 @@ function Feed({ session }) {
         </div>
       )}
 
-      {pins?.length > 0 && (
-        <div className="feed-list">
-          {pins.map((pin) => (
-            <FeedCard key={pin.id} pin={pin} photoUrl={photos[pin.id]} />
-          ))}
-        </div>
-      )}
+      {pins?.length > 0 && (() => {
+        const q = term.trim().toLowerCase();
+        const filtered = q
+          ? pins.filter((p) => {
+              const cat = categoryById(p.category);
+              return p.name.toLowerCase().includes(q)
+                || cat?.label.toLowerCase().includes(q)
+                || p.note?.toLowerCase().includes(q)
+                || p.city?.toLowerCase().includes(q);
+            })
+          : pins;
+        return filtered.length > 0 ? (
+          <div className="feed-list">
+            {filtered.map((pin) => (
+              <FeedCard key={pin.id} pin={pin} photoUrl={photos[pin.id]} />
+            ))}
+          </div>
+        ) : (
+          <p className="friends-note">Nothing matches “{term}”.</p>
+        );
+      })()}
     </section>
   );
 }

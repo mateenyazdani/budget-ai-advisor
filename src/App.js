@@ -12,6 +12,7 @@ import './styles/App.css';
 import { Wordmark, ChartIcon, BasketIcon, BankIcon, ChatIcon } from './components/Icons';
 import WorldMap from './components/WorldMap';
 import Feed from './components/Feed';
+import FloatingAdvisor from './components/FloatingAdvisor';
 import Friends from './components/Friends';
 import Profile from './components/Profile';
 import Landing from './components/Landing';
@@ -90,6 +91,11 @@ function Shell({ session, budget, children, showNav }) {
         <span aria-hidden="true"> · </span>
         <NavLink to="/terms">Terms</NavLink>
       </footer>
+
+      {/* Reachable from anywhere in the main app, not just its own page.
+          Needs a real budget to say anything useful about, so it stays
+          silent on the setup/edit flow (showNav is already off there). */}
+      {showNav && budget && <FloatingAdvisor budget={budget} />}
     </>
   );
 }

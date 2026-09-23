@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -343,8 +344,14 @@ function Discover({ budgetRemaining, session }) {
 
   // "How much do you want to spend" is the product now, not a background
   // filter — it starts unset (Any) so picking an amount is a deliberate act,
-  // not something quietly narrowing results before anyone asked it to.
-  const [budget, setBudget] = useState(null);
+  // not something quietly narrowing results before anyone asked it to. The
+  // one exception: arriving from the dashboard's "see what fits €X today"
+  // link is already that deliberate act, made on the previous page.
+  const [searchParams] = useSearchParams();
+  const budgetFromUrl = Number(searchParams.get('budget'));
+  const [budget, setBudget] = useState(
+    Number.isFinite(budgetFromUrl) && budgetFromUrl > 0 ? Math.round(budgetFromUrl) : null
+  );
   const [budgetInput, setBudgetInput] = useState('');
   const [goodOnly, setGoodOnly] = useState(true);
   const [sort, setSort] = useState('value');

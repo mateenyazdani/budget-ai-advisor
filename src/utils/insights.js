@@ -62,6 +62,10 @@ export function getInsights(budget, today = new Date()) {
 
   return {
     safeThisWeek,
+    // Just today's slice of the same pacing — the figure a "see what fits"
+    // link into Discover needs, since a weekly total isn't a euro amount you
+    // can hand to a price filter.
+    safeToday: Math.round(perDay),
     daysLeft,
     projectedSaving: Math.round(projectedSaving),
     savingRate: totalExpenses > 0 ? Math.round((projectedSaving / monthlyIncome) * 100) : 0,

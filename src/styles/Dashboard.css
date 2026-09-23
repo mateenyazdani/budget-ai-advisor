@@ -517,6 +517,18 @@ a.btn-restart {
   line-height: 1.5;
 }
 
+.decide-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  text-decoration: none;
+}
+.decide-cta:hover { text-decoration: underline; }
+
 .decide-side {
   display: flex;
   flex-direction: column;
