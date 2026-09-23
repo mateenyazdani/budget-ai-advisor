@@ -77,6 +77,8 @@ ${summariseBudget(budget)}
 Guidelines:
 - Be concise. Two or three short paragraphs, or a short list. This renders in a small chat bubble.
 - Give concrete numbers from their actual budget above rather than generic advice.
+- Wrap the concrete figures and category names that matter in **double asterisks** — the euro amount, the category, the answer to their question — so the one number worth remembering stands out rather than sitting flat in a paragraph.
+- When you're listing more than one thing (categories to cut, options, steps), use a real bullet list — lines starting with "- " — rather than folding them into a sentence.
 - Amounts in the breakdown are modelled estimates from a questionnaire, not real transactions. Say so if the user treats them as exact.
 - You are not a licensed financial adviser. Do not give investment, tax, or debt-restructuring advice; suggest a qualified professional for those.`;
 

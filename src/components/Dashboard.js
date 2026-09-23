@@ -4,7 +4,8 @@ import ExpenseLogger from './ExpenseLogger';
 import PriceCheck from './PriceCheck';
 import { groupBudget } from '../utils/budgetGroups';
 import { calculateComprehensiveBudget } from '../utils/budgetCalculator';
-import { getInsights } from '../utils/insights';
+import { getInsights, DISCRETIONARY } from '../utils/insights';
+import WhatIfSlider from './WhatIfSlider';
 import { BasketIcon, BankIcon, ChatIcon } from './Icons';
 import '../styles/Dashboard.css';
 
@@ -182,6 +183,8 @@ function Dashboard({ budget, onStartOver, onBudgetChange }) {
           </ul>
         </div>
       </section>
+
+      <WhatIfSlider budget={currentBudget} discretionary={DISCRETIONARY} />
 
       <div className="quick-actions">
         <Link className="quick-card primary" to="/bank">

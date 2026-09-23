@@ -787,3 +787,38 @@
   .budget-bar { padding: 13px 14px; gap: 10px; }
   .budget-label { font-size: 0.9rem; width: 100%; }
 }
+
+/* Micro-interactions: every tappable control gives a small, fast press
+   response, and cards settle in rather than popping into place instantly. */
+.deal-card,
+.category-chip,
+.budget-chip,
+.rail-item,
+.filter-pill,
+.view-toggle button,
+.bar-btn {
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.deal-card:active { transform: scale(0.985); }
+.category-chip:active,
+.budget-chip:active,
+.rail-item:active,
+.filter-pill:active,
+.bar-btn:active { transform: scale(0.95); }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.deal-card:not(.skeleton) {
+  animation: cardIn 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deal-card:not(.skeleton) { animation: none; }
+  .deal-card, .category-chip, .budget-chip, .rail-item, .filter-pill,
+  .view-toggle button, .bar-btn { transition: none; }
+}

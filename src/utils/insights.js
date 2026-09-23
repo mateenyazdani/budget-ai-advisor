@@ -4,7 +4,7 @@
 
 // Categories a person can realistically change this month. Rent and insurance
 // are not on the list, because "spend less on rent" is not an action.
-const DISCRETIONARY = [
+export const DISCRETIONARY = [
   { name: 'Dining Out', ceiling: 0.08 },
   { name: 'Coffee & Snacks', ceiling: 0.025 },
   { name: 'Cinema & Entertainment', ceiling: 0.05 },

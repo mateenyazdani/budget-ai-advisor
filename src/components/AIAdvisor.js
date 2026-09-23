@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MiniMarkdown } from '../lib/miniMarkdown';
 import '../styles/AIAdvisor.css';
 
 function AIAdvisor({ budget }) {
@@ -73,21 +74,23 @@ function AIAdvisor({ budget }) {
         <button className="back-btn" onClick={() => navigate('/dashboard')}>← Back to dashboard</button>
       </div>
 
-      {/* Quick Questions */}
+      {/* A blank input invites nothing in particular. These are the actual
+          question someone opening this page usually has, specific enough to
+          answer from the numbers above rather than with generic advice. */}
       <div className="quick-questions">
         <p>Quick questions:</p>
         <div className="question-buttons">
-          <button onClick={() => handleQuickQuestion('How can I save more money each month?')}>
-            💰 Save more
+          <button onClick={() => handleQuickQuestion('Where did most of my money go this month?')}>
+            🔍 Where did it go?
           </button>
-          <button onClick={() => handleQuickQuestion('Which expenses can I reduce?')}>
-            ✂️ Reduce costs
+          <button onClick={() => handleQuickQuestion('Audit my recurring subscriptions and tell me what to cut')}>
+            📺 Audit subscriptions
           </button>
-          <button onClick={() => handleQuickQuestion('Is my budget healthy?')}>
-            📊 Budget health
+          <button onClick={() => handleQuickQuestion('Can I afford a €150 weekend trip this month?')}>
+            🧳 Can I afford a trip?
           </button>
-          <button onClick={() => handleQuickQuestion('What are local deals or discounts I should know about?')}>
-            🎯 Local deals
+          <button onClick={() => handleQuickQuestion('Which one category, if I cut it, would help the most?')}>
+            ✂️ Biggest single cut
           </button>
         </div>
       </div>
@@ -98,7 +101,7 @@ function AIAdvisor({ budget }) {
           {messages.map((msg, idx) => (
             <div key={idx} className={`message ${msg.type}`}>
               <div className="message-content">
-                {msg.content}
+                {msg.type === 'assistant' ? <MiniMarkdown text={msg.content} /> : msg.content}
               </div>
             </div>
           ))}
