@@ -12,6 +12,7 @@ import { TOP_LEVEL, categoryById, categoriesIn, topById } from '../lib/categorie
 import { getInsights } from '../utils/insights';
 import { timeAgo } from '../lib/timeAgo';
 import BudgetHUD from './BudgetHUD';
+import QuickInsights from './QuickInsights';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -604,6 +605,16 @@ function Discover({ budgetRemaining, budget: userBudget, session }) {
     if (first) pick(first.id);
   };
 
+  // The quick-insights shortcuts jump straight to a category, so the rail
+  // above still has to highlight the right group rather than being left on
+  // whatever was open before.
+  const quickPick = (catId, budgetAmount) => {
+    const cat = categoryById(catId);
+    if (cat) setTop(cat.top);
+    if (budgetAmount != null) setBudget(budgetAmount);
+    pick(catId);
+  };
+
   const applyCity = (e) => {
     e.preventDefault();
     const next = cityDraft.trim();
@@ -676,6 +687,15 @@ function Discover({ budgetRemaining, budget: userBudget, session }) {
           onFitBudget={(amount) => setBudget(amount)}
         />
       )}
+
+      <QuickInsights
+        insight={insight}
+        currency={userBudget?.currency || '€'}
+        onSetBudget={(amount) => setBudget(amount)}
+        onPickCategory={quickPick}
+        onFriendsOnly={() => setFriendsOnly((f) => !f)}
+        friendsCount={friendsVisitedCount}
+      />
 
       {friendsVisitedCount > 0 && (
         <button

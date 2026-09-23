@@ -24,6 +24,16 @@ function FloatingAdvisor({ budget }) {
     if (open) endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
+  // Other pages have no reference to this component's own open state — it is
+  // mounted once in Shell, everything else lives below it in the tree. A
+  // window event is the smallest way to reach it from anywhere without
+  // threading a prop through every route.
+  useEffect(() => {
+    const openIt = () => setOpen(true);
+    window.addEventListener('open-bargain-advisor', openIt);
+    return () => window.removeEventListener('open-bargain-advisor', openIt);
+  }, []);
+
   const ask = async (text) => {
     if (!text.trim() || loading) return;
     const userMessage = text.trim();
