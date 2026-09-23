@@ -2,52 +2,55 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Wordmark, ChartIcon, ChatIcon, BasketIcon, TagIcon, TrainIcon, BankIcon } from './Icons';
 import ProductShot from './ProductShot';
+import { CATEGORIES } from '../lib/categories';
 import '../styles/Landing.css';
 
+// Read from the real category list rather than typed as a number, so this
+// cannot go stale the way "eleven" did while the app grew to over forty.
 const STATS = [
   { figure: 'Nearby', label: 'Real places, with real distances' },
   { figure: 'Verified', label: 'Every offer links to its source' },
-  { figure: '11', label: 'Categories, and growing' },
+  { figure: String(CATEGORIES.length), label: 'Categories, and growing' },
   { figure: 'Free', label: 'No card, no subscription' },
 ];
 
 const FEATURES = [
   {
     Icon: BasketIcon,
-    title: 'The deal, attached to the place',
-    body: 'Search padel and get the courts near you with the price on them — a court at EUR 6 an hour, 1.2 km away — rather than a list of venues and a separate pile of coupons.',
-  },
-  {
-    Icon: ChartIcon,
-    title: 'Eleven categories, and growing',
-    body: 'Food, padel, tennis, gyms, cinema, groceries, going out, hair, shopping, travel — or type anything at all and it will go looking.',
-  },
-  {
-    Icon: ChatIcon,
-    title: 'A budget behind it',
-    body: 'Know what you actually have spare before you book anything, and ask an advisor about your own numbers. Secondary to the deals, but there when you want it.',
+    title: 'Say what you want to spend',
+    body: '€10 for dinner, €20 for padel — pick a number and see only places that actually fit it, ranked by value rather than distance alone.',
   },
   {
     Icon: TagIcon,
+    title: 'The deal, attached to the place',
+    body: 'Search padel and get the courts near you with the price on them — a court at €6 an hour, 1.2 km away — rather than a list of venues and a separate pile of coupons.',
+  },
+  {
+    Icon: ChartIcon,
+    title: `${CATEGORIES.length} categories, and growing`,
+    body: 'Food, padel, tennis, gyms, cinema, groceries, going out, hair, shopping, travel, SIM cards, insurance — or type anything at all and it will go looking.',
+  },
+  {
+    Icon: ChatIcon,
+    title: 'Rate it, photo and all',
+    body: 'Pin a place after you go — a photo, what you paid, how it compared to everywhere else you have rated. It lands on a map your friends can see, and theirs on yours.',
+  },
+  {
+    Icon: TrainIcon,
     title: 'No invented discounts',
     body: 'Every offer carries the link it came from, so you can check it before you go. If nothing real is found, you get nothing — never a made-up bargain.',
   },
   {
-    Icon: TrainIcon,
-    title: 'Prices that are actually current',
-    body: 'Looks up today’s transport fares and subscription prices for your city and age, so you can see whether a travel card beats paying per ride.',
-  },
-  {
     Icon: BankIcon,
-    title: 'Check it against reality',
-    body: 'Drop in a statement export from Revolut or any bank and see what you actually spent against what you planned. The file is read in your browser and never uploaded.',
+    title: 'A budget behind all of it',
+    body: 'Know what you actually have spare before you book anything, check it against a real bank statement, and ask an advisor about your own numbers.',
   },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Say where you are', body: 'Your city, or let it find you. Madrid, Barcelona, anywhere.' },
+  { n: '1', title: 'Say how much', body: '€10, €20, whatever the moment calls for — set once, applies to everything below it.' },
   { n: '2', title: 'Pick what you want', body: 'Padel, dinner, a gym, a haircut — or type anything at all.' },
-  { n: '3', title: 'Get the price, not a listing', body: 'Places near you with the offer attached, each linking to where it was found.' },
+  { n: '3', title: 'Get the price, not a listing', body: 'Places that fit your number, the offer attached, each linking to where it was found.' },
 ];
 
 const FAQS = [
@@ -90,9 +93,9 @@ function Landing({ onGetStarted }) {
         <span className="hero-eyebrow">Built for Spain · Works in the USA and Australia</span>
         <h1>Discover more.<br />Spend less.</h1>
         <p className="hero-body">
-          The best deals near you — food, padel, gyms, cinema, travel — with the offer attached to
-          the place, not buried in a coupon site. And a budget behind it, so you always know what
-          you have to spend.
+          Say what you want to spend, and get real places and deals near you that actually fit it
+          — food, padel, gyms, cinema, travel — with the offer attached to the place, not buried in
+          a coupon site. Rate where you go, photo and all, and see it on a map your friends follow.
         </p>
         <div className="hero-actions">
           <button className="btn-cta" onClick={onGetStarted}>Get started</button>

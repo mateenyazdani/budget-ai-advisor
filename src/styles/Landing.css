@@ -497,87 +497,87 @@
   letter-spacing: 0.09em;
   color: var(--ink-faint);
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
 }
 
-.shot-amount {
-  display: block;
-  font-size: 2.6rem;
-  font-weight: 680;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
-}
-
-.shot-sub {
-  display: block;
-  color: var(--ink-soft);
-  font-size: 0.84rem;
-  margin-top: 4px;
-}
-
-.shot-bar {
+/* Mirrors the real budget bar on /discover — the headline control, first
+   thing shown, not a chart buried in a menu. */
+.shot-budget-row {
   display: flex;
-  gap: 2px;
-  height: 12px;
-  margin: 24px 0 20px;
+  gap: 8px;
+  margin-bottom: 22px;
 }
 
-.shot-bar > span {
-  border-radius: 3px;
+.shot-chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
 }
 
-.shot-left {
-  background: repeating-linear-gradient(
-    135deg,
-    var(--surface-sunken),
-    var(--surface-sunken) 5px,
-    #fff 5px,
-    #fff 10px
-  );
-  border: 1px solid var(--line-strong);
+.shot-chip.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
 }
 
-.shot-rows {
+.shot-results {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 12px;
 }
 
-.shot-rows li {
+.shot-result {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.shot-result-top {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.82rem;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.shot-swatch {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
+.shot-result-name {
+  font-weight: 650;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
 }
 
-.shot-label {
-  flex: 1;
+.shot-fits {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: white;
+  background: var(--brand);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.shot-result-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
   color: var(--ink-soft);
 }
 
-.shot-value {
-  font-weight: 600;
+.shot-result-price {
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-
-.shot-share {
-  color: var(--ink-faint);
-  font-size: 0.75rem;
-  min-width: 28px;
-  text-align: right;
+  color: var(--ink);
 }
 
 @media (max-width: 768px) {
   .shot-body { padding: 22px 20px 26px; }
-  .shot-amount { font-size: 2rem; }
-  .shot-rows li:nth-child(n + 4) { display: none; }
 }
 
 .cta-secondary {
