@@ -23,34 +23,43 @@
   font-family: inherit;
 }
 
+/* A gradient ring you can actually see the two hues in, not just a flat
+   outline — a small gradient disc with a tinted inner circle sitting inside
+   it, same technique as a two-stop CSS conic border. */
 .qi-icon {
-  width: 56px;
-  height: 56px;
+  position: relative;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  background: var(--surface);
+  font-size: 1.6rem;
   padding: 3px;
+  background: linear-gradient(135deg, var(--qi-c1, var(--brand)), var(--qi-c2, var(--brand-dark)));
   transition: transform 0.15s ease;
 }
 .qi-item:hover .qi-icon { transform: translateY(-2px); }
 .qi-item:active .qi-icon { transform: scale(0.94); }
 
-/* A coloured ring, drawn as a padded double box-shadow rather than a plain
-   border, so it reads as a ring floating off the circle rather than a flat
-   outline touching it. */
-.qi-icon {
-  position: relative;
-  box-shadow: 0 0 0 2.5px var(--surface), 0 0 0 4.5px var(--qi-ring-color, var(--brand));
+/* The icon itself is a raw emoji character, not a wrapped element — text
+   content always paints above a positioned z-index:auto descendant, so the
+   tint needs a negative z-index to actually sit behind it rather than over
+   it, which relative positioning here contains to this circle only. */
+.qi-icon::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--qi-tint, var(--brand-soft));
+  z-index: -1;
 }
 
-.ring-green { --qi-ring-color: #16a34a; }
-.ring-orange { --qi-ring-color: #ea580c; }
-.ring-blue { --qi-ring-color: #2563eb; }
-.ring-pink { --qi-ring-color: #db2777; }
-.ring-purple { --qi-ring-color: #7c3aed; }
+.ring-green { --qi-c1: #4ade80; --qi-c2: #16a34a; --qi-tint: #dcfce7; }
+.ring-orange { --qi-c1: #fbbf24; --qi-c2: #ea580c; --qi-tint: #ffedd5; }
+.ring-blue { --qi-c1: #38bdf8; --qi-c2: #2563eb; --qi-tint: #dbeafe; }
+.ring-pink { --qi-c1: #f472b6; --qi-c2: #db2777; --qi-tint: #fce7f3; }
+.ring-purple { --qi-c1: #a78bfa; --qi-c2: #7c3aed; --qi-tint: #ede9fe; }
 
 .qi-label {
   font-size: 0.7rem;

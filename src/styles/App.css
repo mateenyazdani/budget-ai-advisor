@@ -186,31 +186,35 @@
   .App-main {
     /* Room for the fixed bottom bar so the last card is never hidden
        behind it — 64px bar plus the safe-area inset on notched phones. */
-    padding: 22px 16px calc(40px + 64px + env(safe-area-inset-bottom, 0px));
+    padding: 22px 16px calc(40px + 90px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* A real bottom tab bar on mobile — where the reference image put it —
-     rather than a strip of tabs under the header. */
+  /* A floating rounded dock, not an edge-to-edge bar — closer to a native
+     tab bar you could actually reach with one thumb than a strip glued to
+     the screen edge. */
   .App-nav {
     position: fixed;
-    inset: auto 0 0 0;
+    inset: auto auto calc(16px + env(safe-area-inset-bottom, 0px)) 50%;
     top: auto;
-    height: calc(64px + env(safe-area-inset-bottom, 0px));
-    padding: 6px 6px calc(env(safe-area-inset-bottom, 0px));
-    gap: 2px;
-    justify-content: space-around;
-    border-top: 1px solid var(--line);
-    border-bottom: none;
-    box-shadow: 0 -4px 16px rgba(22, 22, 29, 0.06);
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    height: auto;
+    padding: 8px 10px;
+    gap: 4px;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 12px 32px rgba(22, 22, 29, 0.14);
     z-index: 30;
   }
 
   .App-nav a {
-    flex: 1;
+    flex: 0 0 auto;
     flex-direction: column;
     gap: 3px;
-    padding: 6px 4px;
-    font-size: 0.64rem;
+    padding: 6px 8px;
+    font-size: 0.62rem;
     border-bottom: none;
     margin-bottom: 0;
     border-radius: var(--radius-sm);

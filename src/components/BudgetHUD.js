@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/BudgetHUD.css';
 
-// The ring shows how far through its own pacing window the month is — a real,
+// The arc shows how far through its own pacing window the month is — a real,
 // computed fraction (days elapsed / days in month) — not a live "spent so
 // far today" figure, which this app has no way to know without a connected
 // bank account it deliberately doesn't have yet.
@@ -14,24 +14,36 @@ function money(currency, amount) {
   return `${currency}${Math.round(amount).toLocaleString()}`;
 }
 
+const R = 60;
+const CIRC = 2 * Math.PI * R;
+
 function BudgetHUD({ insight, currency, onFitBudget, fitActive }) {
   if (!insight) return null;
 
   const total = daysInMonth();
   const elapsed = total - insight.daysLeft;
-  const pct = Math.max(4, Math.round((elapsed / total) * 100));
+  const frac = Math.max(0.04, elapsed / total);
+  const dash = CIRC * frac;
 
   return (
     <div className={`budget-hud hud-${insight.status}`}>
-      {/* The dial is the whole point of this card — the figure sits inside
-          it, not beside it, so it reads as a gauge rather than a stat row. */}
-      <div
-        className="hud-dial"
-        style={{
-          background: `conic-gradient(from -90deg, #16a34a, #2563eb ${pct}%, var(--line) ${pct}%)`,
-        }}
-        aria-hidden="true"
-      >
+      <div className="hud-dial-wrap">
+        <svg viewBox="0 0 160 160" className="hud-dial-svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="hudArc" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
+          </defs>
+          <circle cx="80" cy="80" r={R} stroke="var(--line)" strokeWidth="14" fill="transparent" />
+          <circle
+            cx="80" cy="80" r={R}
+            stroke="url(#hudArc)" strokeWidth="14" fill="transparent"
+            strokeDasharray={`${dash} ${CIRC}`}
+            strokeLinecap="round"
+            transform="rotate(-90 80 80)"
+          />
+        </svg>
         <div className="hud-dial-inner">
           <span className="hud-label">Today's safe spend</span>
           <span className="hud-amount">{money(currency, insight.safeToday)}</span>
@@ -52,6 +64,10 @@ function BudgetHUD({ insight, currency, onFitBudget, fitActive }) {
             🟢 Fits today's budget (≤ {money(currency, insight.safeToday)})
           </button>
         )}
+        {/* A real log, not a demo button — it goes to the same expense
+            logger Dashboard already saves through, rather than a number
+            that only ever updates local state and nothing real. */}
+        <Link to="/dashboard" className="hud-log-link">+ Log an expense</Link>
         <Link to="/dashboard" className="hud-dashboard-link">Full budget →</Link>
       </div>
     </div>
