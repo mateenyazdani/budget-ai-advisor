@@ -15,6 +15,7 @@ import BudgetHUD from './BudgetHUD';
 import QuickInsights from './QuickInsights';
 import CountryPassport from './CountryPassport';
 import ProofOfSpend from './ProofOfSpend';
+import MoneyTips from './MoneyTips';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -700,6 +701,8 @@ function Discover({ budgetRemaining, budget: userBudget, session }) {
         onFriendsOnly={() => setFriendsOnly((f) => !f)}
         friendsCount={friendsVisitedCount}
       />
+
+      <MoneyTips city={city} onPickCategory={quickPick} />
 
       <div className="discover-toolbar">
         {friendsVisitedCount > 0 && (

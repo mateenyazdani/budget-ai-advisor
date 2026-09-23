@@ -1,0 +1,197 @@
+.money-tips {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, var(--radius));
+  background: var(--surface);
+  padding: 14px 16px 16px;
+}
+
+.mt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mt-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.mt-sub {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+
+.mt-rail {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+}
+.mt-rail::-webkit-scrollbar { display: none; }
+
+.mt-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 84px;
+  font-family: inherit;
+}
+
+.mt-icon {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--mt-c1, var(--brand)), var(--mt-c2, var(--brand-dark)));
+  transition: transform 0.15s ease;
+}
+.mt-item:hover .mt-icon { transform: translateY(-2px); }
+.mt-item:active .mt-icon { transform: scale(0.94); }
+
+.mt-icon::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--mt-tint, var(--brand-soft));
+  z-index: -1;
+}
+
+/* Same coloured-ring language as QuickInsights, defined locally so this
+   component doesn't depend on that file having loaded first. */
+.money-tips .ring-green { --mt-c1: #4ade80; --mt-c2: #16a34a; --mt-tint: #dcfce7; }
+.money-tips .ring-orange { --mt-c1: #fbbf24; --mt-c2: #ea580c; --mt-tint: #ffedd5; }
+.money-tips .ring-blue { --mt-c1: #38bdf8; --mt-c2: #2563eb; --mt-tint: #dbeafe; }
+.money-tips .ring-pink { --mt-c1: #f472b6; --mt-c2: #db2777; --mt-tint: #fce7f3; }
+.money-tips .ring-purple { --mt-c1: #a78bfa; --mt-c2: #7c3aed; --mt-tint: #ede9fe; }
+
+.mt-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* Modal — same shape as the rest of the app's overlays: a centred card on a
+   dim backdrop, not a full-screen tap-to-advance story. */
+.mt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.mt-modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg, var(--radius));
+  box-shadow: var(--shadow-lg, 0 20px 60px rgba(0,0,0,0.25));
+}
+
+.mt-modal-head {
+  position: relative;
+  padding: 24px 22px 18px;
+  color: white;
+  background: linear-gradient(135deg, var(--mt-c1, var(--brand)), var(--mt-c2, var(--brand-dark)));
+}
+
+.mt-modal-head h3 {
+  margin: 6px 0 4px;
+  font-size: 1.25rem;
+}
+
+.mt-modal-head p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.92;
+}
+
+.mt-modal-emoji {
+  font-size: 1.6rem;
+}
+
+.mt-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.22);
+  color: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.mt-close:hover { background: rgba(255,255,255,0.34); }
+
+.mt-modal-body {
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mt-modal-body p {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.mt-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mt-modal-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  text-decoration: none;
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+}
+.mt-modal-link:hover { border-color: var(--brand); background: var(--brand-soft); }
+
+.mt-modal-action {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: white;
+  background: var(--brand);
+  border: none;
+  padding: 9px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mt-modal-action:hover { background: var(--brand-dark); }
+
+@media (max-width: 640px) {
+  .money-tips { padding: 12px 14px 14px; }
+  .mt-icon { width: 50px; height: 50px; font-size: 1.25rem; }
+}
