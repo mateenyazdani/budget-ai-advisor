@@ -51,9 +51,16 @@ function BudgetHUD({ insight, currency, onFitBudget, fitActive }) {
         </div>
       </div>
 
-      <p className="hud-week-note">
-        {money(currency, insight.safeThisWeek)} to pace the rest of this week
-      </p>
+      <div className="hud-stats">
+        <div className="hud-stat">
+          <span className="hud-stat-label">This week</span>
+          <span className="hud-stat-value">{money(currency, insight.safeThisWeek)}</span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-stat-label">On track to save</span>
+          <span className="hud-stat-value hud-stat-positive">{money(currency, insight.projectedSaving)}</span>
+        </div>
+      </div>
 
       <div className="hud-actions">
         {insight.safeToday > 0 && (

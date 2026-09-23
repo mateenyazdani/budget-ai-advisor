@@ -68,11 +68,40 @@
   font-weight: 600;
 }
 
-.hud-week-note {
-  font-size: 0.82rem;
-  color: var(--ink-soft);
-  margin: 0;
+/* A small real-numbers grid under the dial — both figures already come out
+   of getInsights(), nothing computed just for display here. */
+.hud-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: var(--page-bg, var(--brand-soft));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, var(--radius));
+  padding: 10px 6px;
 }
+
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+}
+
+.hud-stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.hud-stat-value {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.hud-stat-positive { color: var(--brand-dark, var(--brand)); }
 
 .hud-actions {
   display: flex;
