@@ -114,7 +114,7 @@ function FloatingAdvisor({ budget }) {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? 'Close advisor' : 'Ask the advisor'}
       >
-        {open ? '×' : '💬'}
+        {open ? '×' : '🤖'}
       </button>
     </>
   );

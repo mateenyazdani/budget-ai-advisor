@@ -25,8 +25,8 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  font-weight: 650;
-  font-size: 0.98rem;
+  font-weight: 750;
+  font-size: 1.02rem;
   letter-spacing: -0.02em;
   color: var(--ink);
   text-decoration: none;
@@ -39,8 +39,13 @@
   flex-shrink: 0;
 }
 
+/* A touch of the brighter reference on the one thing worth it — the
+   wordmark's own accent — without repainting the rest of the header. */
 .wordmark-accent {
-  color: var(--brand);
+  background: linear-gradient(120deg, #16a34a, #2563eb 55%, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .header-user {
@@ -111,6 +116,16 @@
   display: inline-flex;
 }
 
+/* Same coloured-ring language as the quick-insights row — each destination
+   gets its own hue, echoed here so the bottom bar and the shortcuts above it
+   read as one system. */
+.ring-green { --nav-ring: #16a34a; }
+.ring-orange { --nav-ring: #ea580c; }
+.ring-blue { --nav-ring: #2563eb; }
+.ring-pink { --nav-ring: #db2777; }
+.ring-purple { --nav-ring: #7c3aed; }
+.ring-teal { --nav-ring: #0d9488; }
+
 .App-main {
   flex: 1;
   max-width: 1060px;
@@ -163,31 +178,65 @@
 
 @media (max-width: 768px) {
   .App-header,
-  .App-nav,
   .App-footer {
     padding-left: 16px;
     padding-right: 16px;
   }
 
   .App-main {
-    padding: 22px 16px 40px;
+    /* Room for the fixed bottom bar so the last card is never hidden
+       behind it — 64px bar plus the safe-area inset on notched phones. */
+    padding: 22px 16px calc(40px + 64px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* A real bottom tab bar on mobile — where the reference image put it —
+     rather than a strip of tabs under the header. */
   .App-nav {
-    gap: 8px;
+    position: fixed;
+    inset: auto 0 0 0;
+    top: auto;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 6px calc(env(safe-area-inset-bottom, 0px));
+    gap: 2px;
     justify-content: space-around;
+    border-top: 1px solid var(--line);
+    border-bottom: none;
+    box-shadow: 0 -4px 16px rgba(22, 22, 29, 0.06);
+    z-index: 30;
   }
 
   .App-nav a {
-    padding: 12px 10px;
-    font-size: 0.8rem;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 4px;
+    font-size: 0.64rem;
+    border-bottom: none;
+    margin-bottom: 0;
+    border-radius: var(--radius-sm);
   }
 
   .nav-label {
-    display: none;
+    display: block;
   }
 
   .App-nav a .nav-icon {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--line);
+    transition: box-shadow 0.15s ease;
+  }
+
+  .App-nav a.active .nav-icon {
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--nav-ring, var(--brand));
+  }
+
+  .App-nav a.active {
+    color: var(--ink);
   }
 }

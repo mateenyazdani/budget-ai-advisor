@@ -35,12 +35,12 @@ const NAV_ITEMS = [
   // top means a friend did something since you last looked. A bubble moving
   // slightly on a map does not carry the same pull. The map itself is not
   // gone — Feed links out to it for anyone who wants the geography instead.
-  { to: '/feed', Icon: () => <span aria-hidden="true">📸</span>, label: 'Feed' },
-  { to: '/discover', Icon: BasketIcon, label: 'Discover', public: true },
-  { to: '/friends', Icon: () => <span aria-hidden="true">👥</span>, label: 'Friends' },
-  { to: '/dashboard', Icon: ChartIcon, label: 'My budget' },
-  { to: '/bank', Icon: BankIcon, label: 'Planned vs actual' },
-  { to: '/advisor', Icon: ChatIcon, label: 'Ask advisor' },
+  { to: '/feed', Icon: () => <span aria-hidden="true">📸</span>, label: 'Feed', ring: 'ring-pink' },
+  { to: '/discover', Icon: BasketIcon, label: 'Discover', public: true, ring: 'ring-orange' },
+  { to: '/friends', Icon: () => <span aria-hidden="true">👥</span>, label: 'Social', ring: 'ring-blue' },
+  { to: '/dashboard', Icon: ChartIcon, label: 'My Budget', ring: 'ring-green' },
+  { to: '/bank', Icon: BankIcon, label: 'Planned vs actual', ring: 'ring-teal' },
+  { to: '/advisor', Icon: ChatIcon, label: 'Bargain Genius', ring: 'ring-purple' },
 ];
 
 function Shell({ session, budget, children, showNav }) {
@@ -77,7 +77,7 @@ function Shell({ session, budget, children, showNav }) {
               to={item.to}
               className={({ isActive }) => (isActive ? 'active' : '')}
             >
-              <span className="nav-icon"><item.Icon /></span>
+              <span className={`nav-icon ${item.ring || ''}`}><item.Icon /></span>
               <span className="nav-label">{item.label}</span>
             </NavLink>
           ))}
