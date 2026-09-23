@@ -1,0 +1,116 @@
+.budget-hud {
+  position: sticky;
+  /* Stacks beneath the app's own sticky header (60px) and nav (~48px). */
+  top: 106px;
+  z-index: 18;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, var(--radius));
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 4px;
+}
+
+.hud-risk { border-left: 3px solid var(--negative); }
+.hud-attention { border-left: 3px solid var(--warn-line, #d9a441); }
+.hud-on-track { border-left: 3px solid var(--brand); }
+
+.hud-ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hud-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hud-ring-inner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.hud-figures {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hud-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+
+.hud-amount {
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.hud-sub {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+
+.hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hud-filter-pill {
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.hud-filter-pill:hover { border-color: var(--brand); }
+.hud-filter-pill:active { transform: scale(0.96); }
+.hud-filter-pill.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+
+.hud-dashboard-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.hud-dashboard-link:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .budget-hud { position: static; padding: 12px 14px; }
+}

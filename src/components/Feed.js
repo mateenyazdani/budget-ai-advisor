@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { loadVisiblePins, pinPhotoUrl } from '../lib/pins';
 import { categoryById } from '../lib/categories';
 import { SENTIMENTS } from '../lib/ranking';
+import { timeAgo } from '../lib/timeAgo';
 import '../styles/Feed.css';
 
 // One friend's verdict on one place, photo-first. The map answers "where has
@@ -63,18 +64,6 @@ function FeedCard({ pin, photoUrl }) {
       </div>
     </article>
   );
-}
-
-function timeAgo(iso) {
-  const ms = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString();
 }
 
 function Feed({ session }) {

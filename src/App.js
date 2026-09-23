@@ -189,7 +189,7 @@ function App() {
             path="/discover"
             element={
               <Shell session={session} budget={userBudget} showNav>
-                <Discover budgetRemaining={userBudget?.surplus} session={session} />
+                <Discover budgetRemaining={userBudget?.surplus} budget={userBudget} session={session} />
               </Shell>
             }
           />

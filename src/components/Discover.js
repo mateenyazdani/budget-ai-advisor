@@ -9,6 +9,9 @@ import { loadWantToTry, saveWantToTry, removeWantToTry } from '../lib/wantToTry'
 import { loadVisiblePins } from '../lib/pins';
 import { SENTIMENTS } from '../lib/ranking';
 import { TOP_LEVEL, categoryById, categoriesIn, topById } from '../lib/categories';
+import { getInsights } from '../utils/insights';
+import { timeAgo } from '../lib/timeAgo';
+import BudgetHUD from './BudgetHUD';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -157,7 +160,7 @@ function ResultsMap({ items, icon, centre }) {
   );
 }
 
-function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
+function DealCard({ item, icon, typical, categoryLabel, onPin, onToggleWant, wanted }) {
   const { offer } = item;
   const showPair = offer?.priceBefore != null && offer?.priceNow != null;
 
@@ -172,6 +175,31 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
     </>
   );
 
+  // A friend's own visit outranks the venue's own verdict as the thing worth
+  // leading with — "Mateen recommended" is a stronger reason to go than a
+  // star rating Google computed from strangers.
+  const endorsement = item.verdict?.friends?.[0]
+    ? { author: item.verdict.friends[0].author, when: item.verdict.friends[0].created_at, mine: false }
+    : item.verdict?.mine
+      ? { author: null, when: item.verdict.mine.created_at, mine: true }
+      : null;
+
+  const tags = [
+    categoryLabel && `#${categoryLabel.replace(/[^A-Za-z0-9]/g, '')}`,
+    item.withinBudget === true && '#InBudget',
+    offer?.discountPercent != null && `#${offer.discountPercent}Off`,
+  ].filter(Boolean);
+
+  const share = () => {
+    const url = item.mapsUri || window.location.href;
+    const text = `${item.name}${item.estimatedSpend != null ? ` — about €${item.estimatedSpend}` : ''}`;
+    if (navigator.share) {
+      navigator.share({ title: item.name, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(`${text} ${url}`).catch(() => {});
+    }
+  };
+
   return (
     <article className={`deal-card ${offer ? 'has-offer' : ''}`}>
       {item.photoRef ? (
@@ -185,7 +213,18 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
             alt=""
             loading="lazy"
           />
-          <span className="deal-photo-emoji" aria-hidden="true">{icon}</span>
+          <div className="deal-photo-scrim-top" aria-hidden="true" />
+          {endorsement ? (
+            <span className="deal-endorsement">
+              <span className="deal-endorsement-avatar" aria-hidden="true">
+                {endorsement.mine ? '⭐' : endorsement.author?.avatar_emoji || '🙂'}
+              </span>
+              {endorsement.mine ? 'You went' : `${endorsement.author?.username || 'A friend'} recommended`}
+              {' · '}{timeAgo(endorsement.when)}
+            </span>
+          ) : (
+            <span className="deal-photo-emoji" aria-hidden="true">{icon}</span>
+          )}
           <div className="deal-photo-badges" aria-hidden="true">{badges}</div>
         </div>
       ) : (
@@ -252,6 +291,12 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
         </p>
       )}
 
+      {tags.length > 0 && (
+        <div className="deal-tags">
+          {tags.map((t) => <span key={t} className="deal-tag">{t}</span>)}
+        </div>
+      )}
+
       <div className="deal-facts">
         {item.rating != null && (
           <span>⭐ {item.rating}{item.ratingCount ? ` (${item.ratingCount})` : ''}</span>
@@ -291,6 +336,12 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
             Map
           </a>
         )}
+        {/* The real Web Share API where it exists (mobile mostly), a plain
+            clipboard copy everywhere else — never a fake "share" that does
+            nothing when the browser has no native sheet to hand off to. */}
+        <button type="button" className="deal-link" onClick={share}>
+          ↗ Share
+        </button>
         {/* Only a place you can stand in can be pinned or bookmarked. An online
             SIM deal has no coordinates and would land in the sea off Africa. */}
         {onToggleWant && item.lat != null && !wanted && (
@@ -313,7 +364,7 @@ function DealCard({ item, icon, typical, onPin, onToggleWant, wanted }) {
   );
 }
 
-function Discover({ budgetRemaining, session }) {
+function Discover({ budgetRemaining, budget: userBudget, session }) {
   // The place being rated, if the pin sheet is open over the results.
   const [pinning, setPinning] = useState(null);
   const [wantIds, setWantIds] = useState(() => new Set());
@@ -353,6 +404,7 @@ function Discover({ budgetRemaining, session }) {
     Number.isFinite(budgetFromUrl) && budgetFromUrl > 0 ? Math.round(budgetFromUrl) : null
   );
   const [budgetInput, setBudgetInput] = useState('');
+  const [friendsOnly, setFriendsOnly] = useState(false);
   const [goodOnly, setGoodOnly] = useState(true);
   const [sort, setSort] = useState('value');
   const [view, setView] = useState('list');
@@ -602,14 +654,39 @@ function Discover({ budgetRemaining, session }) {
       })),
     ],
     sort
-  );
+  ).filter((item) => !friendsOnly || item.verdict?.friends?.length > 0);
 
   const offersLoading = offersState === 'loading';
   const placesLoading = placesState === 'loading';
   const showing = category || activeQuery;
+  const insight = userBudget ? getInsights(userBudget) : null;
+  // Only real venues carry a friend verdict — a bare web-found offer has no
+  // place id to match a pin against, so it never counts here.
+  const friendsVisitedCount = friendsOnly
+    ? items.length
+    : merged.filter((p) => verdictsByPlace.get(p.id)?.friends?.length > 0).length;
 
   return (
     <div className="discover">
+      {insight && (
+        <BudgetHUD
+          insight={insight}
+          currency={userBudget.currency}
+          fitActive={budget === insight.safeToday}
+          onFitBudget={(amount) => setBudget(amount)}
+        />
+      )}
+
+      {friendsVisitedCount > 0 && (
+        <button
+          type="button"
+          className={`friends-visited-pill ${friendsOnly ? 'on' : ''}`}
+          onClick={() => setFriendsOnly((f) => !f)}
+        >
+          👥 Spots friends visited ({friendsVisitedCount})
+        </button>
+      )}
+
       <header className="discover-head">
         <h1>{topById(top)?.headline || 'Spend less on all of it.'}</h1>
         <p>
@@ -817,6 +894,7 @@ function Discover({ budgetRemaining, session }) {
                   item={item}
                   icon={icon}
                   typical={typical}
+                  categoryLabel={activeQuery ? null : current?.label}
                   onPin={session ? setPinning : null}
                   onToggleWant={session ? toggleWant : null}
                   wanted={wantIds.has(item.id)}

@@ -864,3 +864,88 @@
   display: flex;
   gap: 6px;
 }
+
+/* A gradient behind the top-left endorsement pill, so real photos — bright
+   skies, white walls — don't wash the text out. */
+.deal-photo-scrim-top {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 46%;
+  background: linear-gradient(to bottom, rgba(10, 10, 14, 0.55), transparent);
+  pointer-events: none;
+}
+
+/* "Mateen recommended" beats a star rating computed from strangers —
+   glassmorphism per the brief: translucent, blurred, sits on any photo. */
+.deal-endorsement {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+  padding: 5px 11px 5px 5px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  color: white;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: fit-content;
+}
+
+.deal-endorsement-avatar {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.deal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: -2px 0 2px;
+}
+
+.deal-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+.friends-visited-pill {
+  align-self: flex-start;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.friends-visited-pill:hover { border-color: var(--brand); }
+.friends-visited-pill:active { transform: scale(0.96); }
+.friends-visited-pill.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
