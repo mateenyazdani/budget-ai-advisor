@@ -13,6 +13,8 @@ import { getInsights } from '../utils/insights';
 import { timeAgo } from '../lib/timeAgo';
 import BudgetHUD from './BudgetHUD';
 import QuickInsights from './QuickInsights';
+import CountryPassport from './CountryPassport';
+import ProofOfSpend from './ProofOfSpend';
 import '../styles/Discover.css';
 
 // Looking at one category, moving to another and coming back used to cost a
@@ -679,6 +681,8 @@ function Discover({ budgetRemaining, budget: userBudget, session }) {
 
   return (
     <div className="discover">
+      <CountryPassport city={city} />
+
       {insight && (
         <BudgetHUD
           insight={insight}
@@ -697,15 +701,26 @@ function Discover({ budgetRemaining, budget: userBudget, session }) {
         friendsCount={friendsVisitedCount}
       />
 
-      {friendsVisitedCount > 0 && (
-        <button
-          type="button"
-          className={`friends-visited-pill ${friendsOnly ? 'on' : ''}`}
-          onClick={() => setFriendsOnly((f) => !f)}
-        >
-          👥 Spots friends visited ({friendsVisitedCount})
-        </button>
-      )}
+      <div className="discover-toolbar">
+        {friendsVisitedCount > 0 && (
+          <button
+            type="button"
+            className={`friends-visited-pill ${friendsOnly ? 'on' : ''}`}
+            onClick={() => setFriendsOnly((f) => !f)}
+          >
+            👥 Spots friends visited ({friendsVisitedCount})
+          </button>
+        )}
+        {/* Logging a place that was never on screen — the "I've been" button
+            on a card only works for a place the search already surfaced. */}
+        {session && (
+          <ProofOfSpend
+            city={city}
+            coords={coords}
+            onPickPlace={(place) => setPinning(place)}
+          />
+        )}
+      </div>
 
       <header className="discover-head">
         <h1>{topById(top)?.headline || 'Spend less on all of it.'}</h1>
