@@ -69,6 +69,9 @@ function WorldMap({ session }) {
   const [zoom, setZoom] = useState(2);
   const [target, setTarget] = useState(null);
   const [onlyFriends, setOnlyFriends] = useState(false);
+  // A real filter on the real price each pin actually logged — pins with no
+  // price attached are left out when this is on, rather than guessed at.
+  const [maxSpend, setMaxSpend] = useState(null);
 
   const me = session?.user?.id;
 
@@ -84,10 +87,11 @@ function WorldMap({ session }) {
 
   useEffect(() => { if (session) refresh(); else setState('signedout'); }, [session, refresh]);
 
-  const shown = useMemo(
-    () => (onlyFriends ? pins.filter((p) => p.user_id !== me) : pins),
-    [pins, onlyFriends, me]
-  );
+  const shown = useMemo(() => {
+    let list = onlyFriends ? pins.filter((p) => p.user_id !== me) : pins;
+    if (maxSpend != null) list = list.filter((p) => p.price_paid != null && p.price_paid <= maxSpend);
+    return list;
+  }, [pins, onlyFriends, me, maxSpend]);
 
   const countries = useMemo(() => groupByCountry(shown), [shown]);
 
@@ -115,14 +119,29 @@ function WorldMap({ session }) {
               : 'Nothing pinned yet'}
           </p>
         </div>
-        <label className="map-toggle">
-          <input
-            type="checkbox"
-            checked={onlyFriends}
-            onChange={(e) => setOnlyFriends(e.target.checked)}
-          />
-          Friends only
-        </label>
+        <div className="map-filters">
+          <label className="map-toggle">
+            <input
+              type="checkbox"
+              checked={onlyFriends}
+              onChange={(e) => setOnlyFriends(e.target.checked)}
+            />
+            Friends only
+          </label>
+
+          <div className="map-spend-filter" role="group" aria-label="Filter by what was paid">
+            {[10, 20, 50].map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`map-spend-pill ${maxSpend === v ? 'on' : ''}`}
+                onClick={() => setMaxSpend((cur) => (cur === v ? null : v))}
+              >
+                Spent &lt; €{v}
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       <div className="map-layout">

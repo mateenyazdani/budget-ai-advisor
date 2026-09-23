@@ -19,24 +19,29 @@ function BudgetHUD({ insight, currency, onFitBudget, fitActive }) {
 
   const total = daysInMonth();
   const elapsed = total - insight.daysLeft;
-  const pct = Math.round((elapsed / total) * 100);
+  const pct = Math.max(4, Math.round((elapsed / total) * 100));
 
   return (
     <div className={`budget-hud hud-${insight.status}`}>
-      <div className="hud-ring-wrap">
-        <div
-          className="hud-ring"
-          style={{ background: `conic-gradient(var(--brand) ${pct}%, var(--line) ${pct}%)` }}
-          aria-hidden="true"
-        >
-          <span className="hud-ring-inner">{insight.daysLeft}d</span>
-        </div>
-        <div className="hud-figures">
+      {/* The dial is the whole point of this card — the figure sits inside
+          it, not beside it, so it reads as a gauge rather than a stat row. */}
+      <div
+        className="hud-dial"
+        style={{
+          background: `conic-gradient(from -90deg, #16a34a, #2563eb ${pct}%, var(--line) ${pct}%)`,
+        }}
+        aria-hidden="true"
+      >
+        <div className="hud-dial-inner">
           <span className="hud-label">Today's safe spend</span>
           <span className="hud-amount">{money(currency, insight.safeToday)}</span>
-          <span className="hud-sub">{money(currency, insight.safeThisWeek)} across the rest of this week</span>
+          <span className="hud-sub">{insight.daysLeft}d left this month</span>
         </div>
       </div>
+
+      <p className="hud-week-note">
+        {money(currency, insight.safeThisWeek)} to pace the rest of this week
+      </p>
 
       <div className="hud-actions">
         {insight.safeToday > 0 && (

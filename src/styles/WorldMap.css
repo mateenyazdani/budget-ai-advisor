@@ -7,12 +7,30 @@
 .map-head h2 { font-size: 22px; letter-spacing: -0.01em; }
 .map-sub { color: var(--ink-soft); font-size: 14px; }
 
+.map-filters {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+
 .map-toggle {
   display: flex; align-items: center; gap: 8px;
   font-size: 14px; color: var(--ink-soft);
   background: var(--surface); border: 1px solid var(--line);
   border-radius: 999px; padding: 6px 14px; cursor: pointer;
 }
+
+/* Filters what was actually logged as paid — never a guess, so a pin with
+   no price on it just does not qualify rather than being included anyway. */
+.map-spend-filter { display: flex; gap: 6px; }
+
+.map-spend-pill {
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 6px 13px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: var(--surface);
+  color: var(--ink); cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.map-spend-pill:hover { border-color: var(--brand); }
+.map-spend-pill.on { background: var(--brand); border-color: var(--brand); color: white; }
 
 /* The map takes the room; the country list is a sidebar that folds underneath
    once there is no width for it. */
