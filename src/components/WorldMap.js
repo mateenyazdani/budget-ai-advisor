@@ -3,8 +3,11 @@ import { MapContainer, TileLayer, CircleMarker, Marker, Popup, useMap, useMapEve
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Link } from 'react-router-dom';
-import { loadVisiblePins, groupByCountry, averageRating } from '../lib/pins';
+import { loadVisiblePins, groupByCountry, averageRating, pinPhotoUrl } from '../lib/pins';
+import { saveWantToTry } from '../lib/wantToTry';
+import { logExpenseLocally } from '../lib/localExpenses';
 import { categoryById } from '../lib/categories';
+import { timeAgo } from '../lib/timeAgo';
 import '../styles/WorldMap.css';
 
 // Below this, one marker per country; above it, the places themselves. Five is
@@ -63,6 +66,115 @@ function PinPopup({ pin }) {
   );
 }
 
+// A persistent detail card for whichever pin was last clicked — real photo,
+// real price, and two real actions (wishlist via saved_places, log via the
+// same expenses store ExpenseLogger reads) instead of Leaflet's small popup
+// being the only way to see a pin's detail.
+function PinDetailCard({ pin, photoUrl }) {
+  const [wishlisted, setWishlisted] = useState(false);
+  const [logged, setLogged] = useState(false);
+  const [wishError, setWishError] = useState('');
+  const cat = categoryById(pin.category);
+
+  const wishlist = async () => {
+    const { error } = await saveWantToTry({
+      id: pin.place_id || pin.id,
+      name: pin.name,
+      category: pin.category,
+      lat: pin.lat,
+      lng: pin.lng,
+      countryCode: pin.countryCode,
+    });
+    if (error) setWishError(error);
+    else setWishlisted(true);
+  };
+
+  const logThisToo = () => {
+    logExpenseLocally({
+      amount: Number(pin.price_paid),
+      category: cat?.label || 'Other',
+      note: `${pin.name} — spotted on the map`,
+    });
+    setLogged(true);
+  };
+
+  return (
+    <section className="pin-detail-card">
+      <div className="pin-detail-photo">
+        {photoUrl ? (
+          <img src={photoUrl} alt="" loading="lazy" />
+        ) : (
+          <span className="pin-detail-photo-emoji" aria-hidden="true">{cat?.icon || '📍'}</span>
+        )}
+      </div>
+
+      <div className="pin-detail-body">
+        <div className="pin-detail-top">
+          <div className="pin-detail-who">
+            <span className="pin-detail-avatar" aria-hidden="true">{pin.author?.avatar_emoji || '🙂'}</span>
+            <div>
+              <p className="pin-detail-name">{pin.name}</p>
+              <p className="pin-detail-sub">
+                @{pin.author?.username || 'someone'} · {timeAgo(pin.created_at)}
+              </p>
+            </div>
+          </div>
+          {pin.rating != null && (
+            <span className="pin-detail-rating">★ {pin.rating}</span>
+          )}
+        </div>
+
+        {pin.note && <p className="pin-detail-note">“{pin.note}”</p>}
+        <p className="pin-detail-meta">
+          {cat && <span>{cat.icon} {cat.label}</span>}
+          {pin.city && <span>{pin.city}</span>}
+        </p>
+
+        <div className="pin-detail-actions">
+          <div className="pin-detail-price">
+            {pin.price_paid != null ? (
+              <span className="amount">{pin.currency}{Number(pin.price_paid).toFixed(2)}</span>
+            ) : (
+              <span className="pin-detail-price-unknown">No price logged</span>
+            )}
+          </div>
+          <div className="pin-detail-buttons">
+            {Number.isFinite(pin.lat) && Number.isFinite(pin.lng) && (
+              <a
+                className="pin-detail-btn"
+                href={`https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open in Maps
+              </a>
+            )}
+            <button
+              type="button"
+              className={`pin-detail-btn ${wishlisted ? 'done' : ''}`}
+              onClick={wishlist}
+              disabled={wishlisted}
+            >
+              {wishlisted ? '✓ Saved' : '+ Wishlist'}
+            </button>
+            {pin.price_paid != null && (
+              <button
+                type="button"
+                className={`pin-detail-btn primary ${logged ? 'done' : ''}`}
+                onClick={logThisToo}
+                disabled={logged}
+              >
+                {logged ? '✓ Logged' : `+ Log ${pin.currency}${Number(pin.price_paid).toFixed(2)}`}
+              </button>
+            )}
+          </div>
+        </div>
+        {wishError && <p className="pin-detail-error">{wishError}</p>}
+      </div>
+    </section>
+  );
+}
+
 function WorldMap({ session }) {
   const [pins, setPins] = useState([]);
   const [state, setState] = useState('loading');
@@ -72,8 +184,18 @@ function WorldMap({ session }) {
   // A real filter on the real price each pin actually logged — pins with no
   // price attached are left out when this is on, rather than guessed at.
   const [maxSpend, setMaxSpend] = useState(null);
+  const [selectedPin, setSelectedPin] = useState(null);
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState(null);
 
   const me = session?.user?.id;
+
+  const selectPin = useCallback((pin) => {
+    setSelectedPin(pin);
+    setSelectedPhotoUrl(null);
+    if (pin.photo_path) {
+      pinPhotoUrl(pin.photo_path).then(setSelectedPhotoUrl);
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     setState('loading');
@@ -186,11 +308,14 @@ function WorldMap({ session }) {
                     key={pin.id}
                     position={[pin.lat, pin.lng]}
                     icon={placeIcon(categoryById(pin.category)?.icon || '📍', pin.rating)}
+                    eventHandlers={{ click: () => selectPin(pin) }}
                   >
                     <Popup><PinPopup pin={pin} /></Popup>
                   </Marker>
                 ))}
           </MapContainer>
+
+          {selectedPin && <PinDetailCard pin={selectedPin} photoUrl={selectedPhotoUrl} />}
         </div>
 
         <aside className="map-side">
