@@ -49,6 +49,33 @@
   gap: 16px;
 }
 
+.passport-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.passport-filter {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.passport-filter:hover { border-color: var(--brand); }
+.passport-filter.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+
 .passport-group-label {
   display: block;
   font-size: 0.72rem;
@@ -59,37 +86,52 @@
   margin-bottom: 8px;
 }
 
-.passport-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/* A card per provider, not a link row — closer to a real "shop" grid than a
+   directory list, matching the density of the reference's SIM-plan cards. */
+.passport-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
 }
 
-.passport-item {
+.passport-card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 13px;
+  gap: 8px;
+  padding: 16px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  text-decoration: none;
-  min-width: 150px;
-  flex: 1;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
-.passport-item:hover { border-color: var(--brand); background: var(--brand-soft); }
+.passport-card:hover { border-color: var(--brand); transform: translateY(-1px); }
 
-.passport-item-name {
-  font-weight: 700;
-  font-size: 0.86rem;
+.passport-card-name {
+  font-weight: 800;
+  font-size: 0.92rem;
   color: var(--ink);
 }
 
-.passport-item-note {
-  font-size: 0.75rem;
+.passport-card-note {
+  font-size: 0.78rem;
   color: var(--ink-faint);
-  line-height: 1.4;
+  line-height: 1.45;
+  flex: 1;
+  margin: 0;
 }
+
+.passport-card-cta {
+  align-self: flex-start;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.passport-card-cta:hover { border-color: var(--brand); background: var(--brand-soft); }
 
 .passport-note {
   margin: 0;
