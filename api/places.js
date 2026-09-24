@@ -449,6 +449,9 @@ module.exports = async function handler(req, res) {
         phone: place.internationalPhoneNumber || null,
         website: place.websiteUri || null,
         photoRef: place.photos?.[0]?.name || null,
+        // A second real photo, when Google actually has one — lets a card
+        // use a two-photo split instead of inventing a second image.
+        photoRef2: place.photos?.[1]?.name || null,
         emoji: category.emoji,
         // Carried through so rating a place can drop a pin without a second
         // lookup for where on Earth the place actually is.

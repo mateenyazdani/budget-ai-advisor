@@ -211,12 +211,21 @@ function DealCard({ item, icon, typical, categoryLabel, onPin, onToggleWant, wan
         // /api/photo so the Google key stays server-side. The badges move
         // onto the image itself once there's a photo to sit on.
         <div className="deal-photo-wrap">
-          <img
-            className="deal-photo"
-            src={`/api/photo?ref=${encodeURIComponent(item.photoRef)}&w=800`}
-            alt=""
-            loading="lazy"
-          />
+          {item.photoRef2 ? (
+            // Two real photos Google actually has for this place, not one
+            // real photo plus an invented second image.
+            <div className="deal-photo-split">
+              <img className="deal-photo" src={`/api/photo?ref=${encodeURIComponent(item.photoRef)}&w=500`} alt="" loading="lazy" />
+              <img className="deal-photo" src={`/api/photo?ref=${encodeURIComponent(item.photoRef2)}&w=500`} alt="" loading="lazy" />
+            </div>
+          ) : (
+            <img
+              className="deal-photo"
+              src={`/api/photo?ref=${encodeURIComponent(item.photoRef)}&w=800`}
+              alt=""
+              loading="lazy"
+            />
+          )}
           <div className="deal-photo-scrim-top" aria-hidden="true" />
           {endorsement ? (
             <span className="deal-endorsement">

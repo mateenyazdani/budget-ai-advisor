@@ -842,6 +842,20 @@
   display: block;
 }
 
+/* Two real photos side by side, only when Google actually returned two for
+   this place — a thin gap keeps them reading as two images, not a seam. */
+.deal-photo-split {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+}
+.deal-photo-split .deal-photo {
+  width: calc(50% - 1px);
+  flex-shrink: 0;
+}
+
 .deal-photo-emoji {
   position: absolute;
   top: 10px;
