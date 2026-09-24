@@ -1,8 +1,8 @@
 .budget-hud {
-  position: sticky;
-  /* Stacks beneath the app's own sticky header (60px) and nav (~48px). */
-  top: 106px;
-  z-index: 18;
+  /* Used to stick under the header while scrolling, back when this card was
+     just a small ring. The stats row and actions row underneath made it too
+     tall to pin without covering the page beneath it while scrolling, so it
+     now scrolls away like everything else. */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -155,7 +155,7 @@
 .hud-log-link:hover { border-color: var(--brand); border-style: solid; background: var(--brand-soft); }
 
 @media (max-width: 640px) {
-  .budget-hud { position: static; padding: 20px 16px 16px; }
+  .budget-hud { padding: 20px 16px 16px; }
   .hud-dial-wrap { width: 128px; height: 128px; }
   .hud-amount { font-size: 1.7rem; }
 }
