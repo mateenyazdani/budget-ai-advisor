@@ -28,6 +28,7 @@ import AIAdvisor from './components/AIAdvisor';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 import { getStoredTheme, applyTheme } from './lib/theme';
+import { getInsights } from './utils/insights';
 
 // Browsing deals needs nothing about you, so it is the one item a signed-out
 // visitor sees. The rest are all tied to a personal budget.
@@ -49,6 +50,7 @@ function Shell({ session, budget, children, showNav }) {
   const username = session?.user?.email?.split('@')[0];
   const navItems = session ? NAV_ITEMS : NAV_ITEMS.filter((i) => i.public);
   const [theme, setTheme] = useState(getStoredTheme);
+  const insight = budget ? getInsights(budget) : null;
 
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut();
@@ -64,7 +66,15 @@ function Shell({ session, budget, children, showNav }) {
   return (
     <>
       <header className="App-header">
-        <div className="App-wordmark"><Wordmark /></div>
+        <div className="App-wordmark-group">
+          <div className="App-wordmark"><Wordmark /></div>
+          {insight && (
+            <span className="header-safe-pill">
+              <span className="header-safe-dot" aria-hidden="true" />
+              {budget.currency}{insight.safeToday} <span className="header-safe-label">safe today</span>
+            </span>
+          )}
+        </div>
         <div className="header-user">
           <button
             type="button"
@@ -96,6 +106,9 @@ function Shell({ session, budget, children, showNav }) {
             >
               <span className={`nav-icon ${item.ring || ''}`}><item.Icon /></span>
               <span className="nav-label">{item.label}</span>
+              {item.to === '/discover' && insight?.safeToday > 0 && (
+                <span className="nav-badge">&lt;{budget.currency}{insight.safeToday}</span>
+              )}
             </NavLink>
           ))}
         </nav>

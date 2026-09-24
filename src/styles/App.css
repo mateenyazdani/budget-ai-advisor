@@ -48,6 +48,45 @@
   -webkit-text-fill-color: transparent;
 }
 
+.App-wordmark-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* A live number in the chrome that's visible from every page, not just
+   Discover's own dial — the same insight.safeToday, just always in view. */
+.header-safe-pill {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  border: 1px solid transparent;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-safe-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.header-safe-label {
+  font-weight: 500;
+  color: var(--brand-dark);
+  opacity: 0.8;
+}
+
+@media (min-width: 560px) {
+  .header-safe-pill { display: inline-flex; }
+}
+
 .header-user {
   display: flex;
   align-items: center;
@@ -102,6 +141,7 @@
 }
 
 .App-nav a {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -114,6 +154,18 @@
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   transition: color 0.15s, border-color 0.15s;
+}
+
+/* A real number on the nav item itself — the same insight.safeToday shown
+   in the header pill and the Discover dial, just visible before you tap in. */
+.nav-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
 }
 
 .App-nav a:hover {
@@ -253,6 +305,26 @@
 
   .App-nav a.active .nav-icon {
     box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--nav-ring, var(--brand));
+  }
+
+  /* A small corner dot on the dock icon instead of a full pill — the dock
+     is too tight for a third stacked line of text here. */
+  .nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    font-size: 0;
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    color: transparent;
+  }
+  .nav-badge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--brand);
   }
 
   .App-nav a.active {
