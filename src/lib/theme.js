@@ -1,13 +1,14 @@
-// A real toggle, not a system-preference guess — the app defaults to the
-// quiet light palette it was designed around, and dark is something a
-// visitor chooses for themselves, remembered on their own device.
+// Still a real, rememberable toggle — not a system-preference guess — but
+// dark is now what a new visitor sees first, matching the look the app has
+// been designed toward. Anyone who explicitly picks light gets that back on
+// their next visit, same as dark.
 const KEY = 'bargainly-theme';
 
 export function getStoredTheme() {
   try {
-    return localStorage.getItem(KEY) === 'dark' ? 'dark' : 'light';
+    return localStorage.getItem(KEY) === 'light' ? 'light' : 'dark';
   } catch {
-    return 'light';
+    return 'dark';
   }
 }
 

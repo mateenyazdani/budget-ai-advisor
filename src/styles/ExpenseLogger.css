@@ -1,8 +1,11 @@
 .expense-logger { margin-bottom: 40px; }
 
 .spending-card {
+  /* Was `color: white` on a `var(--surface)` background — invisible text in
+     light mode, where --surface is white, not just a dark-mode gap. */
   background: var(--surface);
-  color: white;
+  color: var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 24px;
   margin-bottom: 24px;
@@ -30,13 +33,14 @@
 .btn-add-expense {
   width: 100%;
   padding: 14px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--brand);
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--brand);
   border-radius: var(--radius);
   font-weight: 600;
   cursor: pointer;
 }
+.btn-add-expense:hover { filter: brightness(0.92); }
 
 .modal-overlay {
   position: fixed;
@@ -100,13 +104,14 @@
 .btn-submit {
   width: 100%;
   padding: 14px;
-  background: var(--surface);
+  background: var(--brand);
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
 }
+.btn-submit:hover { filter: brightness(0.92); }
 
 .expense-history {
   margin-top: 24px;
