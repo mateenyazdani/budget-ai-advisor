@@ -115,11 +115,56 @@
   margin: 0 0 8px;
 }
 
-.feed-meta {
+.feed-price-row {
   display: flex;
+  align-items: baseline;
   gap: 10px;
+  margin: 2px 0 10px;
+}
+
+.feed-price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.feed-price-unknown {
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+}
+
+.feed-city {
   font-size: 0.78rem;
   color: var(--ink-faint);
+}
+
+.feed-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.feed-log-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  border: 1px solid transparent;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.feed-log-btn:hover { background: var(--brand-soft); border-color: var(--brand); }
+.feed-log-btn:active { transform: scale(0.96); }
+.feed-log-btn.done {
+  color: var(--positive);
+  background: none;
+  border-color: var(--line);
+  cursor: default;
 }
 
 @media (max-width: 640px) {

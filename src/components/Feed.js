@@ -6,6 +6,22 @@ import { SENTIMENTS } from '../lib/ranking';
 import { timeAgo } from '../lib/timeAgo';
 import '../styles/Feed.css';
 
+// Same storage shape and key ExpenseLogger already writes to on /dashboard
+// (see src/components/ExpenseLogger.js) — a real entry that shows up in
+// "Recent Expenses" there, not a second, disconnected log.
+function logExpenseLocally({ amount, category, note }) {
+  const existing = JSON.parse(localStorage.getItem('expenses') || '[]');
+  const expense = {
+    id: Date.now(),
+    amount,
+    category,
+    note,
+    timestamp: new Date().toLocaleString(),
+    date: new Date().toLocaleDateString(),
+  };
+  localStorage.setItem('expenses', JSON.stringify([expense, ...existing]));
+}
+
 // One friend's verdict on one place, photo-first. The map answers "where has
 // everyone been"; this answers "what did someone just do" — the reason to
 // open the app again is a new card at the top, not a bubble that moved.
@@ -13,6 +29,16 @@ function FeedCard({ pin, photoUrl }) {
   const sentiment = SENTIMENTS.find((s) => s.id === pin.sentiment);
   const cat = categoryById(pin.category);
   const when = timeAgo(pin.created_at);
+  const [logged, setLogged] = useState(false);
+
+  const logThisToo = () => {
+    logExpenseLocally({
+      amount: Number(pin.price_paid),
+      category: cat?.label || 'Other',
+      note: `${pin.name} — spotted in the feed`,
+    });
+    setLogged(true);
+  };
 
   return (
     <article className="feed-card">
@@ -41,26 +67,43 @@ function FeedCard({ pin, photoUrl }) {
           {cat && <span aria-hidden="true">{cat.icon}</span>} {pin.name}
         </h3>
         {pin.note && <p className="feed-note">“{pin.note}”</p>}
-        <div className="feed-meta">
-          {pin.price_paid != null && (
-            <span>{pin.currency}{Number(pin.price_paid).toFixed(2)}</span>
+
+        <div className="feed-price-row">
+          {pin.price_paid != null ? (
+            <span className="feed-price amount">{pin.currency}{Number(pin.price_paid).toFixed(2)}</span>
+          ) : (
+            <span className="feed-price-unknown">No price logged</span>
           )}
-          {pin.city && <span>{pin.city}</span>}
+          {pin.city && <span className="feed-city">{pin.city}</span>}
         </div>
 
-        {/* A review with nowhere to go from it is just a scroll-past. Built
-            from the pin's own coordinates — the one thing every pin has,
-            unlike phone or website, which are only known at search time. */}
-        {Number.isFinite(pin.lat) && Number.isFinite(pin.lng) && (
-          <a
-            className="feed-map-cta"
-            href={`https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in Maps →
-          </a>
-        )}
+        <div className="feed-actions">
+          {/* A review with nowhere to go from it is just a scroll-past. Built
+              from the pin's own coordinates — the one thing every pin has,
+              unlike phone or website, which are only known at search time. */}
+          {Number.isFinite(pin.lat) && Number.isFinite(pin.lng) && (
+            <a
+              className="feed-map-cta"
+              href={`https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open in Maps →
+            </a>
+          )}
+          {/* Did the same thing your friend did? One tap adds the same real
+              price to your own expenses — nothing here is guessed. */}
+          {pin.price_paid != null && (
+            <button
+              type="button"
+              className={`feed-log-btn ${logged ? 'done' : ''}`}
+              onClick={logThisToo}
+              disabled={logged}
+            >
+              {logged ? '✓ Logged' : `+ Log ${pin.currency}${Number(pin.price_paid).toFixed(2)} too`}
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );

@@ -32,6 +32,38 @@
   --shadow-lg: 0 12px 40px rgba(22, 22, 29, 0.10);
 }
 
+/* An explicit opt-in dark theme, not a silent prefers-color-scheme swap —
+   every component already reads these same variable names, so this is the
+   one place the whole app's palette lives twice. Matches the near-black,
+   emerald-accent look from the reference mockups. */
+:root[data-theme="dark"] {
+  --brand: #10b981;
+  --brand-dark: #34d399;
+  --brand-soft: rgba(16, 185, 129, 0.14);
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.14);
+
+  --ink: #f4f4f6;
+  --ink-soft: #a3a3ad;
+  --ink-faint: #6f6f7a;
+
+  --surface: #0d1017;
+  --surface-sunken: #12151c;
+  --page-bg: #07080b;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --positive: #34d399;
+  --negative: #f87171;
+  --warn-bg: rgba(217, 164, 65, 0.12);
+  --warn-line: #d9a441;
+  --warn-ink: #f2d19b;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
 * {
   margin: 0;
   padding: 0;

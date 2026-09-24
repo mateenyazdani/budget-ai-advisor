@@ -177,7 +177,7 @@
 }
 
 .btn-restart {
-  background: white;
+  background: var(--surface);
   color: var(--brand);
   border: 2px solid var(--brand);
 }

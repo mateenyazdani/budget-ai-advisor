@@ -27,6 +27,7 @@ import BankConnect from './components/BankConnect';
 import AIAdvisor from './components/AIAdvisor';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { saveBudget, loadLatestBudget } from './lib/budgetStore';
+import { getStoredTheme, applyTheme } from './lib/theme';
 
 // Browsing deals needs nothing about you, so it is the one item a signed-out
 // visitor sees. The rest are all tied to a personal budget.
@@ -47,10 +48,17 @@ function Shell({ session, budget, children, showNav }) {
   const navigate = useNavigate();
   const username = session?.user?.email?.split('@')[0];
   const navItems = session ? NAV_ITEMS : NAV_ITEMS.filter((i) => i.public);
+  const [theme, setTheme] = useState(getStoredTheme);
 
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut();
     navigate('/');
+  };
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    setTheme(next);
   };
 
   return (
@@ -58,6 +66,15 @@ function Shell({ session, budget, children, showNav }) {
       <header className="App-header">
         <div className="App-wordmark"><Wordmark /></div>
         <div className="header-user">
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           {session ? (
             <>
               <NavLink className="header-username" to="/profile">@{username}</NavLink>
@@ -104,6 +121,13 @@ function App() {
   const [session, setSession] = useState(null);
   const [userBudget, setUserBudget] = useState(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+
+  // Applied once at the root so a remembered preference holds on every
+  // route, including the public landing page, which has no Shell header of
+  // its own to carry a toggle.
+  useEffect(() => {
+    applyTheme(getStoredTheme());
+  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;

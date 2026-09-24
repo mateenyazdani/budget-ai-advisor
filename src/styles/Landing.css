@@ -395,7 +395,7 @@
 }
 
 .landing-cta .btn-cta {
-  background: white;
+  background: var(--surface);
   color: var(--ink);
   border-color: white;
 }

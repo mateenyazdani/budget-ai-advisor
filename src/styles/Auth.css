@@ -97,7 +97,7 @@
 .btn-back {
   width: 100%;
   padding: 12px;
-  background: white;
+  background: var(--surface);
   color: var(--brand);
   border: 2px solid var(--line);
   border-radius: var(--radius);
