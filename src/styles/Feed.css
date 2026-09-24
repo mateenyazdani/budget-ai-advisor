@@ -1,6 +1,24 @@
-.feed-page {
-  max-width: 560px;
+.feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) 260px;
+  gap: 24px;
+  align-items: start;
+  max-width: 860px;
   margin: 0 auto;
+}
+
+.feed-sidebar {
+  position: sticky;
+  top: 90px;
+}
+
+@media (max-width: 900px) {
+  .feed-layout { grid-template-columns: minmax(0, 1fr); max-width: 560px; }
+  .feed-sidebar { position: static; order: -1; }
+}
+
+.feed-page {
+  min-width: 0;
 }
 
 .feed-head {
@@ -196,3 +214,99 @@
   text-decoration: none;
 }
 .feed-map-cta:hover { text-decoration: underline; }
+
+.feed-budget-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  border-top: 3px solid var(--brand);
+}
+.feed-budget-card.status-risk { border-top-color: var(--negative); }
+.feed-budget-card.status-attention { border-top-color: var(--warn-line, #d9a441); }
+
+.feed-budget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.feed-budget-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+
+.feed-budget-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+.feed-budget-pill.status-risk { background: rgba(181, 50, 74, 0.12); color: var(--negative); }
+.feed-budget-pill.status-attention { background: var(--warn-bg); color: var(--warn-ink); }
+
+.feed-budget-amount {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.feed-budget-sub {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+  margin-bottom: 14px;
+}
+
+.feed-budget-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+
+.feed-budget-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.feed-budget-row.total { font-weight: 700; color: var(--ink); }
+
+.feed-budget-cta {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: white;
+  background: var(--brand);
+  padding: 10px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.feed-budget-cta:hover { background: var(--brand-dark); }
+
+/* Example content only shows while the real feed is empty — dimmed just
+   enough to read as illustrative rather than something that just happened. */
+.feed-example-block {
+  margin-top: 28px;
+  text-align: left;
+}
+
+.feed-example-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+
+.feed-card-example { opacity: 0.82; }

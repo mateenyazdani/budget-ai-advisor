@@ -234,7 +234,7 @@ function App() {
             element={
               <Protected session={session}>
                 <Shell session={session} budget={userBudget} showNav>
-                  <Feed session={session} />
+                  <Feed session={session} budget={userBudget} />
                 </Shell>
               </Protected>
             }

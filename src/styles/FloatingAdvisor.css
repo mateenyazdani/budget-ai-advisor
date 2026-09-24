@@ -188,7 +188,7 @@
   border-radius: 50%;
   border: none;
   background: var(--ink);
-  color: white;
+  color: var(--page-bg);
   cursor: pointer;
   flex-shrink: 0;
 }

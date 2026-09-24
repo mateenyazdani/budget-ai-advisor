@@ -49,7 +49,7 @@
 
 .discover-search button {
   background: var(--ink);
-  color: white;
+  color: var(--page-bg);
   border: none;
   padding: 17px 30px;
   border-radius: 999px;
