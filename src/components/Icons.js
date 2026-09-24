@@ -53,8 +53,8 @@ export function Wordmark({ className = '' }) {
   return (
     <span className={`wordmark ${className}`}>
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className="wordmark-glyph">
-        <rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor" />
-        <path d="M8 15.5V11m4 4.5V8.5m4 7V12.5" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" />
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="currentColor" />
+        <path d="M8 16v-4M12 16V8M16 16v-6.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
       </svg>
       <span className="wordmark-text">Bargain<span className="wordmark-accent">ly</span></span>
     </span>

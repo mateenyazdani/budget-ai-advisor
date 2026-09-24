@@ -39,13 +39,12 @@
   flex-shrink: 0;
 }
 
-/* A touch of the brighter reference on the one thing worth it — the
-   wordmark's own accent — without repainting the rest of the header. */
+/* One solid brand colour, not a three-stop rainbow — a gradient wordmark
+   reads as a demo/landing-page flourish, and this is a finance product's
+   own name, shown everywhere from the header to a browser tab favicon
+   context. Restraint here is what makes it look like a real product. */
 .wordmark-accent {
-  background: linear-gradient(120deg, #16a34a, #2563eb 55%, #7c3aed);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--brand);
 }
 
 .App-wordmark-group {
