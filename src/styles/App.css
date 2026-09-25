@@ -192,6 +192,18 @@
 .ring-purple { --nav-ring: #7c3aed; }
 .ring-teal { --nav-ring: #0d9488; }
 
+/* One accent for "this is where you are," not a different hue per
+   destination — only one ring shows at a time, so consistency reads as
+   more deliberate than variety here. */
+:root[data-theme="dark"] .ring-green,
+:root[data-theme="dark"] .ring-orange,
+:root[data-theme="dark"] .ring-blue,
+:root[data-theme="dark"] .ring-pink,
+:root[data-theme="dark"] .ring-purple,
+:root[data-theme="dark"] .ring-teal {
+  --nav-ring: var(--brand);
+}
+
 .App-main {
   flex: 1;
   max-width: 1060px;

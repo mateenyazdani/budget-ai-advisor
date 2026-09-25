@@ -61,6 +61,19 @@
 .ring-pink { --qi-c1: #f472b6; --qi-c2: #db2777; --qi-tint: #fce7f3; }
 .ring-purple { --qi-c1: #a78bfa; --qi-c2: #7c3aed; --qi-tint: #ede9fe; }
 
+/* Dark mode drops the rainbow — one neutral graphite disc for every
+   shortcut instead of five hues, checked against monaco.com's own
+   grayscale-plus-one-accent language rather than guessed at. */
+:root[data-theme="dark"] .ring-green,
+:root[data-theme="dark"] .ring-orange,
+:root[data-theme="dark"] .ring-blue,
+:root[data-theme="dark"] .ring-pink,
+:root[data-theme="dark"] .ring-purple {
+  --qi-c1: #2c2c30;
+  --qi-c2: #1c1c1f;
+  --qi-tint: #232326;
+}
+
 .qi-label {
   font-size: 0.7rem;
   font-weight: 600;

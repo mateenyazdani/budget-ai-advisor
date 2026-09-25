@@ -78,6 +78,17 @@
 .money-tips .ring-pink { --mt-c1: #f472b6; --mt-c2: #db2777; --mt-tint: #fce7f3; }
 .money-tips .ring-purple { --mt-c1: #a78bfa; --mt-c2: #7c3aed; --mt-tint: #ede9fe; }
 
+/* Same monochrome swap as QuickInsights in dark mode. */
+:root[data-theme="dark"] .money-tips .ring-green,
+:root[data-theme="dark"] .money-tips .ring-orange,
+:root[data-theme="dark"] .money-tips .ring-blue,
+:root[data-theme="dark"] .money-tips .ring-pink,
+:root[data-theme="dark"] .money-tips .ring-purple {
+  --mt-c1: #2c2c30;
+  --mt-c2: #1c1c1f;
+  --mt-tint: #232326;
+}
+
 .mt-label {
   font-size: 0.7rem;
   font-weight: 600;
