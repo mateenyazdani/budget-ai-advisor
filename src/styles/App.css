@@ -1,8 +1,26 @@
 .App {
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--page-bg);
+  isolation: isolate;
+}
+
+/* An ambient glow behind the page, not a flat matte black — the single
+   biggest signature move in every AI Studio reference this session, done
+   once here at the root instead of re-added per card. Dark mode only: on
+   the light page this would just look like a colour cast, not a mood. */
+:root[data-theme="dark"] .App::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(45vw 45vw at 8% -5%, rgba(16, 185, 129, 0.16), transparent 60%),
+    radial-gradient(40vw 40vw at 108% 15%, rgba(56, 189, 248, 0.10), transparent 60%),
+    radial-gradient(50vw 50vw at 50% 120%, rgba(16, 185, 129, 0.08), transparent 60%);
 }
 
 /* Header spans the full width like site chrome, rather than floating over a
@@ -14,7 +32,9 @@
   gap: 16px;
   padding: 0 28px;
   height: 60px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
   border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
