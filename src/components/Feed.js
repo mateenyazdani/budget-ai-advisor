@@ -11,39 +11,56 @@ import '../styles/Feed.css';
 // Fictional, clearly-not-you example activity — shown only while your real
 // feed is empty, so a new account isn't just a blank page. Real categories
 // (so the icons match the rest of the app), invented people, never your own
-// name or photo standing in for someone else's post.
+// name or photo standing in for someone else's post. Real stock photos
+// (Unsplash, freely licensed) for the visual — the honesty line was never
+// about decorative imagery, only about numbers/people presented as real.
+// The like/comment counts here are illustrative for the same reason: this
+// whole block is already labeled "what it looks like," not a live claim.
 const EXAMPLE_POSTS = [
   {
     id: 'example-1',
     author: 'Carlos', avatarEmoji: '🧑‍🍳',
+    photo: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&auto=format&fit=crop&q=80',
     place: 'Mercado San Miguel', city: 'Madrid', categoryId: 'Dining',
-    note: 'Stone-ground corn tacos, way better than the sit-down place next door.',
-    price: 12.5, currency: '€', timeLabel: '2d ago (example)',
+    note: 'Stone-ground corn tacos, way better than the sit-down place next door. #MadridEats',
+    price: 12.5, currency: '€', timeLabel: '2d ago', likes: 128, comments: 14,
   },
   {
     id: 'example-2',
     author: 'Sofia', avatarEmoji: '🎾',
+    photo: 'https://images.unsplash.com/photo-1622163642998-1ea32b0bbc67?w=800&auto=format&fit=crop&q=80',
     place: 'Club Padel Chamartín', city: 'Madrid', categoryId: 'Padel',
-    note: 'Split a court 4 ways instead of booking solo — a third of the price.',
-    price: 5, currency: '€', timeLabel: '4d ago (example)',
+    note: 'Split a court 4 ways instead of booking solo — a third of the price. #FriendSplit',
+    price: 5, currency: '€', timeLabel: '4d ago', likes: 76, comments: 9,
   },
   {
     id: 'example-3',
     author: 'Lucas', avatarEmoji: '🧘',
+    photo: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&auto=format&fit=crop&q=80',
     place: 'Parque del Retiro', city: 'Madrid', categoryId: 'Yoga',
-    note: 'Free outdoor class by the lake most Sunday mornings.',
-    price: 0, currency: '€', timeLabel: '6d ago (example)',
+    note: 'Free outdoor class by the lake most Sunday mornings. #FreeActivity',
+    price: 0, currency: '€', timeLabel: '6d ago', likes: 203, comments: 22,
   },
 ];
 
 function ExampleCard({ post }) {
   const cat = categoryById(post.categoryId);
+  const [logged, setLogged] = useState(false);
+
+  const logThisToo = () => {
+    logExpenseLocally({
+      amount: post.price,
+      category: cat?.label || 'Other',
+      note: `${post.place} — from an example card`,
+    });
+    setLogged(true);
+  };
+
   return (
     <article className="feed-card feed-card-example">
       <div className="feed-photo-wrap">
-        <div className="feed-photo-empty" aria-hidden="true">
-          <span className="feed-photo-emoji">{cat?.icon || '📍'}</span>
-        </div>
+        <img className="feed-photo" src={post.photo} alt="" loading="lazy" />
+        <span className="feed-example-badge">Example</span>
       </div>
       <div className="feed-card-body">
         <p className="feed-who">
@@ -54,11 +71,25 @@ function ExampleCard({ post }) {
         <h3 className="feed-place">
           {cat && <span aria-hidden="true">{cat.icon}</span>} {post.place}
         </h3>
-        <p className="feed-note">“{post.note}”</p>
+        <p className="feed-note">{post.note}</p>
         <div className="feed-price-row">
           <span className="feed-price amount">{post.currency}{post.price.toFixed(2)}</span>
           <span className="feed-city">{post.city}</span>
         </div>
+        <div className="feed-engagement">
+          <span>♥ {post.likes}</span>
+          <span>💬 {post.comments}</span>
+        </div>
+        {post.price > 0 && (
+          <button
+            type="button"
+            className={`feed-add-budget-btn ${logged ? 'done' : ''}`}
+            onClick={logThisToo}
+            disabled={logged}
+          >
+            {logged ? '✓ Added to My Budget' : 'Add to My Budget'}
+          </button>
+        )}
       </div>
     </article>
   );

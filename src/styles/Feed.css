@@ -309,4 +309,48 @@
   margin-bottom: 12px;
 }
 
-.feed-card-example { opacity: 0.82; }
+.feed-card-example { opacity: 0.94; }
+
+.feed-example-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+.feed-engagement {
+  display: flex;
+  gap: 16px;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.feed-add-budget-btn {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: white;
+  background: var(--brand);
+  border: none;
+  padding: 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.feed-add-budget-btn:hover { filter: brightness(0.94); }
+.feed-add-budget-btn.done {
+  background: var(--surface-sunken);
+  color: var(--positive);
+  cursor: default;
+}
+.feed-add-budget-btn.done:hover { filter: none; }
