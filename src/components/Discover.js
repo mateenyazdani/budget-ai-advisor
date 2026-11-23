@@ -602,8 +602,40 @@ function Discover({ budgetRemaining, budget: userBudget, session }) {
   useEffect(() => {
     if (started.current || locating) return;
     started.current = true;
-    search(category, '');
-  }, [locating, category, search]);
+    // Spotlight (⌘K) hands over a plain-English query as ?q=.
+    const fromSpotlight = (searchParams.get('q') || '').trim();
+    if (fromSpotlight) {
+      setTop(null);
+      setQuery(fromSpotlight);
+      search(null, fromSpotlight);
+    } else {
+      search(category, '');
+    }
+  }, [locating, category, search, searchParams]);
+
+  // The top bar's city dropdown writes the same remembered city this page
+  // uses, so a change there re-runs whatever is open.
+  useEffect(() => {
+    const onCity = (e) => {
+      if (!e.detail) return;
+      setCity(e.detail);
+      setCityDraft(e.detail);
+    };
+    window.addEventListener('bargainly:city', onCity);
+    return () => window.removeEventListener('bargainly:city', onCity);
+  }, []);
+
+  // A second Spotlight search while already on Discover changes ?q= without
+  // remounting the page.
+  const lastQ = useRef(searchParams.get('q') || '');
+  useEffect(() => {
+    const next = (searchParams.get('q') || '').trim();
+    if (!started.current || !next || next === lastQ.current) return;
+    lastQ.current = next;
+    setTop(null);
+    setQuery(next);
+    search(null, next);
+  }, [searchParams, search]);
 
   const pick = (catId) => {
     setQuery('');

@@ -9,7 +9,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import './styles/App.css';
-import { Wordmark, ChartIcon, BasketIcon, BankIcon, ChatIcon } from './components/Icons';
+import TopBar from './components/TopBar';
 import WorldMap from './components/WorldMap';
 import Feed from './components/Feed';
 import FloatingAdvisor from './components/FloatingAdvisor';
@@ -30,25 +30,8 @@ import { saveBudget, loadLatestBudget } from './lib/budgetStore';
 import { getStoredTheme, applyTheme } from './lib/theme';
 import { getInsights } from './utils/insights';
 
-// Browsing deals needs nothing about you, so it is the one item a signed-out
-// visitor sees. The rest are all tied to a personal budget.
-const NAV_ITEMS = [
-  // Feed comes first because it is the reason to come back: a new card at the
-  // top means a friend did something since you last looked. A bubble moving
-  // slightly on a map does not carry the same pull. The map itself is not
-  // gone — Feed links out to it for anyone who wants the geography instead.
-  { to: '/feed', Icon: () => <span aria-hidden="true">📸</span>, label: 'Feed', ring: 'ring-pink' },
-  { to: '/discover', Icon: BasketIcon, label: 'Discover', public: true, ring: 'ring-orange' },
-  { to: '/friends', Icon: () => <span aria-hidden="true">👥</span>, label: 'Social', ring: 'ring-blue' },
-  { to: '/dashboard', Icon: ChartIcon, label: 'My Budget', ring: 'ring-green' },
-  { to: '/bank', Icon: BankIcon, label: 'Planned vs actual', ring: 'ring-teal' },
-  { to: '/advisor', Icon: ChatIcon, label: 'Bargain Genius', ring: 'ring-purple' },
-];
-
 function Shell({ session, budget, children, showNav }) {
   const navigate = useNavigate();
-  const username = session?.user?.email?.split('@')[0];
-  const navItems = session ? NAV_ITEMS : NAV_ITEMS.filter((i) => i.public);
   const [theme, setTheme] = useState(getStoredTheme);
   const insight = budget ? getInsights(budget) : null;
 
@@ -65,54 +48,15 @@ function Shell({ session, budget, children, showNav }) {
 
   return (
     <>
-      <header className="App-header">
-        <div className="App-wordmark-group">
-          <div className="App-wordmark"><Wordmark /></div>
-          {insight && (
-            <span className="header-safe-pill">
-              <span className="header-safe-dot" aria-hidden="true" />
-              {budget.currency}{insight.safeToday} <span className="header-safe-label">safe today</span>
-            </span>
-          )}
-        </div>
-        <div className="header-user">
-          <button
-            type="button"
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          {session ? (
-            <>
-              <NavLink className="header-username" to="/profile">@{username}</NavLink>
-              <button className="btn-logout" onClick={signOut}>Sign out</button>
-            </>
-          ) : (
-            <NavLink className="btn-logout" to="/signin">Sign in</NavLink>
-          )}
-        </div>
-      </header>
-
-      {showNav && (
-        <nav className="App-nav" aria-label="Main">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => (isActive ? 'active' : '')}
-            >
-              <span className={`nav-icon ${item.ring || ''}`}><item.Icon /></span>
-              <span className="nav-label">{item.label}</span>
-              {item.to === '/discover' && insight?.safeToday > 0 && (
-                <span className="nav-badge">&lt;{budget.currency}{insight.safeToday}</span>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-      )}
+      <TopBar
+        session={session}
+        budget={budget}
+        insight={insight}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onSignOut={signOut}
+        showTabs={showNav}
+      />
 
       <main className="App-main">{children}</main>
 
