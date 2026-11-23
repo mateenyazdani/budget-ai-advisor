@@ -30,6 +30,13 @@
 
 .feed-head h2 { font-size: 1.5rem; letter-spacing: -0.02em; }
 
+.feed-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
 .feed-map-link {
   font-size: 0.84rem;
   font-weight: 600;
@@ -56,7 +63,14 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.feed-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .feed-photo-wrap {
@@ -145,6 +159,63 @@
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--ink);
+}
+
+/* A colourful pill instead of bare text — the same treatment the reference
+   screens give every price tag. */
+.feed-price.chip {
+  font-size: 0.95rem;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.feed-engagement {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 2px 0 12px;
+}
+
+.feed-eng-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.feed-eng-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.feed-eng-icon {
+  width: 21px;
+  height: 21px;
+  color: var(--ink-soft);
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.feed-eng-btn:active .feed-eng-icon {
+  transform: scale(0.88);
+}
+
+.feed-eng-icon.liked {
+  color: var(--c-pink);
+}
+
+.feed-eng-spacer {
+  flex: 1;
+}
+
+.feed-eng-bookmark {
+  margin-left: auto;
+  color: var(--ink-soft);
 }
 
 .feed-price-unknown {

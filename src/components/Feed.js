@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { loadVisiblePins, pinPhotoUrl } from '../lib/pins';
 import { categoryById } from '../lib/categories';
 import { SENTIMENTS } from '../lib/ranking';
 import { timeAgo } from '../lib/timeAgo';
 import { getInsights } from '../utils/insights';
 import { logExpenseLocally } from '../lib/localExpenses';
+import { HeartIcon, CommentIcon, BookmarkIcon } from './Icons';
+import BudgetHUD from './BudgetHUD';
+import SpendTrend from './SpendTrend';
 import '../styles/Feed.css';
 
 // Fictional, clearly-not-you example activity — shown only while your real
@@ -73,12 +76,13 @@ function ExampleCard({ post }) {
         </h3>
         <p className="feed-note">{post.note}</p>
         <div className="feed-price-row">
-          <span className="feed-price amount">{post.currency}{post.price.toFixed(2)}</span>
+          <span className="feed-price amount chip">{post.currency}{post.price.toFixed(2)}</span>
           <span className="feed-city">{post.city}</span>
         </div>
         <div className="feed-engagement">
-          <span>♥ {post.likes}</span>
-          <span>💬 {post.comments}</span>
+          <span className="feed-eng-item"><HeartIcon filled className="feed-eng-icon liked" />{post.likes}</span>
+          <span className="feed-eng-item"><CommentIcon className="feed-eng-icon" />{post.comments}</span>
+          <BookmarkIcon className="feed-eng-icon feed-eng-bookmark" />
         </div>
         {post.price > 0 && (
           <button
@@ -104,6 +108,7 @@ function FeedCard({ pin, photoUrl }) {
   const cat = categoryById(pin.category);
   const when = timeAgo(pin.created_at);
   const [logged, setLogged] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   const logThisToo = () => {
     logExpenseLocally({
@@ -144,11 +149,26 @@ function FeedCard({ pin, photoUrl }) {
 
         <div className="feed-price-row">
           {pin.price_paid != null ? (
-            <span className="feed-price amount">{pin.currency}{Number(pin.price_paid).toFixed(2)}</span>
+            <span className="feed-price amount chip">{pin.currency}{Number(pin.price_paid).toFixed(2)}</span>
           ) : (
             <span className="feed-price-unknown">No price logged</span>
           )}
           {pin.city && <span className="feed-city">{pin.city}</span>}
+        </div>
+
+        <div className="feed-engagement">
+          <button
+            type="button"
+            className="feed-eng-item feed-eng-btn"
+            onClick={() => setLiked((v) => !v)}
+            aria-pressed={liked}
+            aria-label={liked ? 'Unlike' : 'Like'}
+          >
+            <HeartIcon filled={liked} className={`feed-eng-icon ${liked ? 'liked' : ''}`} />
+          </button>
+          <span className="feed-eng-item"><CommentIcon className="feed-eng-icon" /></span>
+          <span className="feed-eng-spacer" />
+          <BookmarkIcon className="feed-eng-icon feed-eng-bookmark" />
         </div>
 
         <div className="feed-actions">
@@ -222,6 +242,7 @@ function BudgetSidebar({ budget, insight }) {
 }
 
 function Feed({ session, budget }) {
+  const navigate = useNavigate();
   const [pins, setPins] = useState(null); // null = loading
   const [photos, setPhotos] = useState({});
   const [term, setTerm] = useState('');
@@ -252,6 +273,21 @@ function Feed({ session, budget }) {
           <h2>Feed</h2>
           <Link to="/map" className="feed-map-link">View on map →</Link>
         </header>
+
+        {/* The big gauge from the home screen leads here too — the reason to
+            open the app is either "what happened" (the feed below) or "what
+            can I spend" (this), so both live on the same first screen. */}
+        {insight && (
+          <div className="feed-hero">
+            <BudgetHUD
+              insight={insight}
+              currency={budget.currency}
+              fitActive={false}
+              onFitBudget={(amount) => navigate(`/discover?budget=${amount}`)}
+            />
+            <SpendTrend currency={budget.currency} />
+          </div>
+        )}
 
         {/* A friend visiting from out of town does not want the whole feed —
             they want "what did anyone say about padel". Filters what has

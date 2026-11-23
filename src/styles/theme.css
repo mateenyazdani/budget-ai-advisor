@@ -1,35 +1,48 @@
 :root {
-  /* A near-black ink with one restrained accent, rather than a saturated
-     gradient. Finance products read as trustworthy when they are quiet. */
-  --brand: #007a5e;
-  --brand-dark: #00543f;
-  --brand-soft: #e6f4ef;
-  --accent: #1f6feb;
+  /* A punchy, saturated green plus a full set of category accents — the
+     look of the reference screens (real photos, colourful chips, a bright
+     "safe to spend" gauge) rather than a quiet single-hue finance app. */
+  --brand: #16a34a;
+  --brand-dark: #0d7a37;
+  --brand-soft: #e0f7ea;
+  --accent: #2563eb;
   --accent-soft: #e8f0fe;
+
+  /* Shared with the coloured-ring components (QuickInsights, nav) so a hue
+     means the same thing everywhere: green = money, orange = food, blue =
+     places/map, pink = feed/social, purple = advisor. */
+  --c-orange: #ea580c;
+  --c-orange-soft: #ffedd5;
+  --c-blue: #2563eb;
+  --c-blue-soft: #dbeafe;
+  --c-pink: #db2777;
+  --c-pink-soft: #fce7f3;
+  --c-purple: #7c3aed;
+  --c-purple-soft: #ede9fe;
 
   --ink: #16161d;
   --ink-soft: #55555f;
   --ink-faint: #8b8b96;
 
   --surface: #ffffff;
-  --surface-sunken: #f7f7f9;
-  --page-bg: #fafbfa;
-  --line: #e6e6ec;
-  --line-strong: #d5d5de;
+  --surface-sunken: #f6f7f9;
+  --page-bg: #fbfaf7;
+  --line: #ebebef;
+  --line-strong: #dadae1;
 
   --positive: #16794f;
-  --negative: #b5324a;
+  --negative: #d1364f;
   --warn-bg: #fdf6e7;
   --warn-line: #d9a441;
   --warn-ink: #6b4d12;
 
-  --radius-sm: 10px;
-  --radius: 18px;
-  --radius-lg: 26px;
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 28px;
 
   --shadow-sm: 0 1px 2px rgba(22, 22, 29, 0.06);
-  --shadow: 0 4px 16px rgba(22, 22, 29, 0.07);
-  --shadow-lg: 0 12px 40px rgba(22, 22, 29, 0.10);
+  --shadow: 0 6px 20px rgba(22, 22, 29, 0.08);
+  --shadow-lg: 0 16px 44px rgba(22, 22, 29, 0.12);
 }
 
 /* An explicit opt-in dark theme, not a silent prefers-color-scheme swap —
@@ -44,6 +57,15 @@
   --brand-soft: rgba(16, 185, 129, 0.14);
   --accent: #38bdf8;
   --accent-soft: rgba(56, 189, 248, 0.14);
+
+  --c-orange: #fb923c;
+  --c-orange-soft: rgba(251, 146, 60, 0.14);
+  --c-blue: #38bdf8;
+  --c-blue-soft: rgba(56, 189, 248, 0.14);
+  --c-pink: #f472b6;
+  --c-pink-soft: rgba(244, 114, 182, 0.14);
+  --c-purple: #a78bfa;
+  --c-purple-soft: rgba(167, 139, 250, 0.14);
 
   --ink: #f5f5f4;
   --ink-soft: #a3a3a0;

@@ -1,14 +1,14 @@
-// Still a real, rememberable toggle — not a system-preference guess — but
-// dark is now what a new visitor sees first, matching the look the app has
-// been designed toward. Anyone who explicitly picks light gets that back on
-// their next visit, same as dark.
+// A real, rememberable toggle — not a system-preference guess. Light is what
+// a new visitor sees first: bright, photo-forward, colourful accents per
+// category, matching the product's own reference screens. Anyone who
+// explicitly picks dark gets that back on their next visit, same as light.
 const KEY = 'bargainly-theme';
 
 export function getStoredTheme() {
   try {
-    return localStorage.getItem(KEY) === 'light' ? 'light' : 'dark';
+    return localStorage.getItem(KEY) === 'dark' ? 'dark' : 'light';
   } catch {
-    return 'dark';
+    return 'light';
   }
 }
 

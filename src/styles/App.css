@@ -7,16 +7,23 @@
   isolation: isolate;
 }
 
-/* An ambient glow behind the page, not a flat matte black — the single
-   biggest signature move in every AI Studio reference this session, done
-   once here at the root instead of re-added per card. Dark mode only: on
-   the light page this would just look like a colour cast, not a mood. */
-:root[data-theme="dark"] .App::before {
+/* An ambient glow behind the page instead of a flat matte background — a
+   soft wash of the same category hues used throughout the app (green,
+   orange, pink), tuned much lighter here than in dark mode so it reads as
+   warmth behind white cards rather than a colour cast. */
+.App::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  background:
+    radial-gradient(45vw 45vw at 8% -5%, rgba(22, 163, 74, 0.09), transparent 60%),
+    radial-gradient(40vw 40vw at 108% 10%, rgba(234, 88, 12, 0.06), transparent 60%),
+    radial-gradient(50vw 50vw at 60% 120%, rgba(219, 39, 119, 0.05), transparent 60%);
+}
+
+:root[data-theme="dark"] .App::before {
   background:
     radial-gradient(45vw 45vw at 8% -5%, rgba(16, 185, 129, 0.16), transparent 60%),
     radial-gradient(40vw 40vw at 108% 15%, rgba(56, 189, 248, 0.10), transparent 60%),

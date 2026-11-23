@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ExpenseLogger from './ExpenseLogger';
 import PriceCheck from './PriceCheck';
 import { groupBudget } from '../utils/budgetGroups';
@@ -7,6 +7,8 @@ import { calculateComprehensiveBudget } from '../utils/budgetCalculator';
 import { getInsights, DISCRETIONARY } from '../utils/insights';
 import WhatIfSlider from './WhatIfSlider';
 import { BasketIcon, BankIcon, ChatIcon } from './Icons';
+import BudgetHUD from './BudgetHUD';
+import SpendTrend from './SpendTrend';
 import '../styles/Dashboard.css';
 
 function money(currency, amount) {
@@ -14,6 +16,7 @@ function money(currency, amount) {
 }
 
 function Dashboard({ budget, onStartOver, onBudgetChange }) {
+  const navigate = useNavigate();
   const [currentBudget, setCurrentBudget] = useState(budget);
   const [openGroup, setOpenGroup] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -69,6 +72,18 @@ function Dashboard({ budget, onStartOver, onBudgetChange }) {
 
   return (
     <div className="dashboard">
+      {insight && (
+        <div className="dashboard-hero">
+          <BudgetHUD
+            insight={insight}
+            currency={currency}
+            fitActive={false}
+            onFitBudget={(amount) => navigate(`/discover?budget=${amount}`)}
+          />
+          <SpendTrend currency={currency} />
+        </div>
+      )}
+
       {insight && (
         <section className={`decide decide-${insight.status}`}>
           <div className="decide-main">

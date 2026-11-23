@@ -30,16 +30,21 @@
   height: 188px;
 }
 
-/* A soft glow behind the dial, dark mode only — the one hero moment on the
-   page worth a signature touch instead of a flat card. */
-:root[data-theme="dark"] .hud-dial-wrap::before {
+/* A soft glow behind the dial — the one hero moment on the page worth a
+   signature touch instead of a flat card. Lighter in light mode, so it
+   reads as a halo behind the ring rather than a colour cast on the card. */
+.hud-dial-wrap::before {
   content: '';
   position: absolute;
   inset: -20px;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.16), transparent 70%);
   filter: blur(6px);
+}
+
+:root[data-theme="dark"] .hud-dial-wrap::before {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22), transparent 70%);
 }
 
 .hud-dial-svg {
